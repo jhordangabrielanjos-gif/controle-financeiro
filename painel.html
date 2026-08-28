@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Painel - Controle Financeiro</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body class="painel-body">
+
+
+    <!-- =================================
+         HEADER
+    ================================== -->
+
+    <header class="painel-header">
+
+        <div>
+
+            <h1>
+                💰 Controle Financeiro
+            </h1>
+
+            <p id="nomeUsuario"></p>
+
+        </div>
+
+
+        <button
+            class="btn-sair"
+            onclick="sair()"
+        >
+            Sair
+        </button>
+
+    </header>
+
+
+    <main class="painel">
+
+
+        <!-- =================================
+             DASHBOARD
+        ================================== -->
+
+        <section class="dashboard">
+
+
+            <div class="card-resumo">
+
+                <span>
+                    💰 Total Devido
+                </span>
+
+                <strong id="totalDevido">
+                    R$ 0,00
+                </strong>
+
+            </div>
+
+
+            <div class="card-resumo">
+
+                <span>
+                    ✅ Total Recebido
+                </span>
+
+                <strong id="totalRecebido">
+                    R$ 0,00
+                </strong>
+
+            </div>
+
+
+            <div class="card-resumo">
+
+                <span>
+                    ⏳ Saldo Pendente
+                </span>
+
+                <strong id="saldoPendente">
+                    R$ 0,00
+                </strong>
+
+            </div>
+
+
+            <div class="card-resumo">
+
+                <span>
+                    👥 Clientes
+                </span>
+
+                <strong id="totalClientes">
+                    0
+                </strong>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================
+             RELATÓRIO FINANCEIRO
+        ================================== -->
+
+        <section class="card-painel">
+
+
+            <h2>
+                📊 Relatório Financeiro
+            </h2>
+
+
+            <div class="relatorio-filtros">
+
+
+                <div>
+
+                    <label>
+                        Data inicial
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dataInicio"
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label>
+                        Data final
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dataFim"
+                    >
+
+                </div>
+
+
+                <div class="area-btn-relatorio">
+
+                    <button
+                        class="btn-principal"
+                        onclick="gerarRelatorio()"
+                    >
+                        📊 Gerar Relatório
+                    </button>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- BOTÕES EXPORTAR -->
+
+            <div class="botoes-exportar">
+
+
+                <button
+                    type="button"
+                    class="btn-exportar"
+                    onclick="exportarExcel()"
+                >
+                    📗 Exportar Excel
+                </button>
+
+
+                <button
+                    type="button"
+                    class="btn-exportar"
+                    onclick="exportarPDF()"
+                >
+                    📄 Exportar PDF
+                </button>
+
+
+            </div>
+
+
+
+            <!-- RESUMO RELATÓRIO -->
+
+            <div class="resumo-relatorio">
+
+
+                <div class="card-relatorio">
+
+                    <span>
+                        💰 Total Recebido
+                    </span>
+
+                    <strong id="relatorioTotal">
+                        R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <div class="card-relatorio">
+
+                    <span>
+                        🔢 Pagamentos
+                    </span>
+
+                    <strong id="relatorioQuantidade">
+                        0
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- LISTA RELATÓRIO -->
+
+            <div
+                id="listaRelatorio"
+                class="lista-relatorio"
+            >
+
+                <p>
+                    Selecione um período para gerar o relatório.
+                </p>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================
+             CADASTRAR CLIENTE
+        ================================== -->
+
+        <section class="card-painel">
+
+
+            <h2>
+                ➕ Cadastrar Cliente
+            </h2>
+
+
+            <form id="formCliente">
+
+
+                <div class="grid-form">
+
+
+                    <!-- NOME -->
+
+                    <div>
+
+                        <label>
+                            Nome
+                        </label>
+
+                        <input
+                            type="text"
+                            id="clienteNome"
+                            placeholder="Nome completo"
+                            required
+                        >
+
+                    </div>
+
+
+
+                    <!-- CPF -->
+
+                    <div>
+
+                        <label>
+                            CPF
+                        </label>
+
+                        <input
+                            type="text"
+                            id="clienteCpf"
+                            placeholder="000.000.000-00"
+                            required
+                        >
+
+                    </div>
+
+
+
+                    <!-- NASCIMENTO -->
+
+                    <div>
+
+                        <label>
+                            Data de nascimento
+                        </label>
+
+                        <input
+                            type="date"
+                            id="clienteNascimento"
+                            required
+                        >
+
+                    </div>
+
+
+
+                    <!-- VALOR -->
+
+                    <div>
+
+                        <label>
+                            Valor devido
+                        </label>
+
+                        <input
+                            type="number"
+                            id="clienteValor"
+                            placeholder="0,00"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- ENDEREÇO -->
+
+                <label>
+                    Endereço
+                </label>
+
+                <input
+                    type="text"
+                    id="clienteEndereco"
+                    placeholder="Rua, número, bairro..."
+                    required
+                >
+
+
+
+                <button
+                    type="submit"
+                    class="btn-principal"
+                >
+                    Cadastrar Cliente
+                </button>
+
+
+            </form>
+
+
+        </section>
+
+
+
+        <!-- =================================
+             LISTA DE CLIENTES
+        ================================== -->
+
+        <section class="card-painel">
+
+
+            <div class="titulo-lista">
+
+
+                <h2>
+                    👥 Clientes
+                </h2>
+
+
+                <button
+                    class="btn-atualizar"
+                    onclick="carregarClientes()"
+                >
+                    ↻ Atualizar
+                </button>
+
+
+            </div>
+
+
+
+            <!-- PESQUISA -->
+
+            <div class="area-pesquisa">
+
+                <input
+                    type="text"
+                    id="pesquisaCliente"
+                    placeholder="🔎 Pesquisar por nome ou CPF..."
+                    oninput="pesquisarClientes()"
+                >
+
+            </div>
+
+
+
+            <!-- FILTROS -->
+
+            <div class="filtros-clientes">
+
+
+                <button
+                    class="btn-filtro ativo"
+                    onclick="filtrarClientes('todos')"
+                    id="filtroTodos"
+                >
+                    Todos
+                </button>
+
+
+                <button
+                    class="btn-filtro"
+                    onclick="filtrarClientes('pendentes')"
+                    id="filtroPendentes"
+                >
+                    ⏳ Pendentes
+                </button>
+
+
+                <button
+                    class="btn-filtro"
+                    onclick="filtrarClientes('quitados')"
+                    id="filtroQuitados"
+                >
+                    ✅ Quitados
+                </button>
+
+
+            </div>
+
+
+
+            <!-- LISTA -->
+
+            <div
+                id="listaClientes"
+                class="lista-clientes"
+            >
+
+                <p>
+                    Carregando clientes...
+                </p>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =================================
+         MODAL DE PAGAMENTO
+    ================================== -->
+
+    <div
+        class="modal escondido"
+        id="modalPagamento"
+    >
+
+
+        <div class="modal-conteudo">
+
+
+            <button
+                class="fechar-modal"
+                onclick="fecharModal()"
+            >
+                ×
+            </button>
+
+
+            <h2>
+                Registrar Pagamento
+            </h2>
+
+
+            <p id="clienteSelecionado"></p>
+
+
+            <label>
+                Valor pago
+            </label>
+
+
+            <input
+                type="number"
+                id="valorPagamento"
+                placeholder="0,00"
+                min="0.01"
+                step="0.01"
+            >
+
+
+            <button
+                class="btn-principal"
+                onclick="registrarPagamento()"
+            >
+                Confirmar Pagamento
+            </button>
+
+
+            <div
+                id="historicoPagamentos"
+                class="historico"
+            ></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================
+         MODAL EDITAR CLIENTE
+    ================================== -->
+
+    <div
+        class="modal escondido"
+        id="modalEditar"
+    >
+
+
+        <div class="modal-conteudo">
+
+
+            <button
+                class="fechar-modal"
+                onclick="fecharEditar()"
+            >
+                ×
+            </button>
+
+
+            <h2>
+                ✏️ Editar Cliente
+            </h2>
+
+
+            <form
+                id="formEditarCliente"
+                onsubmit="salvarEdicao(event)"
+            >
+
+
+                <input
+                    type="hidden"
+                    id="editarClienteId"
+                >
+
+
+
+                <!-- NOME -->
+
+                <label>
+                    Nome
+                </label>
+
+                <input
+                    type="text"
+                    id="editarClienteNome"
+                    required
+                >
+
+
+
+                <!-- CPF -->
+
+                <label>
+                    CPF
+                </label>
+
+                <input
+                    type="text"
+                    id="editarClienteCpf"
+                    required
+                >
+
+
+
+                <!-- NASCIMENTO -->
+
+                <label>
+                    Data de nascimento
+                </label>
+
+                <input
+                    type="date"
+                    id="editarClienteNascimento"
+                    required
+                >
+
+
+
+                <!-- ENDEREÇO -->
+
+                <label>
+                    Endereço
+                </label>
+
+                <input
+                    type="text"
+                    id="editarClienteEndereco"
+                    required
+                >
+
+
+
+                <!-- VALOR -->
+
+                <label>
+                    Valor devido
+                </label>
+
+                <input
+                    type="number"
+                    id="editarClienteValor"
+                    min="0"
+                    step="0.01"
+                    required
+                >
+
+
+
+                <button
+                    type="submit"
+                    class="btn-principal"
+                >
+                    Salvar Alterações
+                </button>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================
+         EXCEL
+    ================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+
+
+    <!-- =================================
+         PDF
+    ================================== -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+
+
+    <!-- JAVASCRIPT -->
+
+    <script src="painel.js"></script>
+
+
+</body>
+
+</html>
