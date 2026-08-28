@@ -170,6 +170,23 @@ await pool.query(`
     ADD COLUMN IF NOT EXISTS semana_referencia DATE
 `);
 
+// ----------------------------------
+// IMPEDIR PAGAMENTO DUPLICADO
+// NA MESMA SEMANA
+// ----------------------------------
+
+await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    pagamentos_cliente_semana_unico
+
+    ON pagamentos_financeiro (
+        cliente_id,
+        semana_referencia
+    )
+
+    WHERE semana_referencia IS NOT NULL
+`);
+
         console.log(
             "Tabelas prontas!"
         );
@@ -631,15 +648,15 @@ app.post(
                 );
 
                 const valorSemanal =
-    Number(
-        valor_semanal
-    );
+                Number(
+                      valor_semanal
+                );
 
 
-const diaPagamento =
-    Number(
-        dia_pagamento
-    );
+                const diaPagamento =
+                Number(
+                      dia_pagamento
+                );
 
 
             if (
@@ -822,12 +839,11 @@ app.get(
 
                         c.valor_devido,
 
-                        c.criado_em,
+c.valor_semanal,
 
-                        c.valor_semanal,
+c.dia_pagamento,
 
-                        c.dia_pagamento,
-
+c.criado_em,
 
                         COALESCE(
                             SUM(p.valor),
@@ -862,24 +878,25 @@ app.get(
 
                     GROUP BY
 
-                        c.id,
+                      GROUP BY
 
-                        c.nome,
+    c.id,
 
-                        c.cpf,
+    c.nome,
 
-                        c.nascimento,
+    c.cpf,
 
-                        c.endereco,
+    c.nascimento,
 
-                        c.valor_devido,
+    c.endereco,
 
-                        c.criado_em,
+    c.valor_devido,
 
-                        c.valor_semanal,
+    c.valor_semanal,
 
-                        c.dia_pagamento,
+    c.dia_pagamento,
 
+    c.criado_em  
 
                     ORDER BY
                         c.id DESC
@@ -924,9 +941,8 @@ app.get(
 
 );
 
-
 // ==========================================
-// REGISTRAR PAGAMENTO
+// REGISTRAR PAGAMENTO SEMANAL
 // ==========================================
 
 app.post(
@@ -939,12 +955,6 @@ app.post(
         const clienteId =
             Number(
                 req.params.id
-            );
-
-
-        const valor =
-            Number(
-                req.body.valor
             );
 
 
@@ -967,25 +977,6 @@ app.post(
         }
 
 
-        if (
-
-            Number.isNaN(valor) ||
-            valor <= 0
-
-        ) {
-
-            return res.status(400).json({
-
-                sucesso: false,
-
-                erro:
-                    "Digite um valor válido"
-
-            });
-
-        }
-
-
         let client;
 
 
@@ -1000,6 +991,10 @@ app.post(
             );
 
 
+            // ==================================
+            // BUSCAR CLIENTE
+            // ==================================
+
             const clienteResultado =
                 await client.query(
 
@@ -1009,6 +1004,10 @@ app.post(
                         c.id,
 
                         c.valor_devido,
+
+                        c.valor_semanal,
+
+                        c.dia_pagamento,
 
 
                         COALESCE(
@@ -1039,7 +1038,11 @@ app.post(
 
                         c.id,
 
-                        c.valor_devido
+                        c.valor_devido,
+
+                        c.valor_semanal,
+
+                        c.dia_pagamento
                     `,
 
                     [
@@ -1055,8 +1058,7 @@ app.post(
 
             if (
 
-                clienteResultado
-                    .rows.length === 0
+                clienteResultado.rows.length === 0
 
             ) {
 
@@ -1081,18 +1083,32 @@ app.post(
                 clienteResultado.rows[0];
 
 
-            const saldoRestante =
+            const valorSemanal =
+                Number(
+                    cliente.valor_semanal
+                );
 
+
+            const valorDevido =
                 Number(
                     cliente.valor_devido
-                )
+                );
 
-                -
 
+            const totalPago =
                 Number(
                     cliente.total_pago
                 );
 
+
+            const saldoRestante =
+                valorDevido -
+                totalPago;
+
+
+            // ==================================
+            // VALIDAR SALDO
+            // ==================================
 
             if (
                 saldoRestante <= 0
@@ -1115,8 +1131,33 @@ app.post(
             }
 
 
+            // ==================================
+            // CALCULAR VALOR DO PAGAMENTO
+            // ==================================
+
+            let valorPagamento =
+                valorSemanal;
+
+
+            // ÚLTIMO PAGAMENTO:
+            // paga somente o saldo restante
+
             if (
-                valor > saldoRestante
+                valorPagamento >
+                saldoRestante
+            ) {
+
+                valorPagamento =
+                    saldoRestante;
+
+            }
+
+
+            if (
+
+                !valorPagamento ||
+                valorPagamento <= 0
+
             ) {
 
                 await client.query(
@@ -1129,33 +1170,169 @@ app.post(
                     sucesso: false,
 
                     erro:
-                        "O valor é maior que o saldo restante"
+                        "Valor semanal inválido"
 
                 });
 
             }
 
 
+            // ==================================
+            // DEFINIR SEMANA DE REFERÊNCIA
+            // ==================================
+
+            const hoje =
+                new Date();
+
+
+            const diaDaSemana =
+                hoje.getDay();
+
+
+            const diferenca =
+                hoje.getDate() -
+                diaDaSemana;
+
+
+            const domingo =
+                new Date(
+                    hoje
+                );
+
+
+            domingo.setDate(
+                diferenca
+            );
+
+
+            domingo.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+
+            const ano =
+                domingo.getFullYear();
+
+
+            const mes =
+                String(
+                    domingo.getMonth() + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+
+            const dia =
+                String(
+                    domingo.getDate()
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+
+            const semanaReferencia =
+                `${ano}-${mes}-${dia}`;
+
+
+            // ==================================
+            // VERIFICAR PAGAMENTO DA SEMANA
+            // ==================================
+
+            const pagamentoExistente =
+                await client.query(
+
+                    `
+                    SELECT id
+
+                    FROM pagamentos_financeiro
+
+                    WHERE
+
+                        cliente_id = $1
+
+                    AND
+
+                        semana_referencia = $2
+                    `,
+
+                    [
+
+                        clienteId,
+
+                        semanaReferencia
+
+                    ]
+
+                );
+
+
+            if (
+
+                pagamentoExistente.rows.length > 0
+
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente já possui um pagamento registrado nesta semana"
+
+                });
+
+            }
+
+
+            // ==================================
+            // REGISTRAR PAGAMENTO
+            // ==================================
+
             const resultado =
                 await client.query(
 
                     `
                     INSERT INTO pagamentos_financeiro (
+
                         cliente_id,
-                        valor
+
+                        valor,
+
+                        semana_referencia
+
                     )
 
                     VALUES (
+
                         $1,
-                        $2
+
+                        $2,
+
+                        $3
+
                     )
 
                     RETURNING *
                     `,
 
                     [
+
                         clienteId,
-                        valor
+
+                        valorPagamento,
+
+                        semanaReferencia
+
                     ]
 
                 );
@@ -1171,10 +1348,19 @@ app.post(
                 sucesso: true,
 
                 mensagem:
-                    "Pagamento registrado com sucesso!",
+                    "Pagamento semanal registrado com sucesso!",
+
 
                 pagamento:
-                    resultado.rows[0]
+                    resultado.rows[0],
+
+
+                valor_pago:
+                    valorPagamento,
+
+
+                semana_referencia:
+                    semanaReferencia
 
             });
 
@@ -1192,9 +1378,27 @@ app.post(
 
 
             console.error(
-                "Erro pagamento:",
+                "Erro pagamento semanal:",
                 erro.message
             );
+
+
+            // ERRO DO ÍNDICE ÚNICO
+
+            if (
+                erro.code === "23505"
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente já possui pagamento nesta semana"
+
+                });
+
+            }
 
 
             res.status(500).json({
@@ -1219,7 +1423,6 @@ app.post(
     }
 
 );
-
 
 // ==========================================
 // HISTÓRICO DE PAGAMENTOS
@@ -1465,26 +1668,30 @@ app.put(
                     `
                     UPDATE clientes_financeiro
 
-                    SET
+SET
 
-                        nome = $1,
+    nome = $1,
 
-                        cpf = $2,
+    cpf = $2,
 
-                        nascimento = $3,
+    nascimento = $3,
 
-                        endereco = $4,
+    endereco = $4,
 
-                        valor_devido = $5
+    valor_devido = $5,
+
+    valor_semanal = $6,
+
+    dia_pagamento = $7
 
 
-                    WHERE
+WHERE
 
-                        id = $6
+    id = $8
 
-                    AND
+AND
 
-                        usuario_id = $7
+    usuario_id = $9
 
 
                     RETURNING *
@@ -1501,6 +1708,10 @@ app.put(
                         endereco.trim(),
 
                         valor,
+                        
+                        valor_semanal,
+
+                        diaPagamento,
 
                         clienteId,
 
