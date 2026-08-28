@@ -123,6 +123,21 @@ async function criarTabelas() {
             DROP COLUMN IF EXISTS vencimento
         `);
 
+        // ----------------------------------
+// PAGAMENTO SEMANAL DO CLIENTE
+// ----------------------------------
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS valor_semanal
+    NUMERIC(12, 2)
+`);
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS dia_pagamento
+    INTEGER
+`);
 
         // ----------------------------------
         // PAGAMENTOS
@@ -146,6 +161,14 @@ async function criarTabelas() {
             )
         `);
 
+        // ----------------------------------
+// SEMANA DE REFERÊNCIA DO PAGAMENTO
+// ----------------------------------
+
+await pool.query(`
+    ALTER TABLE pagamentos_financeiro
+    ADD COLUMN IF NOT EXISTS semana_referencia DATE
+`);
 
         console.log(
             "Tabelas prontas!"
