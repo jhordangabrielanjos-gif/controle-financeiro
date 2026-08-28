@@ -878,7 +878,6 @@ c.criado_em,
 
                     GROUP BY
 
-                      GROUP BY
 
     c.id,
 
@@ -1130,6 +1129,7 @@ app.post(
 
             }
 
+        
 
             // ==================================
             // CALCULAR VALOR DO PAGAMENTO
@@ -1237,7 +1237,6 @@ app.post(
 
             const semanaReferencia =
                 `${ano}-${mes}-${dia}`;
-
 
             // ==================================
             // VERIFICAR PAGAMENTO DA SEMANA
@@ -1587,13 +1586,15 @@ app.put(
 
             const {
 
-                nome,
-                cpf,
-                nascimento,
-                endereco,
-                valor_devido
+    nome,
+    cpf,
+    nascimento,
+    endereco,
+    valor_devido,
+    valor_semanal,
+    dia_pagamento
 
-            } = req.body;
+} = req.body;
 
 
             if (
@@ -1621,7 +1622,9 @@ app.put(
                 !cpf ||
                 !nascimento ||
                 !endereco ||
-                valor_devido === undefined
+                valor_devido === undefined ||
+                valor_semanal === undefined ||
+                dia_pagamento === undefined
 
             ) {
 
@@ -1642,6 +1645,15 @@ app.put(
                     valor_devido
                 );
 
+             const valorSemanal =
+    Number(
+        valor_semanal
+    );
+
+const diaPagamento =
+    Number(
+        dia_pagamento
+    );   
 
             if (
 
@@ -1697,27 +1709,25 @@ AND
                     RETURNING *
                     `,
 
-                    [
+                   [
+    nome.trim(),
 
-                        nome.trim(),
+    cpf.trim(),
 
-                        cpf.trim(),
+    nascimento,
 
-                        nascimento,
+    endereco.trim(),
 
-                        endereco.trim(),
+    valor,
 
-                        valor,
-                        
-                        valor_semanal,
+    valorSemanal,
 
-                        diaPagamento,
+    diaPagamento,
 
-                        clienteId,
+    clienteId,
 
-                        req.usuario.id
-
-                    ]
+    req.usuario.id
+] 
 
                 );
 
