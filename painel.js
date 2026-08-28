@@ -951,6 +951,8 @@ async function registrarPagamento() {
 
         await carregarClientes();
 
+        await carregarPagamentosSemanais();
+
         carregarHistorico(
             clienteAtual
         );
@@ -1648,11 +1650,389 @@ function exportarPDF() {
 }
 
 // ==========================================
+// FOLHA DE PAGAMENTOS SEMANAIS
+// ==========================================
+
+function obterNomeDia(dia) {
+
+    const dias = [
+        "Domingo",
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado"
+    ];
+
+    return dias[Number(dia)] || "Hoje";
+
+}
+
+
+// ==========================================
+// ESCAPAR TEXTO PARA HTML
+// ==========================================
+
+function escaparHtml(texto) {
+
+    return String(texto || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+// ==========================================
+// CARREGAR PAGAMENTOS SEMANAIS
+// ==========================================
+
+async function carregarPagamentosSemanais() {
+
+    const lista =
+        document.getElementById(
+            "listaPagamentosSemanais"
+        );
+
+    if (!lista) {
+        return;
+    }
+
+
+    lista.innerHTML =
+        "<p>Carregando folha de pagamentos...</p>";
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/pagamentos-semanais`,
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const texto =
+            await resposta.text();
+
+
+        let dados;
+
+
+        try {
+
+            dados =
+                JSON.parse(texto);
+
+        } catch (erro) {
+
+            throw new Error(
+                "O servidor não retornou um JSON válido."
+            );
+
+        }
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            lista.innerHTML =
+                `<p>${
+                    escaparHtml(
+                        dados.erro ||
+                        "Erro ao carregar pagamentos."
+                    )
+                }</p>`;
+
+            return;
+
+        }
+
+
+        // ==================================
+        // TÍTULO
+        // ==================================
+
+        const titulo =
+            document.getElementById(
+                "tituloPagamentoSemanal"
+            );
+
+
+        if (titulo) {
+
+            titulo.textContent =
+                `Pagamentos previstos para hoje — ${obterNomeDia(
+                    dados.dia_atual
+                )}`;
+
+        }
+
+
+        // ==================================
+        // RESUMO
+        // ==================================
+
+        const totalHoje =
+            document.getElementById(
+                "totalPagamentosHoje"
+            );
+
+
+        const totalPendentes =
+            document.getElementById(
+                "totalPendentesHoje"
+            );
+
+
+        const totalPagos =
+            document.getElementById(
+                "totalPagosHoje"
+            );
+
+
+        if (totalHoje) {
+
+            totalHoje.textContent =
+                Number(dados.total) || 0;
+
+        }
+
+
+        if (totalPendentes) {
+
+            totalPendentes.textContent =
+                Number(dados.pendentes) || 0;
+
+        }
+
+
+        if (totalPagos) {
+
+            totalPagos.textContent =
+                Number(dados.pagos) || 0;
+
+        }
+
+
+        // ==================================
+        // SEM PAGAMENTOS
+        // ==================================
+
+        if (
+            !Array.isArray(
+                dados.pagamentos
+            ) ||
+            dados.pagamentos.length === 0
+        ) {
+
+            lista.innerHTML =
+                `
+                <p>
+                    🎉 Nenhum cliente possui pagamento
+                    previsto para hoje.
+                </p>
+                `;
+
+            return;
+
+        }
+
+
+        // ==================================
+        // MONTAR LISTA
+        // ==================================
+
+        lista.innerHTML =
+            dados.pagamentos.map(
+                (cliente) => {
+
+                    const saldo =
+                        Number(
+                            cliente.saldo_restante
+                        ) || 0;
+
+
+                    const jaPagou =
+                        cliente.pago_semana === true;
+
+
+                    let statusHtml = "";
+
+
+                    if (saldo <= 0) {
+
+                        statusHtml =
+                            `
+                            <span class="status-quitado">
+                                ✅ Quitado
+                            </span>
+                            `;
+
+                    } else if (jaPagou) {
+
+                        statusHtml =
+                            `
+                            <span class="status-pago">
+                                ✅ Pago esta semana
+                            </span>
+                            `;
+
+                    } else {
+
+                        statusHtml =
+                            `
+                            <span class="status-pendente">
+                                ⏳ PAGAMENTO PENDENTE
+                            </span>
+                            `;
+
+                    }
+
+
+                    // Evita quebrar o onclick
+                    const nome =
+                        String(
+                            cliente.nome || ""
+                        );
+
+
+                    const nomeParaBotao =
+                        nome
+                            .replace(/\\/g, "\\\\")
+                            .replace(/'/g, "\\'");
+
+
+                    let botaoPagamento =
+                        "";
+
+
+                    if (
+                        !jaPagou &&
+                        saldo > 0
+                    ) {
+
+                        botaoPagamento =
+                            `
+                            <button
+                                class="btn-pagamento"
+                                onclick="abrirPagamento(
+                                    ${Number(cliente.id)},
+                                    '${nomeParaBotao}'
+                                )"
+                            >
+                                💰 Registrar Pagamento
+                            </button>
+                            `;
+
+                    }
+
+
+                    return `
+
+                        <div class="cliente-item pagamento-semanal-item">
+
+                            <div class="cliente-informacoes">
+
+                                <h3>
+                                    ${escaparHtml(nome)}
+                                </h3>
+
+
+                                <p>
+
+                                    💰
+
+                                    <strong>
+                                        Valor semanal:
+                                    </strong>
+
+                                    ${formatarMoeda(
+                                        cliente.valor_semanal
+                                    )}
+
+                                </p>
+
+
+                                <p>
+
+                                    📉
+
+                                    <strong>
+                                        Saldo restante:
+                                    </strong>
+
+                                    ${formatarMoeda(
+                                        saldo
+                                    )}
+
+                                </p>
+
+
+                                <p>
+
+                                    ${statusHtml}
+
+                                </p>
+
+                            </div>
+
+
+                            <div class="acoes-cliente">
+
+                                ${botaoPagamento}
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao carregar folha de pagamentos:",
+            erro
+        );
+
+
+        lista.innerHTML =
+            `
+            <p>
+                Erro ao carregar folha de pagamentos:
+                ${escaparHtml(
+                    erro.message
+                )}
+            </p>
+            `;
+
+    }
+
+}
+
+// ==========================================
 // INICIAR
 // ==========================================
 
 definirDatasPadrao();
 
 carregarClientes();
+
+carregarPagamentosSemanais();
 
 gerarRelatorio();
