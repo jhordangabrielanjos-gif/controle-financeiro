@@ -112,6 +112,99 @@
         </section>
 
 
+        <!-- =================================
+     FOLHA DE PAGAMENTOS SEMANAIS
+================================== -->
+
+<section class="card-painel">
+
+```
+<div class="titulo-lista">
+
+    <div>
+
+        <h2>
+            📋 Folha de Pagamentos Semanais
+        </h2>
+
+        <p id="tituloPagamentoSemanal">
+            Carregando pagamentos de hoje...
+        </p>
+
+    </div>
+
+
+    <button
+        class="btn-atualizar"
+        onclick="carregarPagamentosSemanais()"
+    >
+        ↻ Atualizar
+    </button>
+
+</div>
+
+
+<!-- RESUMO -->
+
+<div class="resumo-relatorio">
+
+    <div class="card-relatorio">
+
+        <span>
+            👥 Pagamentos de hoje
+        </span>
+
+        <strong id="totalPagamentosHoje">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="card-relatorio">
+
+        <span>
+            ⏳ Pendentes
+        </span>
+
+        <strong id="totalPendentesHoje">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="card-relatorio">
+
+        <span>
+            ✅ Já pagaram
+        </span>
+
+        <strong id="totalPagosHoje">
+            0
+        </strong>
+
+    </div>
+
+</div>
+
+
+<!-- LISTA -->
+
+<div
+    id="listaPagamentosSemanais"
+    class="lista-clientes"
+>
+
+    <p>
+        Carregando folha de pagamentos...
+    </p>
+
+</div>
+```
+
+</section>
+
 
         <!-- =================================
              RELATÓRIO FINANCEIRO
