@@ -747,7 +747,7 @@ if (
                         valor,
 
                         valorSemanal,
-                        
+
                         diaPagamento
 
                     ]
@@ -824,6 +824,10 @@ app.get(
 
                         c.criado_em,
 
+                        c.valor_semanal,
+
+                        c.dia_pagamento,
+
 
                         COALESCE(
                             SUM(p.valor),
@@ -870,7 +874,11 @@ app.get(
 
                         c.valor_devido,
 
-                        c.criado_em
+                        c.criado_em,
+
+                        c.valor_semanal,
+
+                        c.dia_pagamento,
 
 
                     ORDER BY
