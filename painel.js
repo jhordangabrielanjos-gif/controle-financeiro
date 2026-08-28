@@ -892,29 +892,22 @@ function fecharModal() {
 
 async function registrarPagamento() {
 
-    const valor =
-        document.getElementById(
-            "valorPagamento"
-        ).value;
-
-    if (
-        !valor ||
-        Number(valor) <= 0
-    ) {
-
-        alert(
-            "Digite um valor válido"
-        );
-
-        return;
-    }
-
     if (!clienteAtual) {
 
         alert(
             "Nenhum cliente selecionado"
         );
 
+        return;
+
+    }
+
+    const confirmar =
+        confirm(
+            "Confirmar o pagamento semanal deste cliente?"
+        );
+
+    if (!confirmar) {
         return;
     }
 
@@ -932,11 +925,7 @@ async function registrarPagamento() {
 
                         "Authorization":
                             `Bearer ${token}`
-                    },
-
-                    body: JSON.stringify({
-                        valor
-                    })
+                    }
                 }
             );
 
@@ -951,15 +940,14 @@ async function registrarPagamento() {
             );
 
             return;
+
         }
 
         alert(
-            "Pagamento registrado!"
+            `Pagamento semanal registrado: ${formatarMoeda(
+                dados.valor_pago
+            )}`
         );
-
-        document.getElementById(
-            "valorPagamento"
-        ).value = "";
 
         await carregarClientes();
 
