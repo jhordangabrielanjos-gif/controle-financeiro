@@ -1,0 +1,701 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  }
+
+body {
+min-height: 100vh;
+font-family: Arial, Helvetica, sans-serif;
+background: linear-gradient(135deg, #1e293b, #0f172a);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+}
+
+.container {
+width: 100%;
+max-width: 420px;
+}
+
+.card {
+background: #ffffff;
+padding: 35px;
+border-radius: 16px;
+box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.card h1 {
+text-align: center;
+color: #1e293b;
+margin-bottom: 10px;
+}
+
+.subtitulo {
+text-align: center;
+color: #64748b;
+margin-bottom: 25px;
+}
+
+form {
+display: flex;
+flex-direction: column;
+}
+
+label {
+color: #334155;
+font-weight: bold;
+margin-bottom: 7px;
+margin-top: 12px;
+}
+
+input {
+width: 100%;
+padding: 13px;
+border: 1px solid #cbd5e1;
+border-radius: 8px;
+font-size: 15px;
+outline: none;
+}
+
+input:focus {
+border-color: #2563eb;
+}
+
+form button {
+margin-top: 25px;
+padding: 14px;
+border: none;
+border-radius: 8px;
+background: #2563eb;
+color: white;
+font-size: 16px;
+font-weight: bold;
+cursor: pointer;
+}
+
+form button:hover {
+background: #1d4ed8;
+}
+
+.trocar {
+margin-top: 25px;
+text-align: center;
+color: #64748b;
+}
+
+.link {
+border: none;
+background: transparent;
+color: #2563eb;
+font-weight: bold;
+cursor: pointer;
+font-size: 14px;
+}
+
+.escondido {
+display: none;
+}
+
+@media (max-width: 480px) {
+
+  .card {
+    padding: 25px 20px;
+  }
+
+}
+
+/* =========================================
+PAINEL
+========================================= */
+
+.painel-body {
+display: block;
+background: #f1f5f9;
+padding: 0;
+}
+
+.painel-header {
+background: #0f172a;
+color: white;
+padding: 20px 5%;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.painel-header h1 {
+margin-bottom: 5px;
+}
+
+.painel-header p {
+color: #cbd5e1;
+}
+
+.painel {
+width: 90%;
+max-width: 1100px;
+margin: 30px auto;
+}
+
+.card-painel {
+background: white;
+padding: 25px;
+border-radius: 12px;
+margin-bottom: 25px;
+box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card-painel h2 {
+color: #1e293b;
+margin-bottom: 20px;
+}
+
+.grid-form {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 15px;
+}
+
+.btn-principal {
+margin-top: 25px;
+padding: 14px;
+border: none;
+border-radius: 8px;
+background: #2563eb;
+color: white;
+font-weight: bold;
+cursor: pointer;
+}
+
+.btn-sair {
+border: none;
+padding: 10px 18px;
+border-radius: 8px;
+cursor: pointer;
+background: #dc2626;
+color: white;
+}
+
+.titulo-lista {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.btn-atualizar {
+border: none;
+background: #e2e8f0;
+padding: 10px 15px;
+border-radius: 7px;
+cursor: pointer;
+}
+
+.cliente-item {
+border: 1px solid #e2e8f0;
+padding: 18px;
+margin-top: 15px;
+border-radius: 10px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.cliente-item h3 {
+color: #1e293b;
+margin-bottom: 8px;
+}
+
+.cliente-item p {
+color: #64748b;
+margin: 5px 0;
+}
+
+.btn-pagamento {
+border: none;
+background: #16a34a;
+color: white;
+padding: 11px 16px;
+border-radius: 7px;
+cursor: pointer;
+}
+
+.modal {
+position: fixed;
+inset: 0;
+background: rgba(0, 0, 0, 0.55);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+}
+
+.modal.escondido {
+display: none;
+}
+
+.modal-conteudo {
+width: 100%;
+max-width: 450px;
+background: white;
+padding: 30px;
+border-radius: 14px;
+position: relative;
+}
+
+.modal-conteudo h2 {
+color: #1e293b;
+margin-bottom: 15px;
+}
+
+.modal-conteudo label {
+display: block;
+margin-top: 20px;
+}
+
+.fechar-modal {
+position: absolute;
+top: 10px;
+right: 15px;
+border: none;
+background: transparent;
+font-size: 30px;
+cursor: pointer;
+}
+
+.historico {
+margin-top: 25px;
+border-top: 1px solid #e2e8f0;
+padding-top: 20px;
+}
+
+.pagamento-item {
+display: flex;
+justify-content: space-between;
+padding: 12px 0;
+border-bottom: 1px solid #f1f5f9;
+}
+
+.pagamento-item span {
+color: #64748b;
+font-size: 13px;
+}
+
+@media (max-width: 700px) {
+.grid-form {
+    grid-template-columns: 1fr;
+}
+
+.painel-header {
+    padding: 15px;
+}
+
+.painel-header h1 {
+    font-size: 20px;
+}
+
+.painel {
+    width: 94%;
+}
+
+.cliente-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.btn-pagamento {
+    width: 100%;
+}
+}
+
+/* =========================================
+   DASHBOARD
+========================================= */
+
+.dashboard {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+
+.card-resumo {
+    background: white;
+
+    padding: 20px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0, 0, 0, 0.08);
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.card-resumo span {
+    color: #666;
+
+    font-size: 14px;
+}
+
+
+.card-resumo strong {
+    font-size: 22px;
+
+    color: #222;
+}
+
+
+/* CELULAR */
+
+@media (max-width: 800px) {
+
+    .dashboard {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 450px) {
+
+    .dashboard {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+/* =========================================
+   AÇÕES DO CLIENTE
+========================================= */
+
+.acoes-cliente {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+
+.btn-editar,
+.btn-excluir {
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+
+.btn-editar {
+    background: #f0ad4e;
+    color: white;
+}
+
+
+.btn-excluir {
+    background: #dc3545;
+    color: white;
+}
+
+
+.btn-editar:hover,
+.btn-excluir:hover {
+    opacity: 0.85;
+}
+
+
+@media (max-width: 600px) {
+
+    .acoes-cliente {
+        width: 100%;
+    }
+
+    .acoes-cliente button {
+        flex: 1;
+    }
+
+}
+
+/* =========================================
+   FILTROS DE CLIENTES
+========================================= */
+
+.filtros-clientes {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    margin-bottom: 20px;
+}
+
+
+.btn-filtro {
+    border: none;
+
+    background: #e9ecef;
+
+    padding: 10px 16px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    transition: 0.2s;
+}
+
+
+.btn-filtro:hover {
+    transform:
+        translateY(-1px);
+}
+
+
+.btn-filtro.ativo {
+    background: #222;
+
+    color: white;
+}
+
+
+@media (max-width: 500px) {
+
+    .btn-filtro {
+        flex: 1;
+    }
+
+}
+
+/* =========================================
+   RELATÓRIO FINANCEIRO
+========================================= */
+
+.relatorio-filtros {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 15px;
+
+    align-items: end;
+
+    margin-top: 20px;
+}
+
+
+.relatorio-filtros div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.relatorio-filtros input {
+    width: 100%;
+
+    padding: 12px;
+
+    border:
+        1px solid #ddd;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+}
+
+
+.area-btn-relatorio {
+    justify-content: flex-end;
+}
+
+
+.resumo-relatorio {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 15px;
+
+    margin-top: 25px;
+}
+
+
+.card-relatorio {
+    background: #f7f7f7;
+
+    padding: 20px;
+
+    border-radius: 10px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.card-relatorio span {
+    color: #666;
+
+    font-size: 14px;
+}
+
+
+.card-relatorio strong {
+    font-size: 22px;
+}
+
+
+.lista-relatorio {
+    margin-top: 25px;
+}
+
+
+.lista-relatorio h3 {
+    margin-bottom: 15px;
+}
+
+
+.item-relatorio {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 15px;
+
+    border-bottom:
+        1px solid #eee;
+}
+
+
+.item-relatorio div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.item-relatorio span,
+.item-relatorio small {
+    color: #666;
+}
+
+
+.valor-relatorio {
+    font-size: 17px;
+
+    white-space: nowrap;
+}
+
+
+.sem-relatorio {
+    text-align: center;
+
+    padding: 25px;
+
+    color: #777;
+}
+
+
+/* =========================================
+   RESPONSIVO
+========================================= */
+
+@media (max-width: 700px) {
+
+    .relatorio-filtros {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .resumo-relatorio {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .item-relatorio {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+}
+
+/* =========================================
+   EXPORTAR RELATÓRIO
+========================================= */
+
+.botoes-exportar {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 10px;
+
+    flex-wrap: wrap;
+}
+
+
+.btn-exportar {
+    border: none;
+
+    padding: 10px 15px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    background: #333;
+
+    color: white;
+}
+
+
+.btn-exportar:hover {
+    opacity: 0.85;
+}
+
+
+@media (max-width: 500px) {
+
+    .botoes-exportar {
+        flex-direction: column;
+    }
+
+
+    .btn-exportar {
+        width: 100%;
+    }
+
+}
