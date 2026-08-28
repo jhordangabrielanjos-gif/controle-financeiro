@@ -1586,16 +1586,20 @@ app.put(
 
             const {
 
-    nome,
-    cpf,
-    nascimento,
-    endereco,
-    valor_devido,
-    valor_semanal,
-    dia_pagamento
+                nome,
+                cpf,
+                nascimento,
+                endereco,
+                valor_devido,
+                valor_semanal,
+                dia_pagamento
 
-} = req.body;
+            } = req.body;
 
+
+            // ==============================
+            // VALIDAR ID
+            // ==============================
 
             if (
 
@@ -1615,6 +1619,10 @@ app.put(
 
             }
 
+
+            // ==============================
+            // VALIDAR CAMPOS
+            // ==============================
 
             if (
 
@@ -1645,15 +1653,22 @@ app.put(
                     valor_devido
                 );
 
-             const valorSemanal =
-    Number(
-        valor_semanal
-    );
 
-const diaPagamento =
-    Number(
-        dia_pagamento
-    );   
+            const valorSemanal =
+                Number(
+                    valor_semanal
+                );
+
+
+            const diaPagamento =
+                Number(
+                    dia_pagamento
+                );
+
+
+            // ==============================
+            // VALIDAR VALORES
+            // ==============================
 
             if (
 
@@ -1674,60 +1689,103 @@ const diaPagamento =
             }
 
 
+            if (
+
+                Number.isNaN(valorSemanal) ||
+                valorSemanal <= 0
+
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Valor semanal inválido"
+
+                });
+
+            }
+
+
+            if (
+
+                !Number.isInteger(diaPagamento) ||
+                diaPagamento < 0 ||
+                diaPagamento > 6
+
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Dia de pagamento inválido"
+
+                });
+
+            }
+
+
+            // ==============================
+            // ATUALIZAR CLIENTE
+            // ==============================
+
             const resultado =
                 await pool.query(
 
                     `
                     UPDATE clientes_financeiro
 
-SET
+                    SET
 
-    nome = $1,
+                        nome = $1,
 
-    cpf = $2,
+                        cpf = $2,
 
-    nascimento = $3,
+                        nascimento = $3,
 
-    endereco = $4,
+                        endereco = $4,
 
-    valor_devido = $5,
+                        valor_devido = $5,
 
-    valor_semanal = $6,
+                        valor_semanal = $6,
 
-    dia_pagamento = $7
+                        dia_pagamento = $7
 
+                    WHERE
 
-WHERE
+                        id = $8
 
-    id = $8
+                    AND
 
-AND
-
-    usuario_id = $9
-
+                        usuario_id = $9
 
                     RETURNING *
                     `,
 
-                   [
-    nome.trim(),
+                    [
 
-    cpf.trim(),
+                        nome.trim(),
 
-    nascimento,
+                        cpf.trim(),
 
-    endereco.trim(),
+                        nascimento,
 
-    valor,
+                        endereco.trim(),
 
-    valorSemanal,
+                        valor,
 
-    diaPagamento,
+                        valorSemanal,
 
-    clienteId,
+                        diaPagamento,
 
-    req.usuario.id
-] 
+                        clienteId,
+
+                        req.usuario.id
+
+                    ]
 
                 );
 
