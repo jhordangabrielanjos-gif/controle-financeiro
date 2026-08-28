@@ -131,6 +131,15 @@ document
                     "clienteValor"
                 ).value;
 
+            const valor_semanal =
+                document.getElementById(
+                    "clienteValorSemanal"
+                ).value;
+
+            const dia_pagamento =
+                document.getElementById(
+                    "clienteDiaPagamento"
+                ).value;
             try {
 
                 const resposta =
@@ -152,7 +161,9 @@ document
                                 cpf,
                                 nascimento,
                                 endereco,
-                                valor_devido
+                                valor_devido,
+                                valor_semanal,
+                                dia_pagamento
                             })
                         }
                     );
@@ -392,6 +403,27 @@ function aplicarFiltros() {
 }
 
 // ==========================================
+// FORMATAR DIA DA SEMANA
+// ==========================================
+
+function formatarDiaPagamento(dia) {
+
+    const dias = [
+        "Domingo",
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado"
+    ];
+
+    return dias[Number(dia)] ||
+        "Não informado";
+
+}
+
+// ==========================================
 // MOSTRAR CLIENTES
 // ==========================================
 
@@ -472,6 +504,26 @@ function mostrarClientes(clientes) {
                                     )}
                                 </strong>
                             </p>
+
+                            <p>
+    <strong>
+        📅 Pagamento semanal:
+    </strong>
+
+    ${formatarMoeda(
+        cliente.valor_semanal
+    )}
+</p>
+
+<p>
+    <strong>
+        📆 Dia:
+    </strong>
+
+    ${formatarDiaPagamento(
+        cliente.dia_pagamento
+    )}
+</p>
 
                         </div>
 
@@ -582,6 +634,16 @@ function abrirEditar(clienteId) {
     ).value =
         cliente.valor_devido || 0;
 
+     document.getElementById(
+    "editarClienteValorSemanal"
+).value =
+    cliente.valor_semanal || "";
+
+document.getElementById(
+    "editarClienteDiaPagamento"
+).value =
+    cliente.dia_pagamento ?? "";   
+
     document.getElementById(
         "modalEditar"
     ).classList.remove(
@@ -628,6 +690,16 @@ async function salvarEdicao(event) {
             "editarClienteValor"
         ).value;
 
+    const valor_semanal =
+        document.getElementById(
+            "editarClienteValorSemanal"
+        ).value;
+
+    const dia_pagamento =
+        document.getElementById(
+            "editarClienteDiaPagamento"
+        ).value;
+
     try {
 
         const resposta =
@@ -649,8 +721,11 @@ async function salvarEdicao(event) {
                         cpf,
                         nascimento,
                         endereco,
-                        valor_devido
+                        valor_devido,
+                        valor_semanal,
+                        dia_pagamento
                     })
+                
                 }
             );
 
