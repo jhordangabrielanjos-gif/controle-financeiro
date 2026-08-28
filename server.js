@@ -2210,6 +2210,279 @@ app.get(
 
 );
 
+// ==========================================
+// FOLHA DE PAGAMENTOS SEMANAIS
+// ==========================================
+
+app.get(
+    "/pagamentos-semanais",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            // ==================================
+            // DIA ATUAL
+            // ==================================
+
+            const hoje =
+                new Date();
+
+            const diaAtual =
+                hoje.getDay();
+
+
+            // ==================================
+            // CALCULAR DOMINGO DA SEMANA
+            // ==================================
+
+            const domingo =
+                new Date(hoje);
+
+            domingo.setDate(
+                hoje.getDate() -
+                hoje.getDay()
+            );
+
+            domingo.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+
+            const ano =
+                domingo.getFullYear();
+
+            const mes =
+                String(
+                    domingo.getMonth() + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+            const dia =
+                String(
+                    domingo.getDate()
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+
+            const semanaReferencia =
+                `${ano}-${mes}-${dia}`;
+
+
+            // ==================================
+            // BUSCAR CLIENTES DO DIA
+            // ==================================
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    SELECT
+
+                        c.id,
+
+                        c.nome,
+
+                        c.cpf,
+
+                        c.valor_devido,
+
+                        c.valor_semanal,
+
+                        c.dia_pagamento,
+
+
+                        COALESCE(
+                            SUM(p.valor),
+                            0
+                        ) AS total_pago,
+
+
+                        EXISTS (
+
+                            SELECT 1
+
+                            FROM pagamentos_financeiro ps
+
+                            WHERE
+                                ps.cliente_id = c.id
+
+                            AND
+                                ps.semana_referencia = $3
+
+                        ) AS pago_semana
+
+
+                    FROM clientes_financeiro c
+
+
+                    LEFT JOIN pagamentos_financeiro p
+
+                    ON
+                        p.cliente_id = c.id
+
+
+                    WHERE
+
+                        c.usuario_id = $1
+
+                    AND
+
+                        c.dia_pagamento = $2
+
+
+                    GROUP BY
+
+                        c.id,
+
+                        c.nome,
+
+                        c.cpf,
+
+                        c.valor_devido,
+
+                        c.valor_semanal,
+
+                        c.dia_pagamento
+
+
+                    ORDER BY
+                        c.nome ASC
+                    `,
+
+                    [
+
+                        req.usuario.id,
+
+                        diaAtual,
+
+                        semanaReferencia
+
+                    ]
+
+                );
+
+
+            // ==================================
+            // CALCULAR SALDO
+            // ==================================
+
+            const pagamentos =
+                resultado.rows.map(
+                    (cliente) => {
+
+                        const valorDevido =
+                            Number(
+                                cliente.valor_devido
+                            ) || 0;
+
+
+                        const totalPago =
+                            Number(
+                                cliente.total_pago
+                            ) || 0;
+
+
+                        const saldoRestante =
+                            Math.max(
+                                valorDevido -
+                                totalPago,
+                                0
+                            );
+
+
+                        return {
+
+                            ...cliente,
+
+                            saldo_restante:
+                                saldoRestante,
+
+                            pago_semana:
+                                cliente.pago_semana === true
+
+                        };
+
+                    }
+                );
+
+
+            // ==================================
+            // RESUMO
+            // ==================================
+
+            const pendentes =
+                pagamentos.filter(
+                    (cliente) =>
+
+                        cliente.saldo_restante > 0 &&
+
+                        !cliente.pago_semana
+                );
+
+
+            const pagos =
+                pagamentos.filter(
+                    (cliente) =>
+
+                        cliente.pago_semana
+                );
+
+
+            res.json({
+
+                sucesso: true,
+
+                dia_atual:
+                    diaAtual,
+
+                semana_referencia:
+                    semanaReferencia,
+
+                total:
+                    pagamentos.length,
+
+                pendentes:
+                    pendentes.length,
+
+                pagos:
+                    pagos.length,
+
+                pagamentos
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar pagamentos semanais:",
+                erro.message
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar folha de pagamentos"
+
+            });
+
+        }
+
+    }
+
+);
 
 // ==========================================
 // STATUS
