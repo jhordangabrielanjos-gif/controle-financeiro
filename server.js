@@ -594,7 +594,9 @@ app.post(
                 cpf,
                 nascimento,
                 endereco,
-                valor_devido
+                valor_devido,
+                valor_semanal,
+                dia_pagamento
 
             } = req.body;
 
@@ -605,7 +607,9 @@ app.post(
                 !cpf ||
                 !nascimento ||
                 !endereco ||
-                valor_devido === undefined
+                valor_devido === undefined ||
+                valor_semanal === undefined ||
+                dia_pagamento === undefined
 
             ) {
 
@@ -626,6 +630,17 @@ app.post(
                     valor_devido
                 );
 
+                const valorSemanal =
+    Number(
+        valor_semanal
+    );
+
+
+const diaPagamento =
+    Number(
+        dia_pagamento
+    );
+
 
             if (
 
@@ -645,6 +660,44 @@ app.post(
 
             }
 
+            if (
+
+    Number.isNaN(valorSemanal) ||
+    valorSemanal <= 0
+
+) {
+
+    return res.status(400).json({
+
+        sucesso: false,
+
+        erro:
+            "Valor semanal inválido"
+
+    });
+
+}
+
+
+if (
+
+    !Number.isInteger(diaPagamento) ||
+    diaPagamento < 0 ||
+    diaPagamento > 6
+
+) {
+
+    return res.status(400).json({
+
+        sucesso: false,
+
+        erro:
+            "Dia de pagamento inválido"
+
+    });
+
+}
+
 
             const resultado =
                 await pool.query(
@@ -657,7 +710,9 @@ app.post(
                         cpf,
                         nascimento,
                         endereco,
-                        valor_devido
+                        valor_devido,
+                        valor_semanal,
+                        dia_pagamento
 
                     )
 
@@ -668,7 +723,9 @@ app.post(
                         $3,
                         $4,
                         $5,
-                        $6
+                        $6,
+                        $7,
+                        $8
 
                     )
 
@@ -687,7 +744,11 @@ app.post(
 
                         endereco.trim(),
 
-                        valor
+                        valor,
+
+                        valorSemanal,
+                        
+                        diaPagamento
 
                     ]
 
