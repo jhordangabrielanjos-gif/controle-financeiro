@@ -958,12 +958,25 @@ async function excluirCliente(
 // ABRIR PAGAMENTO
 // ==========================================
 
-function abrirPagamento(
-    id,
-    nome
-) {
+function abrirPagamento(id, nome) {
 
-    clienteAtual = id;
+    // Salva o ID do cliente selecionado
+    clienteAtual = Number(id);
+
+    console.log(
+        "Cliente selecionado:",
+        clienteAtual
+    );
+
+    if (!clienteAtual) {
+
+        alert(
+            "Erro ao selecionar o cliente."
+        );
+
+        return;
+
+    }
 
     document.getElementById(
         "clienteSelecionado"
@@ -980,7 +993,9 @@ function abrirPagamento(
         "escondido"
     );
 
-    carregarHistorico(id);
+    carregarHistorico(
+        clienteAtual
+    );
 
 }
 
@@ -1006,15 +1021,18 @@ function fecharModal() {
 
 async function registrarPagamento() {
 
-    if (!clienteAtual) {
+    if (
+    clienteAtual === null ||
+    clienteAtual === undefined
+) {
 
-        alert(
-            "Nenhum cliente selecionado"
-        );
+    alert(
+        "Nenhum cliente selecionado"
+    );
 
-        return;
+    return;
 
-    }
+}
 
     const confirmar =
         confirm(
