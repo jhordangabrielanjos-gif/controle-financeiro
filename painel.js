@@ -2059,9 +2059,9 @@ async function carregarPagamentosSemanais() {
                             <button
                                 class="btn-pagamento"
                                 onclick="abrirPagamento(
-                                    ${Number(cliente.id)},
-                                    '${nomeParaBotao}'
-                                )"
+    '${cliente.id}',
+    '${nomeParaBotao}'
+)"
                             >
                                 💰 Registrar Pagamento
                             </button>
