@@ -658,61 +658,23 @@ app.post(
 
 );
 
-// ==========================================
-// CLOUDINARY
-// ==========================================
-
-cloudinary.config({
-
-    cloud_name:
-        process.env.CLOUDINARY_CLOUD_NAME,
-
-    api_key:
-        process.env.CLOUDINARY_API_KEY,
-
-    api_secret:
-        process.env.CLOUDINARY_API_SECRET
-
-});
-
 
 // ==========================================
 // UPLOAD DE DOCUMENTOS
 // ==========================================
 
-    new CloudinaryStorage({
+const uploadDocumento = multer({
 
-        cloudinary,
+    storage,
 
-        params: {
+    limits: {
 
-            folder:
-                "controle-financeiro/documentos",
+        fileSize:
+            10 * 1024 * 1024
 
-            allowed_formats: [
-                "jpg",
-                "jpeg",
-                "png",
-                "webp"
-            ]
+    }
 
-        }
-
-    });
-
-
-    multer({
-
-        storage,
-
-        limits: {
-
-            fileSize:
-                10 * 1024 * 1024
-
-        }
-
-    });
+});
 
 // ==========================================
 // CADASTRAR CLIENTE
@@ -723,7 +685,7 @@ app.post(
 
     verificarToken,
 
-    upload.single("documento"),
+    uploadDocumento.single("documento"),
 
     async (req, res) => {
 
