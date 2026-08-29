@@ -1148,89 +1148,83 @@ app.get(
     async (req, res) => {
 
         try {
+const resultado =
+    await pool.query(
 
-            const resultado =
-                await pool.query(
+        `
+        SELECT
 
-                    `
-                    SELECT
+            c.id,
 
-                        c.id,
+            c.nome,
 
-                        c.nome,
+            c.documento_foto IS NOT NULL
+            AS possui_documento,
 
-                        c.documento_foto IS NOT NULL AS possui_documento,
+            c.cpf,
 
-                        c.cpf,
+            c.nascimento,
 
-                        c.nascimento,
+            c.endereco,
 
-                        c.endereco,
+            c.valor_devido,
 
-                        c.valor_devido,
+            c.valor_semanal,
 
-c.valor_semanal,
+            c.dia_pagamento,
 
-c.dia_pagamento,
+            c.criado_em,
 
-c.criado_em,
+            COALESCE(
+                SUM(p.valor),
+                0
+            ) AS total_pago,
 
-                        COALESCE(
-    SUM(p.valor),
-    0
-) AS total_pago,
+            c.valor_devido
+            AS saldo_restante
 
-c.valor_devido AS saldo_restante
+        FROM clientes_financeiro c
 
-                        ) AS saldo_restante
+        LEFT JOIN pagamentos_financeiro p
 
+        ON
+            p.cliente_id = c.id
 
-                    FROM clientes_financeiro c
+        WHERE
 
+            c.usuario_id = $1
 
-                    LEFT JOIN pagamentos_financeiro p
+        GROUP BY
 
-                    ON
-                        p.cliente_id = c.id
+            c.id,
 
+            c.nome,
 
-                    WHERE
+            c.documento_foto,
 
-                        c.usuario_id = $1
+            c.cpf,
 
+            c.nascimento,
 
-                    GROUP BY
+            c.endereco,
 
+            c.valor_devido,
 
-    c.id,
+            c.valor_semanal,
 
-    c.nome,
-    
-    c.documento_foto,
+            c.dia_pagamento,
 
-    c.cpf,
+            c.criado_em
 
-    c.nascimento,
+        ORDER BY
+            c.id DESC
+        `,
 
-    c.endereco,
+        [
+            req.usuario.id
+        ]
 
-    c.valor_devido,
-
-    c.valor_semanal,
-
-    c.dia_pagamento,
-
-    c.criado_em  
-
-                    ORDER BY
-                        c.id DESC
-                    `,
-
-                    [
-                        req.usuario.id
-                    ]
-
-                );
+    );
 
 
             res.json({
