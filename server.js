@@ -3,14 +3,67 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+
 
 require("dotenv").config();
 
 const app = express();
 
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+
+// ==========================================
+// UPLOAD DE FOTO EM MEMÓRIA
+// ==========================================
+
+const storage =
+    multer.memoryStorage();
+
+const upload =
+    multer({
+
+        storage,
+
+        limits: {
+
+            fileSize:
+                5 * 1024 * 1024
+
+        },
+
+        fileFilter: (
+            req,
+            file,
+            cb
+        ) => {
+
+            if (
+                file.mimetype.startsWith(
+                    "image/"
+                )
+            ) {
+
+                cb(
+                    null,
+                    true
+                );
+
+            } else {
+
+                cb(
+                    new Error(
+                        "Apenas imagens são permitidas"
+                    )
+                );
+
+            }
+
+        }
+
+    });
 
 // ==========================================
 // CONFIGURAÇÕES
@@ -112,6 +165,20 @@ async function criarTabelas() {
                 ON DELETE CASCADE
             )
         `);
+
+       // ==========================================
+// FOTO DO DOCUMENTO
+// ==========================================
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS documento_foto BYTEA
+`);
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS documento_tipo TEXT
+`);
 
 
         // ----------------------------------
@@ -591,6 +658,61 @@ app.post(
 
 );
 
+// ==========================================
+// CLOUDINARY
+// ==========================================
+
+cloudinary.config({
+
+    cloud_name:
+        process.env.CLOUDINARY_CLOUD_NAME,
+
+    api_key:
+        process.env.CLOUDINARY_API_KEY,
+
+    api_secret:
+        process.env.CLOUDINARY_API_SECRET
+
+});
+
+
+// ==========================================
+// UPLOAD DE DOCUMENTOS
+// ==========================================
+
+    new CloudinaryStorage({
+
+        cloudinary,
+
+        params: {
+
+            folder:
+                "controle-financeiro/documentos",
+
+            allowed_formats: [
+                "jpg",
+                "jpeg",
+                "png",
+                "webp"
+            ]
+
+        }
+
+    });
+
+
+    multer({
+
+        storage,
+
+        limits: {
+
+            fileSize:
+                10 * 1024 * 1024
+
+        }
+
+    });
 
 // ==========================================
 // CADASTRAR CLIENTE
@@ -600,6 +722,8 @@ app.post(
     "/clientes",
 
     verificarToken,
+
+    upload.single("documento"),
 
     async (req, res) => {
 
@@ -715,6 +839,15 @@ if (
 
 }
 
+const documentoFoto =
+    req.file
+        ? req.file.buffer
+        : null;
+
+const documentoTipo =
+    req.file
+        ? req.file.mimetype
+        : null;
 
             const resultado =
                 await pool.query(
@@ -729,7 +862,9 @@ if (
                         endereco,
                         valor_devido,
                         valor_semanal,
-                        dia_pagamento
+                        dia_pagamento,
+                        documento_foto,
+                        documento_tipo
 
                     )
 
@@ -742,7 +877,9 @@ if (
                         $5,
                         $6,
                         $7,
-                        $8
+                        $8,
+                        $9,
+                        $10
 
                     )
 
@@ -765,7 +902,11 @@ if (
 
                         valorSemanal,
 
-                        diaPagamento
+                        diaPagamento,
+
+                        documentoFoto,
+
+                        documentoTipo
 
                     ]
 
@@ -831,6 +972,8 @@ app.get(
 
                         c.nome,
 
+                        c.documento_foto IS NOT NULL AS possui_documento,
+
                         c.cpf,
 
                         c.nascimento,
@@ -882,6 +1025,8 @@ c.criado_em,
     c.id,
 
     c.nome,
+    
+    c.documento_foto,
 
     c.cpf,
 
@@ -931,6 +1076,116 @@ c.criado_em,
 
                 erro:
                     "Erro ao carregar clientes"
+
+            });
+
+        }
+
+    }
+
+);
+
+// ==========================================
+// VER FOTO DO DOCUMENTO
+// ==========================================
+
+app.get(
+    "/clientes/:id/documento",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(
+                    req.params.id
+                );
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    SELECT
+                        documento_foto,
+                        documento_tipo
+
+                    FROM clientes_financeiro
+
+                    WHERE
+                        id = $1
+
+                    AND
+                        usuario_id = $2
+                    `,
+
+                    [
+
+                        clienteId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+            const cliente =
+                resultado.rows[0];
+
+            if (
+                !cliente.documento_foto
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente não possui documento"
+
+                });
+
+            }
+
+            res.set(
+                "Content-Type",
+                cliente.documento_tipo ||
+                "image/jpeg"
+            );
+
+            res.send(
+                cliente.documento_foto
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar documento:",
+                erro.message
+            );
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar documento"
 
             });
 
