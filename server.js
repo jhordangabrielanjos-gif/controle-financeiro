@@ -1176,18 +1176,11 @@ c.dia_pagamento,
 c.criado_em,
 
                         COALESCE(
-                            SUM(p.valor),
-                            0
-                        ) AS total_pago,
+    SUM(p.valor),
+    0
+) AS total_pago,
 
-
-                        (
-                            c.valor_devido -
-
-                            COALESCE(
-                                SUM(p.valor),
-                                0
-                            )
+c.valor_devido AS saldo_restante
 
                         ) AS saldo_restante
 
@@ -1530,69 +1523,14 @@ app.post(
                 );
 
 
-            const valorDevido =
-                Number(
-                    cliente.valor_devido
-                );
-
-
-            const totalPago =
-                Number(
-                    cliente.total_pago
-                );
-
-
-            const saldoRestante =
-                valorDevido -
-                totalPago;
-
-
-            // ==================================
-            // VALIDAR SALDO
-            // ==================================
-
-            if (
-                saldoRestante <= 0
-            ) {
-
-                await client.query(
-                    "ROLLBACK"
-                );
-
-
-                return res.status(400).json({
-
-                    sucesso: false,
-
-                    erro:
-                        "Este cliente não possui saldo pendente"
-
-                });
-
-            }
 
         
 
-            // ==================================
             // CALCULAR VALOR DO PAGAMENTO
-            // ==================================
+// O pagamento semanal NÃO altera a dívida total
 
-            let valorPagamento =
-                valorSemanal;
-
-
-            // ÚLTIMO PAGAMENTO:
-            // paga somente o saldo restante
-
-            if (
-                valorPagamento >
-                saldoRestante
-            ) {
-
-                valorPagamento =
-                    saldoRestante;
-
-            }
+const valorPagamento =
+    valorSemanal;
 
 
             if (
