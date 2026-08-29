@@ -597,21 +597,29 @@ ${
                                         )
                                         : "Não informado"
                                 }
-                            </p>
+                            ${
+    Number(cliente.saldo_restante) > 0
+        ? `
+            <p>
+                <strong>
+                    Saldo restante:
+                </strong>
 
-                            <p>
-                                <strong>
-                                    Saldo:
-                                </strong>
-
-                                <strong>
-                                    ${formatarMoeda(
-                                        cliente.saldo_restante
-                                    )}
-                                </strong>
-                            </p>
-
-                            <p>
+                <strong>
+                    ${formatarMoeda(
+                        cliente.saldo_restante
+                    )}
+                </strong>
+            </p>
+        `
+        : `
+            <p>
+                <strong class="cliente-quitado">
+                    ✅ Cliente quitado
+                </strong>
+            </p>
+        `
+}
     <strong>
         📅 Pagamento semanal:
     </strong>
@@ -2070,19 +2078,25 @@ async function carregarPagamentosSemanais() {
                                 </p>
 
 
-                                <p>
+                               ${
+    saldo > 0
+        ? `
+            <p>
 
-                                    📉
+                📉
 
-                                    <strong>
-                                        Saldo restante:
-                                    </strong>
+                <strong>
+                    Saldo restante:
+                </strong>
 
-                                    ${formatarMoeda(
-                                        saldo
-                                    )}
+                ${formatarMoeda(
+                    saldo
+                )}
 
-                                </p>
+            </p>
+        `
+        : ""
+} 
 
 
                                 <p>
