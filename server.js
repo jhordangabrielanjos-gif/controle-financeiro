@@ -2444,12 +2444,19 @@ app.get(
             // DIA ATUAL
             // ==================================
 
-            const hoje =
-                new Date();
+            const agoraBrasil = new Date(
+    new Date().toLocaleString(
+        "en-US",
+        {
+            timeZone: "America/Maceio"
+        }
+    )
+);
 
-            const diaAtual =
-                hoje.getDay();
+const hoje = agoraBrasil;
 
+const diaAtual =
+    hoje.getDay();
 
             // ==================================
             // CALCULAR DOMINGO DA SEMANA
