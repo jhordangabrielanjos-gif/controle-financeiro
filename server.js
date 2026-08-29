@@ -3020,6 +3020,1165 @@ app.get(
 );
 
 // ==========================================
+// REGISTRAR PAGAMENTO DE UMA COBRANÇA
+// ==========================================
+
+app.post(
+    "/cobrancas/:id/pagamentos",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        const cobrancaId =
+            Number(req.params.id);
+
+
+        const valor =
+            Number(req.body.valor);
+
+
+        if (
+            !Number.isInteger(cobrancaId) ||
+            cobrancaId <= 0
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Cobrança inválida"
+
+            });
+
+        }
+
+
+        if (
+            Number.isNaN(valor) ||
+            valor <= 0
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Informe um valor válido"
+
+            });
+
+        }
+
+
+        let client;
+
+
+        try {
+
+            client =
+                await pool.connect();
+
+
+            await client.query(
+                "BEGIN"
+            );
+
+
+            // ==============================
+            // BUSCAR COBRANÇA
+            // ==============================
+
+            const cobrancaResultado =
+                await client.query(
+
+                    `
+                    SELECT
+
+                        co.id,
+
+                        co.valor_original,
+
+                        co.juros_valor,
+
+                        co.status,
+
+
+                        COALESCE(
+                            SUM(pc.valor),
+                            0
+                        ) AS total_pago
+
+
+                    FROM cobrancas_financeiro co
+
+
+                    LEFT JOIN
+                    pagamentos_cobrancas_financeiro pc
+
+                    ON
+                        pc.cobranca_id = co.id
+
+
+                    WHERE
+
+                        co.id = $1
+
+                    AND
+
+                        co.usuario_id = $2
+
+
+                    GROUP BY
+
+                        co.id,
+
+                        co.valor_original,
+
+                        co.juros_valor,
+
+                        co.status
+                    `,
+
+                    [
+
+                        cobrancaId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+
+            if (
+                cobrancaResultado.rows.length === 0
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cobrança não encontrada"
+
+                });
+
+            }
+
+
+            const cobranca =
+                cobrancaResultado.rows[0];
+
+
+            if (
+                cobranca.status === "quitado"
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Esta cobrança já foi quitada"
+
+                });
+
+            }
+
+
+            const valorOriginal =
+                Number(
+                    cobranca.valor_original
+                );
+
+
+            const juros =
+                Number(
+                    cobranca.juros_valor
+                ) || 0;
+
+
+            const totalPago =
+                Number(
+                    cobranca.total_pago
+                ) || 0;
+
+
+            const valorTotal =
+                valorOriginal +
+                juros;
+
+
+            const saldoRestante =
+                Math.max(
+
+                    valorTotal -
+                    totalPago,
+
+                    0
+
+                );
+
+
+            // ==============================
+            // NÃO DEIXAR PAGAR MAIS
+            // QUE O RESTANTE
+            // ==============================
+
+            if (
+                valor > saldoRestante
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        `O valor é maior que o saldo restante de R$ ${saldoRestante.toFixed(2)}`
+
+                });
+
+            }
+
+
+            // ==============================
+            // REGISTRAR PAGAMENTO
+            // ==============================
+
+            const pagamentoResultado =
+                await client.query(
+
+                    `
+                    INSERT INTO
+                    pagamentos_cobrancas_financeiro (
+
+                        cobranca_id,
+
+                        valor
+
+                    )
+
+                    VALUES (
+
+                        $1,
+
+                        $2
+
+                    )
+
+                    RETURNING *
+                    `,
+
+                    [
+
+                        cobrancaId,
+
+                        valor
+
+                    ]
+
+                );
+
+
+            const novoTotalPago =
+                totalPago +
+                valor;
+
+
+            const novoSaldo =
+                Math.max(
+
+                    valorTotal -
+                    novoTotalPago,
+
+                    0
+
+                );
+
+
+            let novoStatus =
+                "parcial";
+
+
+            if (
+                novoSaldo <= 0
+            ) {
+
+                novoStatus =
+                    "quitado";
+
+            }
+
+
+            // ==============================
+            // ATUALIZAR STATUS
+            // ==============================
+
+            await client.query(
+
+                `
+                UPDATE cobrancas_financeiro
+
+                SET
+
+                    status = $1,
+
+                    quitado_em =
+
+                        CASE
+
+                            WHEN $1 = 'quitado'
+
+                            THEN CURRENT_TIMESTAMP
+
+                            ELSE NULL
+
+                        END
+
+                WHERE
+                    id = $2
+                `,
+
+                [
+
+                    novoStatus,
+
+                    cobrancaId
+
+                ]
+
+            );
+
+
+            await client.query(
+                "COMMIT"
+            );
+
+
+            res.status(201).json({
+
+                sucesso: true,
+
+                mensagem:
+
+                    novoStatus === "quitado"
+
+                        ? "Cobrança quitada com sucesso!"
+
+                        : "Pagamento registrado com sucesso!",
+
+
+                pagamento:
+
+                    pagamentoResultado.rows[0],
+
+
+                valor_original:
+
+                    valorOriginal,
+
+
+                valor_pago_agora:
+
+                    valor,
+
+
+                total_pago:
+
+                    novoTotalPago,
+
+
+                saldo_restante:
+
+                    novoSaldo,
+
+
+                status:
+
+                    novoStatus
+
+            });
+
+        } catch (erro) {
+
+            if (client) {
+
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
+
+            }
+
+
+            console.error(
+
+                "Erro ao registrar pagamento:",
+
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+
+                    "Erro ao registrar pagamento"
+
+            });
+
+        } finally {
+
+            if (client) {
+
+                client.release();
+
+            }
+
+        }
+
+    }
+
+);
+
+// ==========================================
+// QUITAR COBRANÇA COMPLETAMENTE
+// ==========================================
+
+app.post(
+    "/cobrancas/:id/quitar",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        const cobrancaId =
+            Number(req.params.id);
+
+
+        if (
+            !Number.isInteger(cobrancaId) ||
+            cobrancaId <= 0
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Cobrança inválida"
+
+            });
+
+        }
+
+
+        let client;
+
+
+        try {
+
+            client =
+                await pool.connect();
+
+
+            await client.query(
+                "BEGIN"
+            );
+
+
+            // ==============================
+            // BUSCAR COBRANÇA
+            // ==============================
+
+            const resultado =
+                await client.query(
+
+                    `
+                    SELECT
+
+                        co.id,
+
+                        co.valor_original,
+
+                        co.juros_valor,
+
+                        co.status,
+
+
+                        COALESCE(
+                            SUM(pc.valor),
+                            0
+                        ) AS total_pago
+
+
+                    FROM cobrancas_financeiro co
+
+
+                    LEFT JOIN
+                    pagamentos_cobrancas_financeiro pc
+
+                    ON
+                        pc.cobranca_id = co.id
+
+
+                    WHERE
+
+                        co.id = $1
+
+                    AND
+
+                        co.usuario_id = $2
+
+
+                    GROUP BY
+
+                        co.id,
+
+                        co.valor_original,
+
+                        co.juros_valor,
+
+                        co.status
+                    `,
+
+                    [
+
+                        cobrancaId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cobrança não encontrada"
+
+                });
+
+            }
+
+
+            const cobranca =
+                resultado.rows[0];
+
+
+            if (
+                cobranca.status === "quitado"
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Esta cobrança já está quitada"
+
+                });
+
+            }
+
+
+            const valorOriginal =
+                Number(
+                    cobranca.valor_original
+                );
+
+
+            const juros =
+                Number(
+                    cobranca.juros_valor
+                ) || 0;
+
+
+            const totalPago =
+                Number(
+                    cobranca.total_pago
+                ) || 0;
+
+
+            const valorTotal =
+                valorOriginal +
+                juros;
+
+
+            const saldoRestante =
+                Math.max(
+
+                    valorTotal -
+                    totalPago,
+
+                    0
+
+                );
+
+
+            // ==============================
+            // REGISTRAR O VALOR RESTANTE
+            // ==============================
+
+            if (
+                saldoRestante > 0
+            ) {
+
+                await client.query(
+
+                    `
+                    INSERT INTO
+                    pagamentos_cobrancas_financeiro (
+
+                        cobranca_id,
+
+                        valor
+
+                    )
+
+                    VALUES (
+
+                        $1,
+
+                        $2
+
+                    )
+                    `,
+
+                    [
+
+                        cobrancaId,
+
+                        saldoRestante
+
+                    ]
+
+                );
+
+            }
+
+
+            // ==============================
+            // MARCAR COMO QUITADA
+            // ==============================
+
+            await client.query(
+
+                `
+                UPDATE cobrancas_financeiro
+
+                SET
+
+                    status = 'quitado',
+
+                    quitado_em =
+                        CURRENT_TIMESTAMP
+
+                WHERE
+                    id = $1
+                `,
+
+                [
+
+                    cobrancaId
+
+                ]
+
+            );
+
+
+            await client.query(
+                "COMMIT"
+            );
+
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+
+                    "Cobrança quitada com sucesso!",
+
+
+                valor_quitado:
+
+                    saldoRestante,
+
+
+                valor_total:
+
+                    valorTotal
+
+            });
+
+        } catch (erro) {
+
+            if (client) {
+
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
+
+            }
+
+
+            console.error(
+
+                "Erro ao quitar cobrança:",
+
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+
+                    "Erro ao quitar cobrança"
+
+            });
+
+        } finally {
+
+            if (client) {
+
+                client.release();
+
+            }
+
+        }
+
+    }
+
+);
+
+// ==========================================
+// HISTÓRICO DE UMA COBRANÇA
+// ==========================================
+
+app.get(
+    "/cobrancas/:id/pagamentos",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        const cobrancaId =
+            Number(req.params.id);
+
+
+        try {
+
+            // ==============================
+            // VERIFICAR COBRANÇA
+            // ==============================
+
+            const cobranca =
+                await pool.query(
+
+                    `
+                    SELECT id
+
+                    FROM cobrancas_financeiro
+
+                    WHERE
+
+                        id = $1
+
+                    AND
+
+                        usuario_id = $2
+                    `,
+
+                    [
+
+                        cobrancaId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+
+            if (
+                cobranca.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cobrança não encontrada"
+
+                });
+
+            }
+
+
+            // ==============================
+            // BUSCAR PAGAMENTOS
+            // ==============================
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    SELECT
+
+                        id,
+
+                        cobranca_id,
+
+                        valor,
+
+
+                        TO_CHAR(
+
+                            criado_em
+                            AT TIME ZONE
+                            'America/Maceio',
+
+                            'DD/MM/YYYY HH24:MI:SS'
+
+                        )
+                        AS data_formatada
+
+
+                    FROM
+                    pagamentos_cobrancas_financeiro
+
+
+                    WHERE
+
+                        cobranca_id = $1
+
+
+                    ORDER BY
+
+                        criado_em DESC
+                    `,
+
+                    [
+
+                        cobrancaId
+
+                    ]
+
+                );
+
+
+            res.json({
+
+                sucesso: true,
+
+                pagamentos:
+
+                    resultado.rows
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+
+                "Erro ao carregar histórico:",
+
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+
+                    "Erro ao carregar histórico"
+
+            });
+
+        }
+
+    }
+
+);
+
+// ==========================================
+// APLICAR JUROS NA COBRANÇA
+// ==========================================
+
+app.put(
+    "/cobrancas/:id/juros",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        const cobrancaId =
+            Number(req.params.id);
+
+
+        const percentual =
+            Number(req.body.percentual);
+
+
+        if (
+            !Number.isInteger(cobrancaId) ||
+            cobrancaId <= 0
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Cobrança inválida"
+
+            });
+
+        }
+
+
+        if (
+            Number.isNaN(percentual) ||
+            percentual < 0
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Percentual de juros inválido"
+
+            });
+
+        }
+
+
+        try {
+
+            // ==============================
+            // BUSCAR COBRANÇA
+            // ==============================
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    SELECT
+
+                        id,
+
+                        valor_original,
+
+                        status
+
+                    FROM
+                    cobrancas_financeiro
+
+                    WHERE
+
+                        id = $1
+
+                    AND
+
+                        usuario_id = $2
+                    `,
+
+                    [
+
+                        cobrancaId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cobrança não encontrada"
+
+                });
+
+            }
+
+
+            const cobranca =
+                resultado.rows[0];
+
+
+            if (
+                cobranca.status === "quitado"
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Não é possível aplicar juros em uma cobrança quitada"
+
+                });
+
+            }
+
+
+            const valorOriginal =
+                Number(
+                    cobranca.valor_original
+                );
+
+
+            // ==============================
+            // CALCULAR JUROS
+            // ==============================
+
+            const jurosValor =
+
+                valorOriginal *
+
+                (
+                    percentual / 100
+                );
+
+
+            // ==============================
+            // ATUALIZAR COBRANÇA
+            // ==============================
+
+            const atualizado =
+                await pool.query(
+
+                    `
+                    UPDATE
+                    cobrancas_financeiro
+
+                    SET
+
+                        juros_percentual = $1,
+
+                        juros_valor = $2
+
+                    WHERE
+
+                        id = $3
+
+                    RETURNING *
+                    `,
+
+                    [
+
+                        percentual,
+
+                        jurosValor,
+
+                        cobrancaId
+
+                    ]
+
+                );
+
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+
+                    "Juros aplicado com sucesso!",
+
+
+                cobranca:
+
+                    atualizado.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+
+                "Erro ao aplicar juros:",
+
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+
+                    "Erro ao aplicar juros"
+
+            });
+
+        }
+
+    }
+
+);
+
+// ==========================================
 // STATUS
 // ==========================================
 
