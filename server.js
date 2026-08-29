@@ -229,6 +229,81 @@ await pool.query(`
         `);
 
         // ----------------------------------
+// COBRANÇAS INDIVIDUAIS
+// ----------------------------------
+
+await pool.query(`
+    CREATE TABLE IF NOT EXISTS cobrancas_financeiro (
+
+        id SERIAL PRIMARY KEY,
+
+        cliente_id INTEGER NOT NULL,
+
+        usuario_id INTEGER NOT NULL,
+
+        data_cobranca DATE NOT NULL,
+
+        valor_original NUMERIC(12, 2)
+        NOT NULL,
+
+        juros_percentual NUMERIC(8, 2)
+        DEFAULT 0,
+
+        juros_valor NUMERIC(12, 2)
+        DEFAULT 0,
+
+        status VARCHAR(30)
+        NOT NULL DEFAULT 'pendente',
+
+        quitado_em TIMESTAMPTZ,
+
+        criado_em TIMESTAMPTZ
+        DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (cliente_id)
+        REFERENCES clientes_financeiro(id)
+        ON DELETE CASCADE,
+
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios_financeiro(id)
+        ON DELETE CASCADE
+    )
+`);
+
+// ----------------------------------
+// PAGAMENTOS DAS COBRANÇAS
+// ----------------------------------
+
+await pool.query(`
+    CREATE TABLE IF NOT EXISTS
+    pagamentos_cobrancas_financeiro (
+
+        id SERIAL PRIMARY KEY,
+
+        cobranca_id INTEGER NOT NULL,
+
+        valor NUMERIC(12, 2)
+        NOT NULL,
+
+        criado_em TIMESTAMPTZ
+        DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (cobranca_id)
+        REFERENCES cobrancas_financeiro(id)
+        ON DELETE CASCADE
+    )
+`);
+await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    cobranca_cliente_data_unica
+
+    ON cobrancas_financeiro (
+        cliente_id,
+        data_cobranca
+    )
+`);
+
+        // ----------------------------------
 // SEMANA DE REFERÊNCIA DO PAGAMENTO
 // ----------------------------------
 
@@ -270,6 +345,156 @@ await pool.query(`
 }
 
 criarTabelas();
+
+// ==========================================
+// GERAR COBRANÇAS DO DIA
+// ==========================================
+
+async function gerarCobrancasDoDia(
+    usuarioId
+) {
+
+    const agoraBrasil = new Date(
+        new Date().toLocaleString(
+            "en-US",
+            {
+                timeZone:
+                    "America/Maceio"
+            }
+        )
+    );
+
+
+    const ano =
+        agoraBrasil.getFullYear();
+
+
+    const mes =
+        String(
+            agoraBrasil.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const dia =
+        String(
+            agoraBrasil.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const dataHoje =
+        `${ano}-${mes}-${dia}`;
+
+
+    const diaSemana =
+        agoraBrasil.getDay();
+
+
+    // BUSCAR CLIENTES QUE PAGAM HOJE
+
+    const clientes =
+        await pool.query(
+
+            `
+            SELECT
+
+                id,
+
+                valor_semanal
+
+            FROM clientes_financeiro
+
+            WHERE
+
+                usuario_id = $1
+
+            AND
+
+                dia_pagamento = $2
+
+            `,
+
+            [
+
+                usuarioId,
+
+                diaSemana
+
+            ]
+
+        );
+
+
+    // CRIAR COBRANÇA PARA CADA CLIENTE
+
+    for (
+        const cliente of clientes.rows
+    ) {
+
+        await pool.query(
+
+            `
+            INSERT INTO
+            cobrancas_financeiro (
+
+                cliente_id,
+
+                usuario_id,
+
+                data_cobranca,
+
+                valor_original
+
+            )
+
+            VALUES (
+
+                $1,
+
+                $2,
+
+                $3,
+
+                $4
+
+            )
+
+            ON CONFLICT (
+
+                cliente_id,
+
+                data_cobranca
+
+            )
+
+            DO NOTHING
+            `,
+
+            [
+
+                cliente.id,
+
+                usuarioId,
+
+                dataHoje,
+
+                cliente.valor_semanal
+
+            ]
+
+        );
+
+    }
+
+
+    return dataHoje;
+
+}
 
 
 // ==========================================
@@ -2428,7 +2653,8 @@ app.get(
 );
 
 // ==========================================
-// FOLHA DE PAGAMENTOS SEMANAIS
+// FOLHA DE PAGAMENTOS
+// COBRANÇAS DO DIA + ATRASADAS
 // ==========================================
 
 app.get(
@@ -2440,71 +2666,20 @@ app.get(
 
         try {
 
-            // ==================================
-            // DIA ATUAL
-            // ==================================
+            // ==============================
+            // GERAR COBRANÇAS DE HOJE
+            // ==============================
 
-            const agoraBrasil = new Date(
-    new Date().toLocaleString(
-        "en-US",
-        {
-            timeZone: "America/Maceio"
-        }
-    )
-);
-
-const hoje = agoraBrasil;
-
-const diaAtual =
-    hoje.getDay();
-
-            // ==================================
-            // CALCULAR DOMINGO DA SEMANA
-            // ==================================
-
-            const domingo =
-                new Date(hoje);
-
-            domingo.setDate(
-                hoje.getDate() -
-                hoje.getDay()
-            );
-
-            domingo.setHours(
-                0,
-                0,
-                0,
-                0
-            );
-
-
-            const ano =
-                domingo.getFullYear();
-
-            const mes =
-                String(
-                    domingo.getMonth() + 1
-                ).padStart(
-                    2,
-                    "0"
-                );
-
-            const dia =
-                String(
-                    domingo.getDate()
-                ).padStart(
-                    2,
-                    "0"
+            const dataHoje =
+                await gerarCobrancasDoDia(
+                    req.usuario.id
                 );
 
 
-            const semanaReferencia =
-                `${ano}-${mes}-${dia}`;
-
-
-            // ==================================
-            // BUSCAR CLIENTES DO DIA
-            // ==================================
+            // ==============================
+            // BUSCAR TODAS AS COBRANÇAS
+            // PENDENTES E AS DO DIA
+            // ==============================
 
             const resultado =
                 await pool.query(
@@ -2512,7 +2687,24 @@ const diaAtual =
                     `
                     SELECT
 
-                        c.id,
+                        co.id
+                        AS cobranca_id,
+
+                        co.data_cobranca,
+
+                        co.valor_original,
+
+                        co.juros_percentual,
+
+                        co.juros_valor,
+
+                        co.status,
+
+                        co.quitado_em,
+
+
+                        c.id
+                        AS cliente_id,
 
                         c.nome,
 
@@ -2526,45 +2718,68 @@ const diaAtual =
 
 
                         COALESCE(
-                            SUM(p.valor),
+
+                            SUM(pc.valor),
+
                             0
-                        ) AS total_pago,
+
+                        )
+                        AS total_pago
 
 
-                        EXISTS (
-
-                            SELECT 1
-
-                            FROM pagamentos_financeiro ps
-
-                            WHERE
-                                ps.cliente_id = c.id
-
-                            AND
-                                ps.semana_referencia = $3
-
-                        ) AS pago_semana
+                    FROM cobrancas_financeiro co
 
 
-                    FROM clientes_financeiro c
-
-
-                    LEFT JOIN pagamentos_financeiro p
+                    INNER JOIN
+                    clientes_financeiro c
 
                     ON
-                        p.cliente_id = c.id
+
+                        c.id =
+                        co.cliente_id
+
+
+                    LEFT JOIN
+                    pagamentos_cobrancas_financeiro pc
+
+                    ON
+
+                        pc.cobranca_id =
+                        co.id
 
 
                     WHERE
 
-                        c.usuario_id = $1
+                        co.usuario_id = $1
 
-                    AND
 
-                        c.dia_pagamento = $2
+                    AND (
+
+                        co.status != 'quitado'
+
+                        OR
+
+                        co.data_cobranca = $2
+
+                    )
 
 
                     GROUP BY
+
+                        co.id,
+
+                        co.data_cobranca,
+
+                        co.valor_original,
+
+                        co.juros_percentual,
+
+                        co.juros_valor,
+
+                        co.status,
+
+                        co.quitado_em,
+
 
                         c.id,
 
@@ -2580,6 +2795,21 @@ const diaAtual =
 
 
                     ORDER BY
+
+                        CASE
+
+                            WHEN
+                            co.data_cobranca < $2
+                            THEN 0
+
+                            ELSE 1
+
+                        END,
+
+
+                        co.data_cobranca ASC,
+
+
                         c.nome ASC
                     `,
 
@@ -2587,52 +2817,110 @@ const diaAtual =
 
                         req.usuario.id,
 
-                        diaAtual,
-
-                        semanaReferencia
+                        dataHoje
 
                     ]
 
                 );
 
 
-            // ==================================
-            // CALCULAR SALDO
-            // ==================================
-
-            const pagamentos =
+            const cobrancas =
                 resultado.rows.map(
-                    (cliente) => {
+                    (item) => {
 
-                        const valorDevido =
+                        const valorOriginal =
                             Number(
-                                cliente.valor_devido
+                                item.valor_original
+                            ) || 0;
+
+
+                        const juros =
+                            Number(
+                                item.juros_valor
                             ) || 0;
 
 
                         const totalPago =
                             Number(
-                                cliente.total_pago
+                                item.total_pago
                             ) || 0;
+
+
+                        const valorTotal =
+                            valorOriginal +
+                            juros;
 
 
                         const saldoRestante =
                             Math.max(
-                                valorDevido -
+
+                                valorTotal -
                                 totalPago,
+
                                 0
+
                             );
+
+
+                        let status =
+                            item.status;
+
+
+                        if (
+                            saldoRestante <= 0
+                        ) {
+
+                            status =
+                                "quitado";
+
+                        } else if (
+                            totalPago > 0
+                        ) {
+
+                            status =
+                                "parcial";
+
+                        } else if (
+                            item.data_cobranca <
+                            dataHoje
+                        ) {
+
+                            status =
+                                "atrasado";
+
+                        } else {
+
+                            status =
+                                "pendente";
+
+                        }
 
 
                         return {
 
-                            ...cliente,
+                            ...item,
+
+                            valor_original:
+                                valorOriginal,
+
+                            total_pago:
+                                totalPago,
+
+                            juros:
+                                juros,
+
+                            valor_total:
+                                valorTotal,
 
                             saldo_restante:
                                 saldoRestante,
 
-                            pago_semana:
-                                cliente.pago_semana === true
+                            status,
+
+                            atrasada:
+
+                                item.data_cobranca <
+                                dataHoje
 
                         };
 
@@ -2640,25 +2928,43 @@ const diaAtual =
                 );
 
 
-            // ==================================
+            // ==============================
             // RESUMO
-            // ==================================
+            // ==============================
 
             const pendentes =
-                pagamentos.filter(
-                    (cliente) =>
+                cobrancas.filter(
 
-                        cliente.saldo_restante > 0 &&
+                    (cobranca) =>
 
-                        !cliente.pago_semana
+                        cobranca.status ===
+                        "pendente"
+
                 );
 
 
-            const pagos =
-                pagamentos.filter(
-                    (cliente) =>
+            const atrasados =
+                cobrancas.filter(
 
-                        cliente.pago_semana
+                    (cobranca) =>
+
+                        cobranca.status ===
+                        "atrasado" ||
+
+                        cobranca.status ===
+                        "parcial"
+
+                );
+
+
+            const quitados =
+                cobrancas.filter(
+
+                    (cobranca) =>
+
+                        cobranca.status ===
+                        "quitado"
+
                 );
 
 
@@ -2666,30 +2972,34 @@ const diaAtual =
 
                 sucesso: true,
 
-                dia_atual:
-                    diaAtual,
-
-                semana_referencia:
-                    semanaReferencia,
+                data_hoje:
+                    dataHoje,
 
                 total:
-                    pagamentos.length,
+                    cobrancas.length,
 
                 pendentes:
                     pendentes.length,
 
-                pagos:
-                    pagos.length,
+                atrasados:
+                    atrasados.length,
 
-                pagamentos
+                quitados:
+                    quitados.length,
+
+                pagamentos:
+                    cobrancas
 
             });
 
         } catch (erro) {
 
             console.error(
-                "Erro ao carregar pagamentos semanais:",
+
+                "Erro ao carregar folha:",
+
                 erro.message
+
             );
 
 
@@ -2698,6 +3008,7 @@ const diaAtual =
                 sucesso: false,
 
                 erro:
+
                     "Erro ao carregar folha de pagamentos"
 
             });
