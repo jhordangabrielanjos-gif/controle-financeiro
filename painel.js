@@ -1996,7 +1996,7 @@ async function carregarPagamentosSemanais() {
 
 
                     const jaPagou =
-                        cliente.pago_semana === true;
+    cliente.status === "quitado";
 
 
                     let statusHtml = "";
@@ -2056,18 +2056,18 @@ async function carregarPagamentosSemanais() {
 
                         botaoPagamento =
                             `
-                            <button
-                                class="btn-pagamento"
-                                onclick="abrirPagamento(
-    '${cliente.id}',
-    '${nomeParaBotao}'
-)"
-                            >
-                                💰 Registrar Pagamento
-                            </button>
-                            `;
+                         <button
+            class="btn-pagamento"
+            onclick="abrirPagamento(
+                ${Number(cliente.cliente_id)},
+                '${nomeParaBotao}'
+            )"
+        >
+            💰 Registrar Pagamento
+        </button>
+        `;
 
-                    }
+}   
 
 
                     return `
