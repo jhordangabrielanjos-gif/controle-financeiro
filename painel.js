@@ -140,38 +140,122 @@ document
                 document.getElementById(
                     "clienteDiaPagamento"
                 ).value;
+
+            const campoDocumento =
+                document.getElementById(
+                    "clienteDocumento"
+                );
+
+            // ==================================
+            // CRIAR FORM DATA
+            // ==================================
+
+            const formulario =
+                new FormData();
+
+            formulario.append(
+                "nome",
+                nome
+            );
+
+            formulario.append(
+                "cpf",
+                cpf
+            );
+
+            formulario.append(
+                "nascimento",
+                nascimento
+            );
+
+            formulario.append(
+                "endereco",
+                endereco
+            );
+
+            formulario.append(
+                "valor_devido",
+                valor_devido
+            );
+
+            formulario.append(
+                "valor_semanal",
+                valor_semanal
+            );
+
+            formulario.append(
+                "dia_pagamento",
+                dia_pagamento
+            );
+
+            // ==================================
+            // ADICIONAR FOTO
+            // ==================================
+
+            if (
+                campoDocumento &&
+                campoDocumento.files.length > 0
+            ) {
+
+                formulario.append(
+                    "documento",
+                    campoDocumento.files[0]
+                );
+
+            }
+
             try {
 
                 const resposta =
                     await fetch(
                         `${API_URL}/clientes`,
                         {
-                            method: "POST",
+
+                            method:
+                                "POST",
 
                             headers: {
-                                "Content-Type":
-                                    "application/json",
 
                                 "Authorization":
                                     `Bearer ${token}`
+
                             },
 
-                            body: JSON.stringify({
-                                nome,
-                                cpf,
-                                nascimento,
-                                endereco,
-                                valor_devido,
-                                valor_semanal,
-                                dia_pagamento
-                            })
+                            body:
+                                formulario
+
                         }
                     );
 
-                const dados =
-                    await resposta.json();
+                const texto =
+                    await resposta.text();
 
-                if (!dados.sucesso) {
+                let dados;
+
+                try {
+
+                    dados =
+                        JSON.parse(
+                            texto
+                        );
+
+                } catch {
+
+                    console.error(
+                        "Resposta do servidor:",
+                        texto
+                    );
+
+                    throw new Error(
+                        "O servidor não retornou uma resposta válida."
+                    );
+
+                }
+
+                if (
+                    !resposta.ok ||
+                    !dados.sucesso
+                ) {
 
                     alert(
                         dados.erro ||
@@ -179,10 +263,11 @@ document
                     );
 
                     return;
+
                 }
 
                 alert(
-                    "Cliente cadastrado!"
+                    "Cliente cadastrado com sucesso!"
                 );
 
                 document
@@ -191,13 +276,17 @@ document
                     )
                     .reset();
 
-                carregarClientes();
+                await carregarClientes();
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro cadastro:",
+                    erro
+                );
 
                 alert(
+                    erro.message ||
                     "Erro ao conectar ao servidor"
                 );
 
@@ -472,6 +561,23 @@ function mostrarClientes(clientes) {
                             <h3>
                                 ${cliente.nome || "Sem nome"}
                             </h3>
+
+${
+    cliente.possui_documento
+        ? `
+            <button
+                class="btn-documento"
+                onclick="verDocumento(${cliente.id})"
+            >
+                📷 Ver documento
+            </button>
+        `
+        : `
+            <p class="sem-documento">
+                📄 Sem documento
+            </p>
+        `
+}
 
                             <p>
                                 <strong>CPF:</strong>
@@ -2020,6 +2126,74 @@ async function carregarPagamentosSemanais() {
                 )}
             </p>
             `;
+
+    }
+
+}
+
+// ==========================================
+// VER DOCUMENTO
+// ==========================================
+
+async function verDocumento(clienteId) {
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/clientes/${clienteId}/documento`,
+                {
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+        if (!resposta.ok) {
+
+            const dados =
+                await resposta.json()
+                .catch(
+                    () => null
+                );
+
+            alert(
+                dados?.erro ||
+                "Não foi possível carregar o documento"
+            );
+
+            return;
+
+        }
+
+        const arquivo =
+            await resposta.blob();
+
+        const url =
+            URL.createObjectURL(
+                arquivo
+            );
+
+        window.open(
+            url,
+            "_blank"
+        );
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao abrir documento:",
+            erro
+        );
+
+        alert(
+            "Erro ao carregar documento"
+        );
 
     }
 
