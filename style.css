@@ -699,3 +699,39 @@ font-size: 13px;
     }
 
 }
+
+/* =========================================
+   COBRANÇA ATRASADA
+========================================= */
+
+.pagamento-atrasado {
+    border-left: 5px solid #e53935;
+}
+
+
+/* =========================================
+   STATUS ATRASADO
+========================================= */
+
+.status-atrasado {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    background: #ffe5e5;
+    color: #c62828;
+}
+
+
+/* =========================================
+   BOTÃO JUROS
+========================================= */
+
+.btn-juros {
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 8px;
+}
