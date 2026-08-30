@@ -303,7 +303,31 @@ await pool.query(`
     )
 `);
 
-        // ----------------------------------
+// ----------------------------------
+// PAGAMENTOS DA DÍVIDA TOTAL
+// ----------------------------------
+
+await pool.query(`
+    CREATE TABLE IF NOT EXISTS
+    pagamentos_divida_financeiro (
+
+        id SERIAL PRIMARY KEY,
+
+        cliente_id INTEGER NOT NULL,
+
+        valor NUMERIC(12, 2)
+        NOT NULL,
+
+        criado_em TIMESTAMPTZ
+        DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (cliente_id)
+        REFERENCES clientes_financeiro(id)
+        ON DELETE CASCADE
+    )
+`);
+
+  // ----------------------------------
 // SEMANA DE REFERÊNCIA DO PAGAMENTO
 // ----------------------------------
 
@@ -1922,6 +1946,45 @@ app.get(
 
                         UNION ALL
 
+UNION ALL
+
+
+/* =========================
+   QUITAÇÃO DA DÍVIDA TOTAL
+========================= */
+
+SELECT
+
+    pd.id
+    AS pagamento_id,
+
+    pd.valor,
+
+    'Quitação da dívida'
+    AS tipo,
+
+    NULL::INTEGER
+    AS cobranca_id,
+
+    TO_CHAR(
+
+        pd.criado_em
+        AT TIME ZONE
+        'America/Maceio',
+
+        'DD/MM/YYYY HH24:MI:SS'
+
+    )
+    AS data_formatada,
+
+    pd.criado_em
+
+FROM
+    pagamentos_divida_financeiro pd
+
+WHERE
+
+    pd.cliente_id = $1
 
                         /* =========================
                            PAGAMENTOS DE COBRANÇAS
@@ -4233,6 +4296,286 @@ app.put(
                     "Erro ao aplicar juros"
 
             });
+
+        }
+
+    }
+
+);
+
+// ==========================================
+// QUITAR DÍVIDA TOTAL DO CLIENTE
+// ==========================================
+
+app.post(
+    "/clientes/:id/quitar-divida",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        const clienteId =
+            Number(req.params.id);
+
+
+        if (
+
+            !Number.isInteger(clienteId) ||
+            clienteId <= 0
+
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Cliente inválido"
+
+            });
+
+        }
+
+
+        let client;
+
+
+        try {
+
+            client =
+                await pool.connect();
+
+
+            await client.query(
+                "BEGIN"
+            );
+
+
+            // ==============================
+            // BUSCAR CLIENTE
+            // ==============================
+
+            const resultadoCliente =
+                await client.query(
+
+                    `
+                    SELECT
+
+                        id,
+
+                        valor_devido
+
+                    FROM clientes_financeiro
+
+                    WHERE
+
+                        id = $1
+
+                    AND
+
+                        usuario_id = $2
+
+                    FOR UPDATE
+                    `,
+
+                    [
+
+                        clienteId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+
+            if (
+
+                resultadoCliente.rows.length === 0
+
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+
+            const cliente =
+                resultadoCliente.rows[0];
+
+
+            const valorDevido =
+                Number(
+                    cliente.valor_devido
+                ) || 0;
+
+
+            // ==============================
+            // VERIFICAR SE EXISTE DÍVIDA
+            // ==============================
+
+            if (
+
+                valorDevido <= 0
+
+            ) {
+
+                await client.query(
+                    "ROLLBACK"
+                );
+
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente não possui dívida pendente"
+
+                });
+
+            }
+
+
+            // ==============================
+            // REGISTRAR PAGAMENTO
+            // ==============================
+
+            const pagamento =
+                await client.query(
+
+                    `
+                    INSERT INTO
+                    pagamentos_divida_financeiro (
+
+                        cliente_id,
+
+                        valor
+
+                    )
+
+                    VALUES (
+
+                        $1,
+
+                        $2
+
+                    )
+
+                    RETURNING *
+                    `,
+
+                    [
+
+                        clienteId,
+
+                        valorDevido
+
+                    ]
+
+                );
+
+
+            // ==============================
+            // ZERAR A DÍVIDA
+            // ==============================
+
+            await client.query(
+
+                `
+                UPDATE clientes_financeiro
+
+                SET
+
+                    valor_devido = 0
+
+                WHERE
+
+                    id = $1
+                `,
+
+                [
+
+                    clienteId
+
+                ]
+
+            );
+
+
+            await client.query(
+                "COMMIT"
+            );
+
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+                    "Dívida quitada com sucesso!",
+
+                valor_quitado:
+                    valorDevido,
+
+                saldo_restante:
+                    0,
+
+                pagamento:
+                    pagamento.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            if (client) {
+
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
+
+            }
+
+
+            console.error(
+
+                "Erro ao quitar dívida:",
+
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao quitar dívida"
+
+            });
+
+        } finally {
+
+            if (client) {
+
+                client.release();
+
+            }
 
         }
 
