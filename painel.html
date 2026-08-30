@@ -916,6 +916,60 @@
 
     <script src="painel.js"></script>
 
+<!-- =========================================
+     MODAL PAGAMENTO DE COBRANÇA
+========================================= -->
+
+<div
+    id="modalPagamentoCobranca"
+    class="modal escondido"
+>
+
+    <div class="modal-conteudo">
+
+        <button
+            class="btn-fechar-modal"
+            onclick="fecharModalPagamentoCobranca()"
+        >
+            ✕
+        </button>
+
+        <h2>
+            💰 Registrar Pagamento
+        </h2>
+
+        <p
+            id="nomeClienteCobranca"
+        >
+        </p>
+
+        <p>
+            <strong>
+                Valor a pagar:
+            </strong>
+
+            <span
+                id="valorTotalCobranca"
+            >
+            </span>
+        </p>
+
+        <div
+            class="opcoes-pagamento"
+        >
+
+            <button
+                class="btn-pagamento"
+                onclick="pagarTudoCobranca()"
+            >
+                💰 Pagar tudo
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 </body>
 
