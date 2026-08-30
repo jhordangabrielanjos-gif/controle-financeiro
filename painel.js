@@ -4,6 +4,9 @@ let clienteAtual = null;
 let todosClientes = [];
 let filtroAtual = "todos";
 let dadosRelatorio = null;
+let cobrancaAtual = null;
+
+let valorCobrancaAtual = 0;
 
 // ==========================================
 // VERIFICAR LOGIN
@@ -2138,16 +2141,16 @@ async function carregarPagamentosSemanais() {
                         botoes =
                             `
 
-                            <button
-                                class="btn-pagamento"
-                                onclick="quitarCobranca(
-                                    ${Number(
-                                        cobranca.cobranca_id
-                                    )}
-                                )"
-                            >
-                                💰 Quitar
-                            </button>
+                           <button
+    class="btn-pagamento"
+    onclick="abrirModalPagamentoCobranca(
+        ${Number(cobranca.cobranca_id)},
+        '${String(cobranca.nome || "").replace(/'/g, "\\'")}',
+        ${saldoRestante}
+    )"
+>
+    💰 Pagar
+</button> 
 
 
                             <button
@@ -2558,6 +2561,191 @@ async function adicionarJuros(
     } catch (erro) {
 
         console.error(
+            erro
+        );
+
+
+        alert(
+            "Erro ao conectar ao servidor"
+        );
+
+    }
+
+}
+
+// ==========================================
+// ABRIR MODAL DE PAGAMENTO DA COBRANÇA
+// ==========================================
+
+function abrirModalPagamentoCobranca(
+    cobrancaId,
+    nome,
+    saldoRestante
+) {
+
+    cobrancaAtual =
+        Number(cobrancaId);
+
+    valorCobrancaAtual =
+        Number(saldoRestante) || 0;
+
+
+    const nomeCliente =
+        document.getElementById(
+            "nomeClienteCobranca"
+        );
+
+    const valorTotal =
+        document.getElementById(
+            "valorTotalCobranca"
+        );
+
+
+    if (nomeCliente) {
+
+        nomeCliente.textContent =
+            `Cliente: ${nome}`;
+
+    }
+
+
+    if (valorTotal) {
+
+        valorTotal.textContent =
+            formatarMoeda(
+                valorCobrancaAtual
+            );
+
+    }
+
+
+    document.getElementById(
+        "modalPagamentoCobranca"
+    ).classList.remove(
+        "escondido"
+    );
+
+}
+
+
+// ==========================================
+// FECHAR MODAL
+// ==========================================
+
+function fecharModalPagamentoCobranca() {
+
+    document.getElementById(
+        "modalPagamentoCobranca"
+    ).classList.add(
+        "escondido"
+    );
+
+
+    cobrancaAtual =
+        null;
+
+
+    valorCobrancaAtual =
+        0;
+
+}
+
+
+// ==========================================
+// PAGAR TUDO
+// ==========================================
+
+async function pagarTudoCobranca() {
+
+    if (
+        !cobrancaAtual ||
+        valorCobrancaAtual <= 0
+    ) {
+
+        alert(
+            "Cobrança inválida."
+        );
+
+        return;
+
+    }
+
+
+    const confirmar =
+        confirm(
+            `Confirmar pagamento de ${formatarMoeda(
+                valorCobrancaAtual
+            )}?`
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/cobrancas/${cobrancaAtual}/quitar`,
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao registrar pagamento"
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            `Pagamento realizado com sucesso!\n\nValor pago: ${formatarMoeda(
+                dados.valor_quitado
+            )}`
+        );
+
+
+        fecharModalPagamentoCobranca();
+
+
+        await carregarPagamentosSemanais();
+
+
+        await carregarClientes();
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao pagar cobrança:",
             erro
         );
 
