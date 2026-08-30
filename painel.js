@@ -1817,9 +1817,9 @@ function escaparHtml(texto) {
 
 }
 
-
 // ==========================================
 // CARREGAR PAGAMENTOS SEMANAIS
+// COBRANÇAS DO DIA + ATRASADAS
 // ==========================================
 
 async function carregarPagamentosSemanais() {
@@ -1833,10 +1833,8 @@ async function carregarPagamentosSemanais() {
         return;
     }
 
-
     lista.innerHTML =
         "<p>Carregando folha de pagamentos...</p>";
-
 
     try {
 
@@ -1851,27 +1849,23 @@ async function carregarPagamentosSemanais() {
                 }
             );
 
-
         const texto =
             await resposta.text();
 
-
         let dados;
-
 
         try {
 
             dados =
                 JSON.parse(texto);
 
-        } catch (erro) {
+        } catch {
 
             throw new Error(
                 "O servidor não retornou um JSON válido."
             );
 
         }
-
 
         if (
             !resposta.ok ||
@@ -1900,13 +1894,10 @@ async function carregarPagamentosSemanais() {
                 "tituloPagamentoSemanal"
             );
 
-
         if (titulo) {
 
             titulo.textContent =
-                `Pagamentos previstos para hoje — ${obterNomeDia(
-                    dados.dia_atual
-                )}`;
+                "Cobranças pendentes e atrasadas";
 
         }
 
@@ -1920,12 +1911,10 @@ async function carregarPagamentosSemanais() {
                 "totalPagamentosHoje"
             );
 
-
         const totalPendentes =
             document.getElementById(
                 "totalPendentesHoje"
             );
-
 
         const totalPagos =
             document.getElementById(
@@ -1944,7 +1933,8 @@ async function carregarPagamentosSemanais() {
         if (totalPendentes) {
 
             totalPendentes.textContent =
-                Number(dados.pendentes) || 0;
+                Number(dados.pendentes || 0) +
+                Number(dados.atrasados || 0);
 
         }
 
@@ -1952,13 +1942,13 @@ async function carregarPagamentosSemanais() {
         if (totalPagos) {
 
             totalPagos.textContent =
-                Number(dados.pagos) || 0;
+                Number(dados.quitados) || 0;
 
         }
 
 
         // ==================================
-        // SEM PAGAMENTOS
+        // SEM COBRANÇAS
         // ==================================
 
         if (
@@ -1971,8 +1961,7 @@ async function carregarPagamentosSemanais() {
             lista.innerHTML =
                 `
                 <p>
-                    🎉 Nenhum cliente possui pagamento
-                    previsto para hoje.
+                    🎉 Nenhuma cobrança pendente!
                 </p>
                 `;
 
@@ -1982,41 +1971,142 @@ async function carregarPagamentosSemanais() {
 
 
         // ==================================
+        // DATA DE HOJE
+        // ==================================
+
+        const hoje =
+            dados.data_hoje;
+
+
+        // ==================================
         // MONTAR LISTA
         // ==================================
 
         lista.innerHTML =
             dados.pagamentos.map(
-                (cliente) => {
+                (cobranca) => {
 
-                    const saldo =
+
+                    const valorOriginal =
                         Number(
-                            cliente.saldo_restante
+                            cobranca.valor_original
                         ) || 0;
 
 
-                    const jaPagou =
-    cliente.status === "quitado";
+                    const juros =
+                        Number(
+                            cobranca.juros
+                        ) || 0;
 
 
-                    let statusHtml = "";
+                    const valorTotal =
+                        Number(
+                            cobranca.valor_total
+                        ) || 0;
 
 
-                    if (saldo <= 0) {
+                    const saldoRestante =
+                        Number(
+                            cobranca.saldo_restante
+                        ) || 0;
+
+
+                    const totalPago =
+                        Number(
+                            cobranca.total_pago
+                        ) || 0;
+
+
+                    const dataCobranca =
+                        String(
+                            cobranca.data_cobranca
+                        ).split("T")[0];
+
+
+                    // ==========================
+                    // CALCULAR DIAS ATRASADOS
+                    // ==========================
+
+                    let diasAtrasados =
+                        0;
+
+
+                    if (
+                        dataCobranca < hoje
+                    ) {
+
+                        const dataInicio =
+                            new Date(
+                                `${dataCobranca}T00:00:00`
+                            );
+
+
+                        const dataFim =
+                            new Date(
+                                `${hoje}T00:00:00`
+                            );
+
+
+                        const diferenca =
+                            dataFim -
+                            dataInicio;
+
+
+                        diasAtrasados =
+                            Math.floor(
+                                diferenca /
+                                (1000 * 60 * 60 * 24)
+                            );
+
+                    }
+
+
+                    // ==========================
+                    // STATUS
+                    // ==========================
+
+                    let statusHtml =
+                        "";
+
+
+                    if (
+                        cobranca.status ===
+                        "quitado"
+                    ) {
 
                         statusHtml =
                             `
                             <span class="status-quitado">
-                                ✅ Quitado
+                                ✅ QUITADO
                             </span>
                             `;
 
-                    } else if (jaPagou) {
+                    } else if (
+                        cobranca.status ===
+                        "parcial"
+                    ) {
 
                         statusHtml =
                             `
-                            <span class="status-pago">
-                                ✅ Pago esta semana
+                            <span class="status-pendente">
+                                🟡 PAGAMENTO PARCIAL
+                            </span>
+                            `;
+
+                    } else if (
+                        dataCobranca < hoje
+                    ) {
+
+                        statusHtml =
+                            `
+                            <span class="status-atrasado">
+                                🔴 ATRASADO —
+                                ${diasAtrasados}
+                                dia${
+                                    diasAtrasados !== 1
+                                        ? "s"
+                                        : ""
+                                }
                             </span>
                             `;
 
@@ -2032,53 +2122,92 @@ async function carregarPagamentosSemanais() {
                     }
 
 
-                    // Evita quebrar o onclick
-                    const nome =
-                        String(
-                            cliente.nome || ""
-                        );
+                    // ==========================
+                    // BOTÕES
+                    // ==========================
 
-
-                    const nomeParaBotao =
-                        nome
-                            .replace(/\\/g, "\\\\")
-                            .replace(/'/g, "\\'");
-
-
-                    let botaoPagamento =
+                    let botoes =
                         "";
 
 
                     if (
-                        !jaPagou &&
-                        saldo > 0
+                        cobranca.status !==
+                        "quitado"
                     ) {
 
-                        botaoPagamento =
+                        botoes =
                             `
-                         <button
-            class="btn-pagamento"
-            onclick="abrirPagamento(
-                ${Number(cliente.cliente_id)},
-                '${nomeParaBotao}'
-            )"
-        >
-            💰 Registrar Pagamento
-        </button>
-        `;
 
-}   
+                            <button
+                                class="btn-pagamento"
+                                onclick="quitarCobranca(
+                                    ${Number(
+                                        cobranca.cobranca_id
+                                    )}
+                                )"
+                            >
+                                💰 Quitar
+                            </button>
 
+
+                            <button
+                                class="btn-juros"
+                                onclick="adicionarJuros(
+                                    ${Number(
+                                        cobranca.cobranca_id
+                                    )}
+                                )"
+                            >
+                                ➕ Juros
+                            </button>
+
+                            `;
+
+                    }
+
+
+                    // ==========================
+                    // RETORNAR HTML
+                    // ==========================
 
                     return `
 
-                        <div class="cliente-item pagamento-semanal-item">
+                        <div
+                            class="
+                                cliente-item
+                                pagamento-semanal-item
+                                ${
+                                    dataCobranca < hoje
+                                        ? "pagamento-atrasado"
+                                        : ""
+                                }
+                            "
+                        >
 
-                            <div class="cliente-informacoes">
+                            <div
+                                class="cliente-informacoes"
+                            >
 
                                 <h3>
-                                    ${escaparHtml(nome)}
+                                    ${escaparHtml(
+                                        cobranca.nome
+                                    )}
                                 </h3>
+
+
+                                <p>
+
+                                    📅
+
+                                    <strong>
+                                        Vencimento:
+                                    </strong>
+
+                                    ${formatarDataSimples(
+                                        dataCobranca
+                                    )}
+
+                                </p>
 
 
                                 <p>
@@ -2086,35 +2215,94 @@ async function carregarPagamentosSemanais() {
                                     💰
 
                                     <strong>
-                                        Valor semanal:
+                                        Valor original:
                                     </strong>
 
                                     ${formatarMoeda(
-                                        cliente.valor_semanal
+                                        valorOriginal
                                     )}
 
                                 </p>
 
 
-                               ${
-    saldo > 0
-        ? `
-            <p>
+                                ${
+                                    juros > 0
+                                        ? `
 
-                📉
+                                        <p>
 
-                <strong>
-                    Saldo restante:
-                </strong>
+                                            ⚠️
 
-                ${formatarMoeda(
-                    saldo
-                )}
+                                            <strong>
+                                                Juros:
+                                            </strong>
 
-            </p>
-        `
-        : ""
-} 
+                                            ${formatarMoeda(
+                                                juros
+                                            )}
+
+                                        </p>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                <p>
+
+                                    💵
+
+                                    <strong>
+                                        Valor total:
+                                    </strong>
+
+                                    <strong>
+                                        ${formatarMoeda(
+                                            valorTotal
+                                        )}
+                                    </strong>
+
+                                </p>
+
+
+                                ${
+                                    totalPago > 0
+                                        ? `
+
+                                        <p>
+
+                                            ✅
+
+                                            <strong>
+                                                Já pago:
+                                            </strong>
+
+                                            ${formatarMoeda(
+                                                totalPago
+                                            )}
+
+                                        </p>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                <p>
+
+                                    📉
+
+                                    <strong>
+                                        Falta pagar:
+                                    </strong>
+
+                                    <strong>
+                                        ${formatarMoeda(
+                                            saldoRestante
+                                        )}
+                                    </strong>
+
+                                </p>
 
 
                                 <p>
@@ -2126,9 +2314,11 @@ async function carregarPagamentosSemanais() {
                             </div>
 
 
-                            <div class="acoes-cliente">
+                            <div
+                                class="acoes-cliente"
+                            >
 
-                                ${botaoPagamento}
+                                ${botoes}
 
                             </div>
 
@@ -2144,20 +2334,237 @@ async function carregarPagamentosSemanais() {
     } catch (erro) {
 
         console.error(
-            "Erro ao carregar folha de pagamentos:",
+            "Erro ao carregar folha:",
             erro
         );
-
 
         lista.innerHTML =
             `
             <p>
-                Erro ao carregar folha de pagamentos:
+                Erro ao carregar folha:
                 ${escaparHtml(
                     erro.message
                 )}
             </p>
             `;
+
+    }
+
+}
+
+// ==========================================
+// QUITAR COBRANÇA
+// ==========================================
+
+async function quitarCobranca(
+    cobrancaId
+) {
+
+    const confirmar =
+        confirm(
+            "Deseja quitar completamente esta cobrança?"
+        );
+
+    if (!confirmar) {
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/cobrancas/${cobrancaId}/quitar`,
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao quitar cobrança"
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            `Cobrança quitada!\n\nValor pago: ${formatarMoeda(
+                dados.valor_quitado
+            )}`
+        );
+
+
+        await carregarPagamentosSemanais();
+
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        alert(
+            "Erro ao conectar ao servidor"
+        );
+
+    }
+
+}
+
+// ==========================================
+// ADICIONAR JUROS
+// ==========================================
+
+async function adicionarJuros(
+    cobrancaId
+) {
+
+    const percentual =
+        prompt(
+            "Digite a porcentagem de juros.\n\nExemplo: 10 para 10%"
+        );
+
+
+    if (
+        percentual === null
+    ) {
+
+        return;
+
+    }
+
+
+    const valor =
+        Number(
+            String(
+                percentual
+            )
+            .replace(
+                ",",
+                "."
+            )
+        );
+
+
+    if (
+        Number.isNaN(
+            valor
+        ) ||
+        valor < 0
+    ) {
+
+        alert(
+            "Digite uma porcentagem válida."
+        );
+
+        return;
+
+    }
+
+
+    const confirmar =
+        confirm(
+            `Aplicar ${valor}% de juros nesta cobrança?`
+        );
+
+
+    if (!confirmar) {
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/cobrancas/${cobrancaId}/juros`,
+                {
+
+                    method:
+                        "PUT",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            percentual:
+                                valor
+
+                        })
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao aplicar juros"
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            "Juros aplicado com sucesso!"
+        );
+
+
+        await carregarPagamentosSemanais();
+
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        alert(
+            "Erro ao conectar ao servidor"
+        );
 
     }
 
