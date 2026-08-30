@@ -910,12 +910,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-
-
-    <!-- JAVASCRIPT -->
-
-    <script src="painel.js"></script>
-
 <!-- =========================================
      MODAL PAGAMENTO DE COBRANÇA
 ========================================= -->
@@ -970,6 +964,67 @@
     </div>
 
 </div>
+
+<!-- =========================================
+     MODAL QUITAR DÍVIDA DO CLIENTE
+========================================= -->
+
+<div
+    id="modalQuitarDivida"
+    class="modal escondido"
+>
+
+    <div class="modal-conteudo">
+
+        <button
+            class="btn-fechar-modal"
+            onclick="fecharModalQuitarDivida()"
+        >
+            ✕
+        </button>
+
+
+        <h2>
+            💰 Quitar Dívida
+        </h2>
+
+
+        <p id="nomeClienteQuitarDivida">
+        </p>
+
+
+        <p>
+            <strong>
+                Valor total devido:
+            </strong>
+
+            <span id="valorDividaQuitar">
+                R$ 0,00
+            </span>
+        </p>
+
+
+        <p>
+            Ao confirmar, a dívida total será quitada
+            e o saldo restante ficará em R$ 0,00.
+        </p>
+
+
+        <button
+            class="btn-principal"
+            onclick="confirmarQuitarDivida()"
+        >
+            ✅ Confirmar Quitação
+        </button>
+
+
+    </div>
+
+</div>
+
+    <!-- JAVASCRIPT -->
+
+    <script src="painel.js"></script>
 
 </body>
 
