@@ -657,6 +657,13 @@ ${
                             </button>
 
                             <button
+    class="btn-quitar"
+    onclick="abrirModalQuitarDivida(${cliente.id})"
+>
+    ✅ Quitar dívida
+</button>
+
+                            <button
                                 class="btn-editar"
                                 onclick="abrirEditar(
                                     ${cliente.id}
@@ -2820,6 +2827,262 @@ async function verDocumento(clienteId) {
 
         alert(
             "Erro ao carregar documento"
+        );
+
+    }
+
+}
+
+// ==========================================
+// QUITAR DÍVIDA TOTAL DO CLIENTE
+// ==========================================
+
+let clienteQuitarDivida = null;
+
+
+// ==========================================
+// ABRIR MODAL QUITAR DÍVIDA
+// ==========================================
+
+function abrirModalQuitarDivida(clienteId) {
+
+    const cliente =
+        todosClientes.find(
+            (item) =>
+                Number(item.id) ===
+                Number(clienteId)
+        );
+
+    if (!cliente) {
+
+        alert(
+            "Cliente não encontrado."
+        );
+
+        return;
+
+    }
+
+
+    const saldoRestante =
+        Number(
+            cliente.saldo_restante
+        ) || 0;
+
+
+    if (saldoRestante <= 0) {
+
+        alert(
+            "Este cliente já está quitado."
+        );
+
+        return;
+
+    }
+
+
+    clienteQuitarDivida =
+        Number(clienteId);
+
+
+    document.getElementById(
+        "nomeClienteQuitarDivida"
+    ).textContent =
+        `Cliente: ${cliente.nome}`;
+
+
+    document.getElementById(
+        "valorDividaQuitar"
+    ).textContent =
+        formatarMoeda(
+            saldoRestante
+        );
+
+
+    document.getElementById(
+        "modalQuitarDivida"
+    ).classList.remove(
+        "escondido"
+    );
+
+}
+
+
+// ==========================================
+// FECHAR MODAL QUITAR DÍVIDA
+// ==========================================
+
+function fecharModalQuitarDivida() {
+
+    document.getElementById(
+        "modalQuitarDivida"
+    ).classList.add(
+        "escondido"
+    );
+
+
+    clienteQuitarDivida =
+        null;
+
+}
+
+
+// ==========================================
+// CONFIRMAR QUITAÇÃO TOTAL
+// ==========================================
+
+async function confirmarQuitarDivida() {
+
+    if (!clienteQuitarDivida) {
+
+        alert(
+            "Nenhum cliente selecionado."
+        );
+
+        return;
+
+    }
+
+
+    const cliente =
+        todosClientes.find(
+            (item) =>
+                Number(item.id) ===
+                Number(clienteQuitarDivida)
+        );
+
+
+    if (!cliente) {
+
+        alert(
+            "Cliente não encontrado."
+        );
+
+        return;
+
+    }
+
+
+    const saldoRestante =
+        Number(
+            cliente.saldo_restante
+        ) || 0;
+
+
+    if (saldoRestante <= 0) {
+
+        alert(
+            "Este cliente já está quitado."
+        );
+
+        fecharModalQuitarDivida();
+
+        return;
+
+    }
+
+
+    const confirmar =
+        confirm(
+            `Deseja realmente quitar toda a dívida de ${cliente.nome}?\n\n` +
+            `Valor a quitar: ${formatarMoeda(saldoRestante)}`
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/clientes/${clienteQuitarDivida}/quitar`,
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+
+        const texto =
+            await resposta.text();
+
+
+        let dados;
+
+
+        try {
+
+            dados =
+                JSON.parse(
+                    texto
+                );
+
+        } catch {
+
+            throw new Error(
+                "O servidor não retornou uma resposta válida."
+            );
+
+        }
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao quitar a dívida."
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            `✅ Dívida quitada com sucesso!\n\n` +
+            `Valor pago: ${formatarMoeda(
+                dados.valor_quitado ||
+                saldoRestante
+            )}`
+        );
+
+
+        fecharModalQuitarDivida();
+
+
+        await carregarClientes();
+
+        await carregarPagamentosSemanais();
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao quitar dívida:",
+            erro
+        );
+
+
+        alert(
+            erro.message ||
+            "Erro ao conectar ao servidor."
         );
 
     }
