@@ -1936,15 +1936,11 @@ app.get(
 
                             p.criado_em
 
-                        FROM
-                            pagamentos_financeiro p
+                       FROM pagamentos_financeiro p
 
-                        WHERE
+WHERE
+    p.cliente_id = $1
 
-                            p.cliente_id = $1
-
-
-                        UNION ALL
 
 UNION ALL
 
@@ -1986,68 +1982,74 @@ WHERE
 
     pd.cliente_id = $1
 
-                        /* =========================
-                           PAGAMENTOS DE COBRANÇAS
-                           INCLUINDO JUROS
-                        ========================= */
 
-                        SELECT
+UNION ALL
 
-                            pc.id
-                            AS pagamento_id,
 
-                            pc.valor,
+/* =========================
+   PAGAMENTOS DE COBRANÇAS
+   INCLUINDO JUROS
+========================= */
 
-                            CASE
+SELECT
 
-                                WHEN
-                                    co.juros_valor > 0
+    pc.id
+    AS pagamento_id,
 
-                                THEN
+    pc.valor,
 
-                                    'Pagamento de cobrança com juros'
+    CASE
 
-                                ELSE
+        WHEN
+            co.juros_valor > 0
 
-                                    'Pagamento de cobrança'
+        THEN
 
-                            END
-                            AS tipo,
+            'Pagamento de cobrança com juros'
 
-                            co.id
-                            AS cobranca_id,
+        ELSE
 
-                            TO_CHAR(
+            'Pagamento de cobrança'
 
-                                pc.criado_em
-                                AT TIME ZONE
-                                'America/Maceio',
+    END
+    AS tipo,
 
-                                'DD/MM/YYYY HH24:MI:SS'
+    co.id
+    AS cobranca_id,
 
-                            )
-                            AS data_formatada,
+    TO_CHAR(
 
-                            pc.criado_em
+        pc.criado_em
+        AT TIME ZONE
+        'America/Maceio',
 
-                        FROM
-                            pagamentos_cobrancas_financeiro pc
+        'DD/MM/YYYY HH24:MI:SS'
 
-                        INNER JOIN
-                            cobrancas_financeiro co
+    )
+    AS data_formatada,
 
-                        ON
+    pc.criado_em
 
-                            co.id =
-                            pc.cobranca_id
+FROM
+    pagamentos_cobrancas_financeiro pc
 
-                        WHERE
+INNER JOIN
+    cobrancas_financeiro co
 
-                            co.cliente_id = $1
+ON
 
-                        AND
+    co.id =
+    pc.cobranca_id
 
-                            co.usuario_id = $2
+WHERE
+
+    co.cliente_id = $1
+
+AND
+
+    co.usuario_id = $2 
+
+
 
                     ) AS historico
 
