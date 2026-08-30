@@ -4305,6 +4305,130 @@ app.put(
 
 );
 
+app.post(
+    "/clientes/:id/quitar",
+    verificarToken,
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(req.params.id);
+
+            // BUSCAR CLIENTE
+            const clienteResultado =
+                await pool.query(
+                    `
+                    SELECT
+                        id,
+                        valor_devido
+                    FROM clientes
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+                );
+
+            if (
+                clienteResultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Cliente não encontrado."
+                });
+
+            }
+
+            // CALCULAR TOTAL JÁ PAGO
+            const pagamentosResultado =
+                await pool.query(
+                    `
+                    SELECT
+                        COALESCE(
+                            SUM(valor),
+                            0
+                        ) AS total_pago
+                    FROM pagamentos
+                    WHERE cliente_id = $1
+                    `,
+                    [
+                        clienteId
+                    ]
+                );
+
+            const cliente =
+                clienteResultado.rows[0];
+
+            const totalPago =
+                Number(
+                    pagamentosResultado
+                        .rows[0]
+                        .total_pago
+                ) || 0;
+
+            const valorDevido =
+                Number(
+                    cliente.valor_devido
+                ) || 0;
+
+            const saldoRestante =
+                Math.max(
+                    0,
+                    valorDevido - totalPago
+                );
+
+            if (saldoRestante <= 0) {
+
+                return res.json({
+                    sucesso: false,
+                    erro: "Este cliente já está quitado."
+                });
+
+            }
+
+            // REGISTRAR O VALOR RESTANTE COMO PAGAMENTO
+            await pool.query(
+                `
+                INSERT INTO pagamentos (
+                    cliente_id,
+                    valor
+                )
+                VALUES ($1, $2)
+                `,
+                [
+                    clienteId,
+                    saldoRestante
+                ]
+            );
+
+            return res.json({
+                sucesso: true,
+                valor_quitado:
+                    saldoRestante
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "ERRO AO QUITAR DÍVIDA:",
+                erro
+            );
+
+            return res.status(500).json({
+                sucesso: false,
+                erro:
+                    "Erro ao quitar dívida."
+            });
+
+        }
+
+    }
+);
+
 // ==========================================
 // QUITAR DÍVIDA TOTAL DO CLIENTE
 // ==========================================
