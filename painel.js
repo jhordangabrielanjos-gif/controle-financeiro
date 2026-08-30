@@ -657,6 +657,13 @@ ${
                             </button>
 
                             <button
+    class="btn-localizacao"
+    onclick='abrirLocalizacao(${JSON.stringify(cliente.endereco || "")})'
+>
+    📍 Localização
+</button>
+
+                            <button
     class="btn-quitar"
     onclick="abrirModalQuitarDivida(${cliente.id})"
 >
@@ -3079,6 +3086,36 @@ async function confirmarQuitarDivida() {
         );
 
     }
+
+}
+
+function abrirLocalizacao(endereco) {
+
+    if (!endereco) {
+
+        alert(
+            "Este cliente não possui endereço cadastrado."
+        );
+
+        return;
+
+    }
+
+
+    const enderecoCodificado =
+        encodeURIComponent(
+            endereco
+        );
+
+
+    const url =
+        `https://www.google.com/maps/search/?api=1&query=${enderecoCodificado}`;
+
+
+    window.open(
+        url,
+        "_blank"
+    );
 
 }
 
