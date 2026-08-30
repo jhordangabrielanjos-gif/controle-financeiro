@@ -3000,21 +3000,14 @@ async function confirmarQuitarDivida() {
 
         const resposta =
             await fetch(
-                `${API_URL}/clientes/${clienteQuitarDivida}/quitar`,
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Authorization":
-                            `Bearer ${token}`
-
-                    }
-
-                }
-            );
+    `${API_URL}/clientes/${clienteQuitarDivida}/quitar-divida`,
+    {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    }
+)
 
 
         const texto =
