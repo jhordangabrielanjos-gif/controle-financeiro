@@ -1797,7 +1797,8 @@ const valorPagamento =
 );
 
 // ==========================================
-// HISTÓRICO DE PAGAMENTOS
+// HISTÓRICO COMPLETO DE PAGAMENTOS
+// SEMANAIS + COBRANÇAS + JUROS
 // ==========================================
 
 app.get(
@@ -1810,10 +1811,13 @@ app.get(
         try {
 
             const clienteId =
-                Number(
-                    req.params.id
-                );
+                Number(req.params.id);
 
+
+            // ==================================
+            // VERIFICAR SE O CLIENTE PERTENCE
+            // AO USUÁRIO LOGADO
+            // ==================================
 
             const clienteResultado =
                 await pool.query(
@@ -1824,30 +1828,22 @@ app.get(
                     FROM clientes_financeiro
 
                     WHERE
-
                         id = $1
 
                     AND
-
                         usuario_id = $2
                     `,
 
                     [
-
                         clienteId,
-
                         req.usuario.id
-
                     ]
 
                 );
 
 
             if (
-
-                clienteResultado
-                    .rows.length === 0
-
+                clienteResultado.rows.length === 0
             ) {
 
                 return res.status(404).json({
@@ -1862,45 +1858,172 @@ app.get(
             }
 
 
+            // ==================================
+            // BUSCAR TODOS OS PAGAMENTOS
+            // ==================================
+
             const resultado =
                 await pool.query(
 
                     `
                     SELECT
 
-                        id,
-
-                        cliente_id,
+                        pagamento_id AS id,
 
                         valor,
 
+                        tipo,
 
-                        TO_CHAR(
+                        cobranca_id,
 
-                            criado_em
-                            AT TIME ZONE
-                            'America/Maceio',
+                        data_formatada,
 
-                            'DD/MM/YYYY HH24:MI:SS'
+                        criado_em
 
-                        )
-                        AS data_formatada
+                    FROM (
+
+                        /* =========================
+                           PAGAMENTOS SEMANAIS
+                        ========================= */
+
+                        SELECT
+
+                            p.id
+                            AS pagamento_id,
+
+                            p.valor,
+
+                            'Pagamento semanal'
+                            AS tipo,
+
+                            NULL::INTEGER
+                            AS cobranca_id,
+
+                            TO_CHAR(
+
+                                p.criado_em
+                                AT TIME ZONE
+                                'America/Maceio',
+
+                                'DD/MM/YYYY HH24:MI:SS'
+
+                            )
+                            AS data_formatada,
+
+                            p.criado_em
+
+                        FROM
+                            pagamentos_financeiro p
+
+                        WHERE
+
+                            p.cliente_id = $1
 
 
-                    FROM pagamentos_financeiro
+                        UNION ALL
 
 
-                    WHERE
-                        cliente_id = $1
+                        /* =========================
+                           PAGAMENTOS DE COBRANÇAS
+                           INCLUINDO JUROS
+                        ========================= */
+
+                        SELECT
+
+                            pc.id
+                            AS pagamento_id,
+
+                            pc.valor,
+
+                            CASE
+
+                                WHEN
+                                    co.juros_valor > 0
+
+                                THEN
+
+                                    'Pagamento de cobrança com juros'
+
+                                ELSE
+
+                                    'Pagamento de cobrança'
+
+                            END
+                            AS tipo,
+
+                            co.id
+                            AS cobranca_id,
+
+                            TO_CHAR(
+
+                                pc.criado_em
+                                AT TIME ZONE
+                                'America/Maceio',
+
+                                'DD/MM/YYYY HH24:MI:SS'
+
+                            )
+                            AS data_formatada,
+
+                            pc.criado_em
+
+                        FROM
+                            pagamentos_cobrancas_financeiro pc
+
+                        INNER JOIN
+                            cobrancas_financeiro co
+
+                        ON
+
+                            co.id =
+                            pc.cobranca_id
+
+                        WHERE
+
+                            co.cliente_id = $1
+
+                        AND
+
+                            co.usuario_id = $2
+
+                    ) AS historico
 
 
                     ORDER BY
+
                         criado_em DESC
                     `,
 
                     [
-                        clienteId
+
+                        clienteId,
+
+                        req.usuario.id
+
                     ]
+
+                );
+
+
+            // ==================================
+            // CALCULAR TOTAL
+            // ==================================
+
+            const totalPago =
+                resultado.rows.reduce(
+
+                    (
+                        total,
+                        pagamento
+                    ) =>
+
+                        total +
+
+                        Number(
+                            pagamento.valor
+                        ),
+
+                    0
 
                 );
 
@@ -1908,6 +2031,12 @@ app.get(
             res.json({
 
                 sucesso: true,
+
+                total_pago:
+                    totalPago,
+
+                quantidade:
+                    resultado.rows.length,
 
                 pagamentos:
                     resultado.rows
@@ -1917,8 +2046,11 @@ app.get(
         } catch (erro) {
 
             console.error(
-                "Erro histórico:",
+
+                "Erro histórico completo:",
+
                 erro.message
+
             );
 
 
@@ -1936,7 +2068,6 @@ app.get(
     }
 
 );
-
 
 // ==========================================
 // EDITAR CLIENTE
