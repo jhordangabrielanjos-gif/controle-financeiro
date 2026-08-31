@@ -3174,6 +3174,11 @@ async function confirmarQuitarDivida() {
 
 function abrirLocalizacao(enderecoCliente) {
 
+    console.log(
+        "ENDEREÇO RECEBIDO:",
+        enderecoCliente
+    );
+
     if (!enderecoCliente) {
 
         alert(
@@ -3184,12 +3189,10 @@ function abrirLocalizacao(enderecoCliente) {
 
     }
 
-
     const endereco =
         encodeURIComponent(
             enderecoCliente.trim()
         );
-
 
     window.open(
         `https://www.google.com/maps/search/?api=1&query=${endereco}`,
