@@ -385,8 +385,12 @@ async function carregarClientes() {
 
         console.log(
     "CLIENTES RECEBIDOS:",
-    todosClientes
-);    
+    JSON.stringify(
+        todosClientes,
+        null,
+        2
+    )
+);
 
         atualizarDashboard(
             todosClientes
