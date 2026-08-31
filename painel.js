@@ -672,19 +672,21 @@ ${
             </p>
         `
 }
-    <strong>
-        📅 Pagamento semanal:
-    </strong>
 
-    ${formatarMoeda(
-        cliente.valor_semanal
-    )}
-</p>
+                            <p>
+                                <strong>
+                                    📅 Pagamento semanal:
+                                </strong>
 
-<p>
-    <strong>
-        📆 Dia:
-    </strong>
+                                ${formatarMoeda(
+                                    cliente.valor_semanal
+                                )}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    📆 Dia:
+                                </strong>
 
     ${formatarDiaPagamento(
         cliente.dia_pagamento
@@ -707,7 +709,7 @@ ${
 
                            <button
     class="btn-localizacao"
-    data-endereco="${cliente.endereco}"
+    onclick="abrirLocalizacaoPorId(${cliente.id})"
 >
     📍 Localização
 </button>
@@ -748,22 +750,7 @@ ${
         )
         .join("");
 
-        document.querySelectorAll(
-    ".btn-localizacao"
-).forEach((botao) => {
-
-    botao.addEventListener(
-        "click",
-        function () {
-
-            abrirLocalizacao(
-                this.dataset.endereco
-            );
-
-        }
-    );
-
-});
+    container.innerHTML = html;
 
 }
 
@@ -862,66 +849,72 @@ async function salvarEdicao(event) {
             "editarClienteId"
         ).value;
 
+
     const nome =
         document.getElementById(
             "editarClienteNome"
         ).value;
+
 
     const cpf =
         document.getElementById(
             "editarClienteCpf"
         ).value;
 
+
     const nascimento =
         document.getElementById(
             "editarClienteNascimento"
         ).value;
 
+
     const rua =
-    document.getElementById(
-        "clienteRua"
-    ).value;
+        document.getElementById(
+            "clienteRua"
+        ).value;
 
-const numero =
-    document.getElementById(
-        "clienteNumero"
-    ).value;
 
-const bairro =
-    document.getElementById(
-        "clienteBairro"
-    ).value;
+    const numero =
+        document.getElementById(
+            "clienteNumero"
+        ).value;
 
-const cidade =
-    document.getElementById(
-        "clienteCidade"
-    ).value;
 
-const estado =
-    document.getElementById(
-        "clienteEstado"
-    ).value;
+    const bairro =
+        document.getElementById(
+            "clienteBairro"
+        ).value;
 
-   const endereco =
-    `${rua.trim()}, ${numero.trim()} - ${bairro.trim()}, ${cidade.trim()} - ${estado.trim()}`; 
+
+    const cidade =
+        document.getElementById(
+            "clienteCidade"
+        ).value;
+
+
+    const estado =
+        document.getElementById(
+            "clienteEstado"
+        ).value;
+
 
     const valor_devido =
         document.getElementById(
             "editarClienteValor"
         ).value;
 
+
     const valor_semanal =
         document.getElementById(
             "editarClienteValorSemanal"
         ).value;
+
 
     const dia_pagamento =
         document.getElementById(
             "editarClienteDiaPagamento"
         ).value;
 
-     console.log("ENDEREÇO:", endereco);
-console.log("TIPO:", typeof endereco);   
 
     try {
 
@@ -929,31 +922,44 @@ console.log("TIPO:", typeof endereco);
             await fetch(
                 `${API_URL}/clientes/${clienteId}`,
                 {
+
                     method: "PUT",
 
                     headers: {
+
                         "Content-Type":
                             "application/json",
 
                         "Authorization":
                             `Bearer ${token}`
+
                     },
 
                     body: JSON.stringify({
+
                         nome,
                         cpf,
                         nascimento,
-                        endereco,
+
+                        rua,
+                        numero,
+                        bairro,
+                        cidade,
+                        estado,
+
                         valor_devido,
                         valor_semanal,
                         dia_pagamento
+
                     })
-                
+
                 }
             );
 
+
         const dados =
             await resposta.json();
+
 
         if (!dados.sucesso) {
 
@@ -963,15 +969,20 @@ console.log("TIPO:", typeof endereco);
             );
 
             return;
+
         }
+
 
         alert(
             "Cliente atualizado!"
         );
 
+
         fecharEditar();
 
+
         carregarClientes();
+
 
     } catch (erro) {
 
@@ -3181,17 +3192,26 @@ async function confirmarQuitarDivida() {
 
 }
 
-function abrirLocalizacao(enderecoCliente) {
+function abrirLocalizacao(cliente) {
 
-    console.log(
-        "ENDEREÇO RECEBIDO:",
-        enderecoCliente
-    );
+    const enderecoCompleto = [
 
-    if (!enderecoCliente) {
+        cliente?.rua?.trim(),
+
+        cliente?.numero?.trim(),
+
+        cliente?.bairro?.trim(),
+
+        cliente?.cidade?.trim()
+
+    ]
+        .filter(Boolean)
+        .join(", ");
+
+    if (!enderecoCompleto) {
 
         alert(
-            "Endereço não informado."
+            "Este cliente não possui endereço cadastrado."
         );
 
         return;
@@ -3200,13 +3220,39 @@ function abrirLocalizacao(enderecoCliente) {
 
     const endereco =
         encodeURIComponent(
-            enderecoCliente.trim()
+            enderecoCompleto
         );
 
     window.open(
+
         `https://www.google.com/maps/search/?api=1&query=${endereco}`,
+
         "_blank"
+
     );
+
+}
+
+
+function abrirLocalizacaoPorId(clienteId) {
+
+    const cliente =
+        todosClientes.find(
+            (cliente) =>
+                cliente.id === Number(clienteId)
+        );
+
+    if (!cliente) {
+
+        alert(
+            "Cliente não encontrado."
+        );
+
+        return;
+
+    }
+
+    abrirLocalizacao(cliente);
 
 }
 
