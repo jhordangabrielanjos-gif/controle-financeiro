@@ -959,6 +959,7 @@ const uploadDocumento = multer({
 // ==========================================
 
 app.post(
+
     "/clientes",
 
     verificarToken,
@@ -971,21 +972,26 @@ app.post(
 
             const {
 
-    nome,
-    cpf,
-    nascimento,
+                nome,
+                cpf,
+                nascimento,
 
-    rua,
-    numero,
-    bairro,
-    cidade,
-    estado,
+                rua,
+                numero,
+                bairro,
+                cidade,
+                estado,
 
-    valor_devido,
-    valor_semanal,
-    dia_pagamento
+                valor_devido,
+                valor_semanal,
+                dia_pagamento
 
-} = req.body;
+            } = req.body;
+
+
+            // ==================================
+            // VALIDAR CAMPOS
+            // ==================================
 
             if (
 
@@ -1018,21 +1024,20 @@ app.post(
 
 
             const valor =
-                Number(
-                    valor_devido
-                );
-
-                const valorSemanal =
-                Number(
-                      valor_semanal
-                );
+                Number(valor_devido);
 
 
-                const diaPagamento =
-                Number(
-                      dia_pagamento
-                );
+            const valorSemanal =
+                Number(valor_semanal);
 
+
+            const diaPagamento =
+                Number(dia_pagamento);
+
+
+            // ==================================
+            // VALIDAR VALOR DEVIDO
+            // ==================================
 
             if (
 
@@ -1052,53 +1057,83 @@ app.post(
 
             }
 
+
+            // ==================================
+            // VALIDAR VALOR SEMANAL
+            // ==================================
+
             if (
 
-    Number.isNaN(valorSemanal) ||
-    valorSemanal <= 0
+                Number.isNaN(valorSemanal) ||
+                valorSemanal <= 0
 
-) {
+            ) {
 
-    return res.status(400).json({
+                return res.status(400).json({
 
-        sucesso: false,
+                    sucesso: false,
 
-        erro:
-            "Valor semanal inválido"
+                    erro:
+                        "Valor semanal inválido"
 
-    });
+                });
 
-}
+            }
 
 
-if (
+            // ==================================
+            // VALIDAR DIA DE PAGAMENTO
+            // ==================================
 
-    !Number.isInteger(diaPagamento) ||
-    diaPagamento < 0 ||
-    diaPagamento > 6
+            if (
 
-) {
+                !Number.isInteger(diaPagamento) ||
+                diaPagamento < 0 ||
+                diaPagamento > 6
 
-    return res.status(400).json({
+            ) {
 
-        sucesso: false,
+                return res.status(400).json({
 
-        erro:
-            "Dia de pagamento inválido"
+                    sucesso: false,
 
-    });
+                    erro:
+                        "Dia de pagamento inválido"
 
-}
+                });
 
-const documentoFoto =
-    req.file
-        ? req.file.buffer
-        : null;
+            }
 
-const documentoTipo =
-    req.file
-        ? req.file.mimetype
-        : null;
+
+            // ==================================
+            // DOCUMENTO
+            // ==================================
+
+            const documentoFoto =
+                req.file
+                    ? req.file.buffer
+                    : null;
+
+
+            const documentoTipo =
+                req.file
+                    ? req.file.mimetype
+                    : null;
+
+
+            // ==================================
+            // ENDEREÇO COMPLETO
+            // ==================================
+
+            const enderecoCompleto =
+                `${rua.trim()}, ${numero.trim()} - ` +
+                `${bairro.trim()}, ${cidade.trim()} - ` +
+                `${estado.trim()}`;
+
+
+            // ==================================
+            // CADASTRAR CLIENTE
+            // ==================================
 
             const resultado =
                 await pool.query(
@@ -1122,6 +1157,7 @@ const documentoTipo =
                         valor_devido,
                         valor_semanal,
                         dia_pagamento,
+
                         documento_foto,
                         documento_tipo
 
@@ -1129,57 +1165,60 @@ const documentoTipo =
 
                     VALUES (
 
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9,
-    $10,
-    $11,
-    $12,
-    $13,
-    $14
+                        $1,
+                        $2,
+                        $3,
+                        $4,
+                        $5,
+                        $6,
+                        $7,
+                        $8,
+                        $9,
+                        $10,
+                        $11,
+                        $12,
+                        $13,
+                        $14,
+                        $15
 
-)
+                    )
 
                     RETURNING *
                     `,
 
                     [
 
-    req.usuario.id,
+                        req.usuario.id,
 
-    nome.trim(),
+                        nome.trim(),
 
-    cpf.trim(),
+                        cpf.trim(),
 
-    nascimento,
+                        nascimento,
 
-    `${rua.trim()}, ${numero.trim()} - ${bairro.trim()}, ${cidade.trim()}`,
+                        enderecoCompleto,
 
-    rua.trim(),
+                        rua.trim(),
 
-    numero.trim(),
+                        numero.trim(),
 
-    bairro.trim(),
+                        bairro.trim(),
 
-    cidade.trim(),
+                        cidade.trim(),
 
-    valor,
+                        estado.trim(),
 
-    valorSemanal,
+                        valor,
 
-    diaPagamento,
+                        valorSemanal,
 
-    documentoFoto,
+                        diaPagamento,
 
-    documentoTipo
+                        documentoFoto,
 
-]
+                        documentoTipo
+
+                    ]
 
                 );
 
@@ -1196,11 +1235,12 @@ const documentoTipo =
 
             });
 
+
         } catch (erro) {
 
             console.error(
                 "Erro ao cadastrar cliente:",
-                erro.message
+                erro
             );
 
 
