@@ -124,10 +124,30 @@ document
                     "clienteNascimento"
                 ).value;
 
-            const endereco =
-                document.getElementById(
-                    "clienteEndereco"
-                ).value;
+            const rua =
+    document.getElementById(
+        "clienteRua"
+    ).value;
+
+const numero =
+    document.getElementById(
+        "clienteNumero"
+    ).value;
+
+const bairro =
+    document.getElementById(
+        "clienteBairro"
+    ).value;
+
+const cidade =
+    document.getElementById(
+        "clienteCidade"
+    ).value;
+
+const estado =
+    document.getElementById(
+        "clienteEstado"
+    ).value;
 
             const valor_devido =
                 document.getElementById(
@@ -172,9 +192,29 @@ document
             );
 
             formulario.append(
-                "endereco",
-                endereco
-            );
+    "rua",
+    rua
+);
+
+formulario.append(
+    "numero",
+    numero
+);
+
+formulario.append(
+    "bairro",
+    bairro
+);
+
+formulario.append(
+    "cidade",
+    cidade
+);
+
+formulario.append(
+    "estado",
+    estado
+);
 
             formulario.append(
                 "valor_devido",
@@ -656,9 +696,9 @@ ${
                                 💰 Pagamento
                             </button>
 
-                            <button
+                           <button
     class="btn-localizacao"
-    onclick='abrirLocalizacao(${JSON.stringify(cliente.endereco || "")})'
+    onclick='abrirLocalizacao(${JSON.stringify(cliente)})'
 >
     📍 Localização
 </button>
@@ -811,10 +851,30 @@ async function salvarEdicao(event) {
             "editarClienteNascimento"
         ).value;
 
-    const endereco =
-        document.getElementById(
-            "editarClienteEndereco"
-        ).value;
+    const rua =
+    document.getElementById(
+        "clienteRua"
+    ).value;
+
+const numero =
+    document.getElementById(
+        "clienteNumero"
+    ).value;
+
+const bairro =
+    document.getElementById(
+        "clienteBairro"
+    ).value;
+
+const cidade =
+    document.getElementById(
+        "clienteCidade"
+    ).value;
+
+const estado =
+    document.getElementById(
+        "clienteEstado"
+    ).value;
 
     const valor_devido =
         document.getElementById(
@@ -3089,31 +3149,19 @@ async function confirmarQuitarDivida() {
 
 }
 
-function abrirLocalizacao(endereco) {
+function abrirLocalizacao(cliente) {
 
-    if (!endereco) {
+    const enderecoCompleto =
+        `${cliente.rua}, ${cliente.numero}, ` +
+        `${cliente.bairro}, ${cliente.cidade}`;
 
-        alert(
-            "Este cliente não possui endereço cadastrado."
-        );
-
-        return;
-
-    }
-
-
-    const enderecoCodificado =
+    const endereco =
         encodeURIComponent(
-            endereco
+            enderecoCompleto
         );
-
-
-    const url =
-        `https://www.google.com/maps/search/?api=1&query=${enderecoCodificado}`;
-
 
     window.open(
-        url,
+        `https://www.google.com/maps/search/?api=1&query=${endereco}`,
         "_blank"
     );
 
