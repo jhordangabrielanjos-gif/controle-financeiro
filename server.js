@@ -206,6 +206,30 @@ await pool.query(`
     INTEGER
 `);
 
+// ==========================================
+// CAMPOS SEPARADOS DO ENDEREÇO
+// ==========================================
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS rua TEXT
+`);
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS numero TEXT
+`);
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS bairro TEXT
+`);
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS cidade TEXT
+`);
+
         // ----------------------------------
         // PAGAMENTOS
         // ----------------------------------
@@ -942,23 +966,32 @@ app.post(
 
             const {
 
-                nome,
-                cpf,
-                nascimento,
-                endereco,
-                valor_devido,
-                valor_semanal,
-                dia_pagamento
+    nome,
+    cpf,
+    nascimento,
 
-            } = req.body;
+    rua,
+    numero,
+    bairro,
+    cidade,
 
+    valor_devido,
+    valor_semanal,
+    dia_pagamento
+
+} = req.body;
 
             if (
 
                 !nome ||
                 !cpf ||
                 !nascimento ||
-                !endereco ||
+
+                !rua ||
+                !numero ||
+                !bairro ||
+                !cidade ||
+
                 valor_devido === undefined ||
                 valor_semanal === undefined ||
                 dia_pagamento === undefined
@@ -1070,7 +1103,14 @@ const documentoTipo =
                         nome,
                         cpf,
                         nascimento,
+
                         endereco,
+
+                        rua,
+                        numero,
+                        bairro,
+                        cidade,
+
                         valor_devido,
                         valor_semanal,
                         dia_pagamento,
@@ -1081,45 +1121,57 @@ const documentoTipo =
 
                     VALUES (
 
-                        $1,
-                        $2,
-                        $3,
-                        $4,
-                        $5,
-                        $6,
-                        $7,
-                        $8,
-                        $9,
-                        $10
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13,
+    $14
 
-                    )
+)
 
                     RETURNING *
                     `,
 
                     [
 
-                        req.usuario.id,
+    req.usuario.id,
 
-                        nome.trim(),
+    nome.trim(),
 
-                        cpf.trim(),
+    cpf.trim(),
 
-                        nascimento,
+    nascimento,
 
-                        endereco.trim(),
+    `${rua.trim()}, ${numero.trim()} - ${bairro.trim()}, ${cidade.trim()}`,
 
-                        valor,
+    rua.trim(),
 
-                        valorSemanal,
+    numero.trim(),
 
-                        diaPagamento,
+    bairro.trim(),
 
-                        documentoFoto,
+    cidade.trim(),
 
-                        documentoTipo
+    valor,
 
-                    ]
+    valorSemanal,
+
+    diaPagamento,
+
+    documentoFoto,
+
+    documentoTipo
+
+]
 
                 );
 
@@ -1190,6 +1242,14 @@ const resultado =
 
             c.endereco,
 
+            c.rua,
+
+c.numero,
+
+c.bairro,
+
+c.cidade,
+
             c.valor_devido,
 
             c.valor_semanal,
@@ -1230,6 +1290,14 @@ const resultado =
             c.nascimento,
 
             c.endereco,
+
+            c.rua,
+
+c.numero,
+
+c.bairro,
+
+c.cidade,
 
             c.valor_devido,
 
