@@ -614,22 +614,22 @@ function mostrarClientes(clientes) {
                                 ${cliente.nome || "Sem nome"}
                             </h3>
 
-${
-    cliente.possui_documento
-        ? `
-            <button
-                class="btn-documento"
-                onclick="verDocumento(${cliente.id})"
-            >
-                📷 Ver documento
-            </button>
-        `
-        : `
-            <p class="sem-documento">
-                📄 Sem documento
-            </p>
-        `
-}
+                            ${
+                                cliente.possui_documento
+                                    ? `
+                                        <button
+                                            class="btn-documento"
+                                            onclick="verDocumento(${cliente.id})"
+                                        >
+                                            📷 Ver documento
+                                        </button>
+                                    `
+                                    : `
+                                        <p class="sem-documento">
+                                            📄 Sem documento
+                                        </p>
+                                    `
+                            }
 
                             <p>
                                 <strong>CPF:</strong>
@@ -638,9 +638,7 @@ ${
 
                             <p>
                                 🎂
-                                <strong>
-                                    Nascimento:
-                                </strong>
+                                <strong>Nascimento:</strong>
 
                                 ${
                                     cliente.nascimento
@@ -649,29 +647,31 @@ ${
                                         )
                                         : "Não informado"
                                 }
-                            ${
-    Number(cliente.saldo_restante) > 0
-        ? `
-            <p>
-                <strong>
-                    Saldo restante:
-                </strong>
+                            </p>
 
-                <strong>
-                    ${formatarMoeda(
-                        cliente.saldo_restante
-                    )}
-                </strong>
-            </p>
-        `
-        : `
-            <p>
-                <strong class="cliente-quitado">
-                    ✅ Cliente quitado
-                </strong>
-            </p>
-        `
-}
+                            ${
+                                Number(cliente.saldo_restante) > 0
+                                    ? `
+                                        <p>
+                                            <strong>
+                                                Saldo restante:
+                                            </strong>
+
+                                            <strong>
+                                                ${formatarMoeda(
+                                                    cliente.saldo_restante
+                                                )}
+                                            </strong>
+                                        </p>
+                                    `
+                                    : `
+                                        <p>
+                                            <strong class="cliente-quitado">
+                                                ✅ Cliente quitado
+                                            </strong>
+                                        </p>
+                                    `
+                            }
 
                             <p>
                                 <strong>
@@ -688,10 +688,10 @@ ${
                                     📆 Dia:
                                 </strong>
 
-    ${formatarDiaPagamento(
-        cliente.dia_pagamento
-    )}
-</p>
+                                ${formatarDiaPagamento(
+                                    cliente.dia_pagamento
+                                )}
+                            </p>
 
                         </div>
 
@@ -707,25 +707,23 @@ ${
                                 💰 Pagamento
                             </button>
 
-                           <button
-    class="btn-localizacao"
-    onclick="abrirLocalizacaoPorId(${cliente.id})"
->
-    📍 Localização
-</button>
+                            <button
+                                class="btn-localizacao"
+                                onclick="abrirLocalizacaoPorId(${cliente.id})"
+                            >
+                                📍 Localização
+                            </button>
 
                             <button
-    class="btn-quitar"
-    onclick="abrirModalQuitarDivida(${cliente.id})"
->
-    ✅ Quitar dívida
-</button>
+                                class="btn-quitar"
+                                onclick="abrirModalQuitarDivida(${cliente.id})"
+                            >
+                                ✅ Quitar dívida
+                            </button>
 
                             <button
                                 class="btn-editar"
-                                onclick="abrirEditar(
-                                    ${cliente.id}
-                                )"
+                                onclick="abrirEditar(${cliente.id})"
                             >
                                 ✏️ Editar
                             </button>
@@ -749,8 +747,6 @@ ${
             }
         )
         .join("");
-
-    container.innerHTML = html;
 
 }
 
