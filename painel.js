@@ -876,6 +876,14 @@ const estado =
         "clienteEstado"
     ).value;
 
+    const endereco = {
+    rua: rua.trim(),
+    numero: numero.trim(),
+    bairro: bairro.trim(),
+    cidade: cidade.trim(),
+    estado: estado.trim()
+};
+
     const valor_devido =
         document.getElementById(
             "editarClienteValor"
@@ -3151,9 +3159,13 @@ async function confirmarQuitarDivida() {
 
 function abrirLocalizacao(cliente) {
 
-    const enderecoCompleto =
-        `${cliente.rua}, ${cliente.numero}, ` +
-        `${cliente.bairro}, ${cliente.cidade}`;
+    const enderecoCompleto = [
+        cliente.rua?.trim() || "",
+        cliente.numero?.trim() || "",
+        cliente.bairro?.trim() || "",
+        cliente.cidade?.trim() || "",
+        cliente.estado?.trim() || ""
+    ].filter(Boolean).join(", ");
 
     const endereco =
         encodeURIComponent(
