@@ -805,11 +805,6 @@ function abrirEditar(clienteId) {
         );
 
     document.getElementById(
-        "editarClienteEndereco"
-    ).value =
-        cliente.endereco || "";
-
-    document.getElementById(
     "editarClienteRua"
 ).value =
     cliente.rua || "";
@@ -892,22 +887,26 @@ async function salvarEdicao(event) {
     const rua =
     document.getElementById(
         "editarClienteRua"
-    ).value;
+    ).value
+    .trim();
 
 const numero =
     document.getElementById(
         "editarClienteNumero"
-    ).value;
+    ).value
+    .trim();
 
 const bairro =
     document.getElementById(
         "editarClienteBairro"
-    ).value;
+    ).value
+    .trim();
 
 const cidade =
     document.getElementById(
         "editarClienteCidade"
-    ).value;
+    ).value
+    .trim();
 
 const estado =
     document.getElementById(
