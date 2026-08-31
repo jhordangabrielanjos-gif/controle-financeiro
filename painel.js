@@ -810,6 +810,31 @@ function abrirEditar(clienteId) {
         cliente.endereco || "";
 
     document.getElementById(
+    "editarClienteRua"
+).value =
+    cliente.rua || "";
+
+document.getElementById(
+    "editarClienteNumero"
+).value =
+    cliente.numero || "";
+
+document.getElementById(
+    "editarClienteBairro"
+).value =
+    cliente.bairro || "";
+
+document.getElementById(
+    "editarClienteCidade"
+).value =
+    cliente.cidade || "";
+
+document.getElementById(
+    "editarClienteEstado"
+).value =
+    cliente.estado || "";    
+
+    document.getElementById(
         "editarClienteValor"
     ).value =
         cliente.valor_devido || 0;
@@ -865,34 +890,29 @@ async function salvarEdicao(event) {
 
 
     const rua =
-        document.getElementById(
-            "clienteRua"
-        ).value;
+    document.getElementById(
+        "editarClienteRua"
+    ).value;
 
+const numero =
+    document.getElementById(
+        "editarClienteNumero"
+    ).value;
 
-    const numero =
-        document.getElementById(
-            "clienteNumero"
-        ).value;
+const bairro =
+    document.getElementById(
+        "editarClienteBairro"
+    ).value;
 
+const cidade =
+    document.getElementById(
+        "editarClienteCidade"
+    ).value;
 
-    const bairro =
-        document.getElementById(
-            "clienteBairro"
-        ).value;
-
-
-    const cidade =
-        document.getElementById(
-            "clienteCidade"
-        ).value;
-
-
-    const estado =
-        document.getElementById(
-            "clienteEstado"
-        ).value;
-
+const estado =
+    document.getElementById(
+        "editarClienteEstado"
+    ).value;
 
     const valor_devido =
         document.getElementById(
