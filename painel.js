@@ -383,6 +383,11 @@ async function carregarClientes() {
         todosClientes =
             dados.clientes || [];
 
+        console.log(
+    "CLIENTES RECEBIDOS:",
+    todosClientes
+);    
+
         atualizarDashboard(
             todosClientes
         );
