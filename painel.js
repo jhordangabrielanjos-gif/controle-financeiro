@@ -698,7 +698,7 @@ ${
 
                            <button
     class="btn-localizacao"
-    onclick='abrirLocalizacao(${JSON.stringify(cliente)})'
+    onclick="abrirLocalizacao('${cliente.endereco}')"
 >
     📍 Localização
 </button>
@@ -876,13 +876,8 @@ const estado =
         "clienteEstado"
     ).value;
 
-    const endereco = {
-    rua: rua.trim(),
-    numero: numero.trim(),
-    bairro: bairro.trim(),
-    cidade: cidade.trim(),
-    estado: estado.trim()
-};
+   const endereco =
+    `${rua.trim()}, ${numero.trim()} - ${bairro.trim()}, ${cidade.trim()} - ${estado.trim()}`; 
 
     const valor_devido =
         document.getElementById(
@@ -898,6 +893,9 @@ const estado =
         document.getElementById(
             "editarClienteDiaPagamento"
         ).value;
+
+     console.log("ENDEREÇO:", endereco);
+console.log("TIPO:", typeof endereco);   
 
     try {
 
@@ -3157,20 +3155,24 @@ async function confirmarQuitarDivida() {
 
 }
 
-function abrirLocalizacao(cliente) {
+function abrirLocalizacao(enderecoCliente) {
 
-    const enderecoCompleto = [
-        cliente.rua?.trim() || "",
-        cliente.numero?.trim() || "",
-        cliente.bairro?.trim() || "",
-        cliente.cidade?.trim() || "",
-        cliente.estado?.trim() || ""
-    ].filter(Boolean).join(", ");
+    if (!enderecoCliente) {
+
+        alert(
+            "Endereço não informado."
+        );
+
+        return;
+
+    }
+
 
     const endereco =
         encodeURIComponent(
-            enderecoCompleto
+            enderecoCliente.trim()
         );
+
 
     window.open(
         `https://www.google.com/maps/search/?api=1&query=${endereco}`,
