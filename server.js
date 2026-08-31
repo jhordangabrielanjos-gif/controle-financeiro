@@ -230,6 +230,11 @@ await pool.query(`
     ADD COLUMN IF NOT EXISTS cidade TEXT
 `);
 
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS estado TEXT
+`);
+
         // ----------------------------------
         // PAGAMENTOS
         // ----------------------------------
@@ -974,6 +979,7 @@ app.post(
     numero,
     bairro,
     cidade,
+    estado,
 
     valor_devido,
     valor_semanal,
@@ -991,6 +997,7 @@ app.post(
                 !numero ||
                 !bairro ||
                 !cidade ||
+                !estado ||
 
                 valor_devido === undefined ||
                 valor_semanal === undefined ||
@@ -1110,6 +1117,7 @@ const documentoTipo =
                         numero,
                         bairro,
                         cidade,
+                        estado,
 
                         valor_devido,
                         valor_semanal,
@@ -2216,21 +2224,21 @@ app.put(
         try {
 
             const clienteId =
-                Number(
-                    req.params.id
-                );
+                Number(req.params.id);
 
 
             const {
-
                 nome,
                 cpf,
                 nascimento,
-                endereco,
+                rua,
+                numero,
+                bairro,
+                cidade,
+                estado,
                 valor_devido,
                 valor_semanal,
                 dia_pagamento
-
             } = req.body;
 
 
@@ -2239,10 +2247,8 @@ app.put(
             // ==============================
 
             if (
-
                 !Number.isInteger(clienteId) ||
                 clienteId <= 0
-
             ) {
 
                 return res.status(400).json({
@@ -2266,7 +2272,13 @@ app.put(
                 !nome ||
                 !cpf ||
                 !nascimento ||
-                !endereco ||
+
+                !rua ||
+                !numero ||
+                !bairro ||
+                !cidade ||
+                !estado ||
+
                 valor_devido === undefined ||
                 valor_semanal === undefined ||
                 dia_pagamento === undefined
@@ -2286,21 +2298,15 @@ app.put(
 
 
             const valor =
-                Number(
-                    valor_devido
-                );
+                Number(valor_devido);
 
 
             const valorSemanal =
-                Number(
-                    valor_semanal
-                );
+                Number(valor_semanal);
 
 
             const diaPagamento =
-                Number(
-                    dia_pagamento
-                );
+                Number(dia_pagamento);
 
 
             // ==============================
@@ -2308,10 +2314,8 @@ app.put(
             // ==============================
 
             if (
-
                 Number.isNaN(valor) ||
                 valor < 0
-
             ) {
 
                 return res.status(400).json({
@@ -2327,10 +2331,8 @@ app.put(
 
 
             if (
-
                 Number.isNaN(valorSemanal) ||
                 valorSemanal <= 0
-
             ) {
 
                 return res.status(400).json({
@@ -2346,11 +2348,9 @@ app.put(
 
 
             if (
-
                 !Number.isInteger(diaPagamento) ||
                 diaPagamento < 0 ||
                 diaPagamento > 6
-
             ) {
 
                 return res.status(400).json({
@@ -2363,6 +2363,16 @@ app.put(
                 });
 
             }
+
+
+            // ==============================
+            // MONTAR ENDEREÇO COMPLETO
+            // ==============================
+
+            const enderecoCompleto =
+                `${rua.trim()}, ${numero.trim()} - ` +
+                `${bairro.trim()}, ${cidade.trim()} - ` +
+                `${estado.trim()}`;
 
 
             // ==============================
@@ -2385,19 +2395,29 @@ app.put(
 
                         endereco = $4,
 
-                        valor_devido = $5,
+                        rua = $5,
 
-                        valor_semanal = $6,
+                        numero = $6,
 
-                        dia_pagamento = $7
+                        bairro = $7,
+
+                        cidade = $8,
+
+                        estado = $9,
+
+                        valor_devido = $10,
+
+                        valor_semanal = $11,
+
+                        dia_pagamento = $12
 
                     WHERE
 
-                        id = $8
+                        id = $13
 
                     AND
 
-                        usuario_id = $9
+                        usuario_id = $14
 
                     RETURNING *
                     `,
@@ -2410,7 +2430,17 @@ app.put(
 
                         nascimento,
 
-                        endereco.trim(),
+                        enderecoCompleto,
+
+                        rua.trim(),
+
+                        numero.trim(),
+
+                        bairro.trim(),
+
+                        cidade.trim(),
+
+                        estado.trim(),
 
                         valor,
 
@@ -2428,9 +2458,7 @@ app.put(
 
 
             if (
-
                 resultado.rows.length === 0
-
             ) {
 
                 return res.status(404).json({
@@ -2479,7 +2507,6 @@ app.put(
     }
 
 );
-
 
 // ==========================================
 // EXCLUIR CLIENTE
@@ -4371,130 +4398,6 @@ app.put(
 
     }
 
-);
-
-app.post(
-    "/clientes/:id/quitar",
-    verificarToken,
-    async (req, res) => {
-
-        try {
-
-            const clienteId =
-                Number(req.params.id);
-
-            // BUSCAR CLIENTE
-            const clienteResultado =
-                await pool.query(
-                    `
-                    SELECT
-                        id,
-                        valor_devido
-                    FROM clientes
-                    WHERE id = $1
-                    AND usuario_id = $2
-                    `,
-                    [
-                        clienteId,
-                        req.usuario.id
-                    ]
-                );
-
-            if (
-                clienteResultado.rows.length === 0
-            ) {
-
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: "Cliente não encontrado."
-                });
-
-            }
-
-            // CALCULAR TOTAL JÁ PAGO
-            const pagamentosResultado =
-                await pool.query(
-                    `
-                    SELECT
-                        COALESCE(
-                            SUM(valor),
-                            0
-                        ) AS total_pago
-                    FROM pagamentos
-                    WHERE cliente_id = $1
-                    `,
-                    [
-                        clienteId
-                    ]
-                );
-
-            const cliente =
-                clienteResultado.rows[0];
-
-            const totalPago =
-                Number(
-                    pagamentosResultado
-                        .rows[0]
-                        .total_pago
-                ) || 0;
-
-            const valorDevido =
-                Number(
-                    cliente.valor_devido
-                ) || 0;
-
-            const saldoRestante =
-                Math.max(
-                    0,
-                    valorDevido - totalPago
-                );
-
-            if (saldoRestante <= 0) {
-
-                return res.json({
-                    sucesso: false,
-                    erro: "Este cliente já está quitado."
-                });
-
-            }
-
-            // REGISTRAR O VALOR RESTANTE COMO PAGAMENTO
-            await pool.query(
-                `
-                INSERT INTO pagamentos (
-                    cliente_id,
-                    valor
-                )
-                VALUES ($1, $2)
-                `,
-                [
-                    clienteId,
-                    saldoRestante
-                ]
-            );
-
-            return res.json({
-                sucesso: true,
-                valor_quitado:
-                    saldoRestante
-            });
-
-        } catch (erro) {
-
-            console.error(
-                "ERRO AO QUITAR DÍVIDA:",
-                erro
-            );
-
-            return res.status(500).json({
-                sucesso: false,
-                erro:
-                    "Erro ao quitar dívida."
-            });
-
-        }
-
-    }
 );
 
 // ==========================================
