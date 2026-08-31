@@ -698,7 +698,7 @@ ${
 
                            <button
     class="btn-localizacao"
-    onclick="abrirLocalizacao('${cliente.endereco}')"
+    data-endereco="${cliente.endereco}"
 >
     📍 Localização
 </button>
@@ -738,6 +738,23 @@ ${
             }
         )
         .join("");
+
+        document.querySelectorAll(
+    ".btn-localizacao"
+).forEach((botao) => {
+
+    botao.addEventListener(
+        "click",
+        function () {
+
+            abrirLocalizacao(
+                this.dataset.endereco
+            );
+
+        }
+    );
+
+});
 
 }
 
