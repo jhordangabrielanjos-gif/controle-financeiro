@@ -4227,9 +4227,8 @@ app.put(
             Number(req.params.id);
 
 
-        const percentual =
-            Number(req.body.percentual);
-
+        const jurosValor =
+    Number(req.body.juros_valor);
 
         if (
             !Number.isInteger(cobrancaId) ||
@@ -4249,21 +4248,20 @@ app.put(
 
 
         if (
-            Number.isNaN(percentual) ||
-            percentual < 0
-        ) {
+    Number.isNaN(jurosValor) ||
+    jurosValor < 0
+) {
 
-            return res.status(400).json({
+    return res.status(400).json({
 
-                sucesso: false,
+        sucesso: false,
 
-                erro:
-                    "Percentual de juros inválido"
+        erro:
+            "Valor do juros inválido"
 
-            });
+    });
 
-        }
-
+}
 
         try {
 
@@ -4342,23 +4340,6 @@ app.put(
             }
 
 
-            const valorOriginal =
-                Number(
-                    cobranca.valor_original
-                );
-
-
-            // ==============================
-            // CALCULAR JUROS
-            // ==============================
-
-            const jurosValor =
-
-                valorOriginal *
-
-                (
-                    percentual / 100
-                );
 
 
             // ==============================
@@ -4370,30 +4351,25 @@ app.put(
 
                     `
                     UPDATE
-                    cobrancas_financeiro
+cobrancas_financeiro
 
-                    SET
+SET
 
-                        juros_percentual = $1,
+    juros_percentual = 0,
 
-                        juros_valor = $2
+    juros_valor = $1
 
-                    WHERE
+WHERE
 
-                        id = $3
+    id = $2
 
-                    RETURNING *
+RETURNING *
                     `,
 
                     [
-
-                        percentual,
-
-                        jurosValor,
-
-                        cobrancaId
-
-                    ]
+    jurosValor,
+    cobrancaId
+]
 
                 );
 
