@@ -2570,21 +2570,21 @@ async function quitarCobranca(
 }
 
 // ==========================================
-// ADICIONAR JUROS
+// ADICIONAR JUROS EM VALOR FIXO
 // ==========================================
 
 async function adicionarJuros(
     cobrancaId
 ) {
 
-    const percentual =
+    const valorInformado =
         prompt(
-            "Digite a porcentagem de juros.\n\nExemplo: 10 para 10%"
+            "Digite o valor do juros em reais.\n\nExemplo: 5 para R$ 5,00"
         );
 
 
     if (
-        percentual === null
+        valorInformado === null
     ) {
 
         return;
@@ -2592,10 +2592,10 @@ async function adicionarJuros(
     }
 
 
-    const valor =
+    const jurosValor =
         Number(
             String(
-                percentual
+                valorInformado
             )
             .replace(
                 ",",
@@ -2606,13 +2606,13 @@ async function adicionarJuros(
 
     if (
         Number.isNaN(
-            valor
+            jurosValor
         ) ||
-        valor < 0
+        jurosValor < 0
     ) {
 
         alert(
-            "Digite uma porcentagem válida."
+            "Digite um valor de juros válido."
         );
 
         return;
@@ -2622,12 +2622,16 @@ async function adicionarJuros(
 
     const confirmar =
         confirm(
-            `Aplicar ${valor}% de juros nesta cobrança?`
+            `Aplicar ${formatarMoeda(
+                jurosValor
+            )} de juros nesta cobrança?`
         );
 
 
     if (!confirmar) {
+
         return;
+
     }
 
 
@@ -2635,7 +2639,9 @@ async function adicionarJuros(
 
         const resposta =
             await fetch(
+
                 `${API_URL}/cobrancas/${cobrancaId}/juros`,
+
                 {
 
                     method:
@@ -2654,12 +2660,13 @@ async function adicionarJuros(
                     body:
                         JSON.stringify({
 
-                            percentual:
-                                valor
+                            juros_valor:
+                                jurosValor
 
                         })
 
                 }
+
             );
 
 
@@ -2668,13 +2675,19 @@ async function adicionarJuros(
 
 
         if (
+
             !resposta.ok ||
+
             !dados.sucesso
+
         ) {
 
             alert(
+
                 dados.erro ||
+
                 "Erro ao aplicar juros"
+
             );
 
             return;
@@ -2683,7 +2696,11 @@ async function adicionarJuros(
 
 
         alert(
-            "Juros aplicado com sucesso!"
+
+            `Juros de ${formatarMoeda(
+                jurosValor
+            )} aplicado com sucesso!`
+
         );
 
 
