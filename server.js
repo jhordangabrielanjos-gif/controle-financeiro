@@ -1473,6 +1473,7 @@ c.cidade,
 // ==========================================
 
 app.get(
+
     "/clientes/:id/documento",
 
     verificarToken,
@@ -1486,32 +1487,30 @@ app.get(
                     req.params.id
                 );
 
+
             const resultado =
                 await pool.query(
 
                     `
                     SELECT
+
                         documento_foto,
                         documento_tipo
 
                     FROM clientes_financeiro
 
-                    WHERE
-                        id = $1
+                    WHERE id = $1
 
-                    AND
-                        usuario_id = $2
+                    AND usuario_id = $2
                     `,
 
                     [
-
                         clienteId,
-
                         req.usuario.id
-
                     ]
 
                 );
+
 
             if (
                 resultado.rows.length === 0
@@ -1528,8 +1527,10 @@ app.get(
 
             }
 
+
             const cliente =
                 resultado.rows[0];
+
 
             if (
                 !cliente.documento_foto
@@ -1546,24 +1547,64 @@ app.get(
 
             }
 
-            res.set(
+
+            // ==================================
+            // GARANTIR BUFFER DA IMAGEM
+            // ==================================
+
+            const imagem =
+                Buffer.from(
+                    cliente.documento_foto
+                );
+
+
+            // ==================================
+            // TIPO DA IMAGEM
+            // ==================================
+
+            const tipoImagem =
+                cliente.documento_tipo &&
+                cliente.documento_tipo.startsWith(
+                    "image/"
+                )
+
+                    ? cliente.documento_tipo
+
+                    : "image/jpeg";
+
+
+            res.setHeader(
                 "Content-Type",
-                cliente.documento_tipo ||
-                "image/jpeg"
+                tipoImagem
             );
 
-            res.send(
-                cliente.documento_foto
+
+            res.setHeader(
+                "Content-Disposition",
+                "inline"
             );
+
+
+            res.setHeader(
+                "Content-Length",
+                imagem.length
+            );
+
+
+            return res.send(
+                imagem
+            );
+
 
         } catch (erro) {
 
             console.error(
                 "Erro ao carregar documento:",
-                erro.message
+                erro
             );
 
-            res.status(500).json({
+
+            return res.status(500).json({
 
                 sucesso: false,
 
