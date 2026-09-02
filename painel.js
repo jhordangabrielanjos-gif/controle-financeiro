@@ -809,46 +809,30 @@ carregarFotosRosto(
 // VER FOTO DO ROSTO
 // ==========================================
 
-async function verFotoRosto(
-    clienteId
-) {
+async function verFotoRosto(clienteId) {
 
     try {
 
         const resposta =
             await fetch(
-
                 `${API_URL}/clientes/${clienteId}/foto`,
-
                 {
-
                     headers: {
-
-                        "Authorization":
+                        Authorization:
                             `Bearer ${token}`
-
                     }
-
                 }
-
             );
 
 
         if (!resposta.ok) {
 
-            const dados =
-                await resposta.json()
-                    .catch(
-                        () => null
-                    );
-
+            const erro =
+                await resposta.json();
 
             alert(
-
-                dados?.erro ||
-
-                "Não foi possível carregar a foto"
-
+                erro.erro ||
+                "Erro ao carregar foto"
             );
 
             return;
@@ -856,32 +840,51 @@ async function verFotoRosto(
         }
 
 
-        const arquivo =
+        const blob =
             await resposta.blob();
 
 
-        const url =
+        if (
+            !blob.type.startsWith(
+                "image/"
+            )
+        ) {
+
+            alert(
+                "O arquivo salvo não é uma imagem válida."
+            );
+
+            return;
+
+        }
+
+
+        const imagemURL =
             URL.createObjectURL(
-                arquivo
+                blob
             );
 
 
-        window.open(
-            url,
-            "_blank"
-        );
+        document.getElementById(
+            "imagemFotoRosto"
+        ).src =
+            imagemURL;
+
+
+        document.getElementById(
+            "modalFotoRosto"
+        ).style.display =
+            "flex";
 
 
     } catch (erro) {
 
         console.error(
-            "Erro ao abrir foto:",
             erro
         );
 
-
         alert(
-            "Erro ao carregar foto"
+            "Erro ao carregar foto."
         );
 
     }
@@ -3138,27 +3141,24 @@ async function verDocumento(clienteId) {
 
         const resposta =
             await fetch(
-
                 `${API_URL}/clientes/${clienteId}/documento`,
-
                 {
-
                     headers: {
-
-                        "Authorization":
+                        Authorization:
                             `Bearer ${token}`
-
                     }
-
                 }
-
             );
 
 
         if (!resposta.ok) {
 
+            const erro =
+                await resposta.json();
+
             alert(
-                "Não foi possível carregar o documento"
+                erro.erro ||
+                "Erro ao carregar documento"
             );
 
             return;
@@ -3166,28 +3166,20 @@ async function verDocumento(clienteId) {
         }
 
 
-        const arquivo =
+        const blob =
             await resposta.blob();
 
 
-        console.log(
-            "Tipo da imagem:",
-            arquivo.type
-        );
-
-
-        console.log(
-            "Tamanho da imagem:",
-            arquivo.size
-        );
-
+        // VERIFICAR SE É IMAGEM
 
         if (
-            arquivo.size === 0
+            !blob.type.startsWith(
+                "image/"
+            )
         ) {
 
             alert(
-                "A foto do documento está vazia."
+                "O arquivo salvo não é uma imagem válida."
             );
 
             return;
@@ -3195,9 +3187,17 @@ async function verDocumento(clienteId) {
         }
 
 
-        const url =
+        const imagemURL =
             URL.createObjectURL(
-                arquivo
+                blob
+            );
+
+
+        // ABRIR MODAL
+
+        const modal =
+            document.getElementById(
+                "modalDocumento"
             );
 
 
@@ -3207,51 +3207,35 @@ async function verDocumento(clienteId) {
             );
 
 
-        imagem.onload =
-            function () {
-
-                console.log(
-                    "Documento carregado!"
-                );
-
-            };
-
-
-        imagem.onerror =
-            function () {
-
-                console.error(
-                    "Erro ao interpretar a imagem"
-                );
-
-                alert(
-                    "O arquivo salvo não é uma imagem válida."
-                );
-
-            };
-
-
         imagem.src =
-            url;
+            imagemURL;
 
 
-        document.getElementById(
-            "modalDocumento"
-        ).classList.remove(
-            "escondido"
-        );
+        modal.style.display =
+            "flex";
+
+
+        // Liberar memória depois
+
+        imagem.onload =
+            () => {
+
+                URL.revokeObjectURL(
+                    imagemURL
+                );
+
+            };
 
 
     } catch (erro) {
 
         console.error(
-            "Erro ao abrir documento:",
+            "Erro ao visualizar documento:",
             erro
         );
 
-
         alert(
-            "Erro ao carregar documento"
+            "Erro ao carregar documento."
         );
 
     }
