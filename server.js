@@ -964,6 +964,36 @@ const uploadDocumento = multer({
         fileSize:
             10 * 1024 * 1024
 
+    },
+
+    fileFilter: (
+        req,
+        file,
+        cb
+    ) => {
+
+        if (
+            file.mimetype &&
+            file.mimetype.startsWith(
+                "image/"
+            )
+        ) {
+
+            cb(
+                null,
+                true
+            );
+
+        } else {
+
+            cb(
+                new Error(
+                    "Apenas imagens são permitidas"
+                )
+            );
+
+        }
+
     }
 
 });
