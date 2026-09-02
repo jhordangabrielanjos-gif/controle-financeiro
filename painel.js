@@ -871,10 +871,17 @@ async function verFotoRosto(clienteId) {
             imagemURL;
 
 
-        document.getElementById(
-            "modalFotoRosto"
-        ).style.display =
-            "flex";
+        const modal =
+    document.getElementById(
+        "modalFotoRosto"
+    );
+
+modal.classList.remove(
+    "escondido"
+);
+
+modal.style.display =
+    "flex";
 
 
     } catch (erro) {
@@ -3211,9 +3218,12 @@ async function verDocumento(clienteId) {
             imagemURL;
 
 
-        modal.style.display =
-            "flex";
+        modal.classList.remove(
+    "escondido"
+);
 
+modal.style.display =
+    "flex";
 
         // Liberar memória depois
 
@@ -3253,25 +3263,60 @@ function fecharDocumento() {
             "imagemDocumento"
         );
 
-
-    if (imagem) {
-
-        URL.revokeObjectURL(
-            imagem.src
+    const modal =
+        document.getElementById(
+            "modalDocumento"
         );
 
+    if (imagem) {
 
         imagem.src =
             "";
 
     }
 
+    if (modal) {
 
-    document.getElementById(
-        "modalDocumento"
-    ).classList.add(
-        "escondido"
-    );
+        modal.style.display =
+            "none";
+
+        modal.classList.add(
+            "escondido"
+        );
+
+    }
+
+}
+
+function fecharFotoRosto() {
+
+    const imagem =
+        document.getElementById(
+            "imagemFotoRosto"
+        );
+
+    const modal =
+        document.getElementById(
+            "modalFotoRosto"
+        );
+
+    if (imagem) {
+
+        imagem.src =
+            "";
+
+    }
+
+    if (modal) {
+
+        modal.style.display =
+            "none";
+
+        modal.classList.add(
+            "escondido"
+        );
+
+    }
 
 }
 
