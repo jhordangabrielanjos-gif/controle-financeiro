@@ -3160,8 +3160,14 @@ async function verDocumento(clienteId) {
 
         if (!resposta.ok) {
 
-            const erro =
-                await resposta.json();
+            let erro = {};
+
+            try {
+                erro = await resposta.json();
+            } catch {
+                erro.erro =
+                    "Erro ao carregar documento";
+            }
 
             alert(
                 erro.erro ||
@@ -3177,16 +3183,69 @@ async function verDocumento(clienteId) {
             await resposta.blob();
 
 
-        // VERIFICAR SE É IMAGEM
+        const tipoArquivo =
+            blob.type ||
+            resposta.headers.get(
+                "content-type"
+            ) ||
+            "";
+
+
+        const arquivoURL =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        // ==================================
+        // SE FOR IMAGEM
+        // JPG, JPEG, PNG, WEBP, ETC.
+        // ==================================
 
         if (
-            !blob.type.startsWith(
+            tipoArquivo.startsWith(
                 "image/"
             )
         ) {
 
-            alert(
-                "O arquivo salvo não é uma imagem válida."
+            const modal =
+                document.getElementById(
+                    "modalDocumento"
+                );
+
+
+            const imagem =
+                document.getElementById(
+                    "imagemDocumento"
+                );
+
+
+            imagem.src =
+                arquivoURL;
+
+
+            modal.style.display =
+                "flex";
+
+
+            return;
+
+        }
+
+
+        // ==================================
+        // SE FOR PDF
+        // ==================================
+
+        if (
+            tipoArquivo.includes(
+                "application/pdf"
+            )
+        ) {
+
+            window.open(
+                arquivoURL,
+                "_blank"
             );
 
             return;
@@ -3194,47 +3253,14 @@ async function verDocumento(clienteId) {
         }
 
 
-        const imagemURL =
-            URL.createObjectURL(
-                blob
-            );
+        // ==================================
+        // OUTROS FORMATOS
+        // ==================================
 
-
-        // ABRIR MODAL
-
-        const modal =
-            document.getElementById(
-                "modalDocumento"
-            );
-
-
-        const imagem =
-            document.getElementById(
-                "imagemDocumento"
-            );
-
-
-        imagem.src =
-            imagemURL;
-
-
-        modal.classList.remove(
-    "escondido"
-);
-
-modal.style.display =
-    "flex";
-
-        // Liberar memória depois
-
-        imagem.onload =
-            () => {
-
-                URL.revokeObjectURL(
-                    imagemURL
-                );
-
-            };
+        window.open(
+            arquivoURL,
+            "_blank"
+        );
 
 
     } catch (erro) {
