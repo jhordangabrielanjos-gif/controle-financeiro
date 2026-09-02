@@ -180,6 +180,20 @@ await pool.query(`
     ADD COLUMN IF NOT EXISTS documento_tipo TEXT
 `);
 
+// ==========================================
+// FOTO DO ROSTO DO CLIENTE
+// ==========================================
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS foto_rosto BYTEA
+`);
+
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS foto_rosto_tipo TEXT
+`);
+
 
         // ----------------------------------
         // REMOVER VENCIMENTO SE EXISTIR
@@ -964,7 +978,16 @@ app.post(
 
     verificarToken,
 
-    uploadDocumento.single("documento"),
+    uploadDocumento.fields([
+    {
+        name: "documento",
+        maxCount: 1
+    },
+    {
+        name: "foto_rosto",
+        maxCount: 1
+    }
+]),
 
     async (req, res) => {
 
@@ -1106,19 +1129,49 @@ app.post(
 
 
             // ==================================
-            // DOCUMENTO
-            // ==================================
+// DOCUMENTO
+// ==================================
 
-            const documentoFoto =
-                req.file
-                    ? req.file.buffer
-                    : null;
+const arquivoDocumento =
+    req.files &&
+    req.files.documento
+        ? req.files.documento[0]
+        : null;
 
 
-            const documentoTipo =
-                req.file
-                    ? req.file.mimetype
-                    : null;
+const documentoFoto =
+    arquivoDocumento
+        ? arquivoDocumento.buffer
+        : null;
+
+
+const documentoTipo =
+    arquivoDocumento
+        ? arquivoDocumento.mimetype
+        : null;
+
+
+// ==================================
+// FOTO DO ROSTO
+// ==================================
+
+const arquivoFotoRosto =
+    req.files &&
+    req.files.foto_rosto
+        ? req.files.foto_rosto[0]
+        : null;
+
+
+const fotoRosto =
+    arquivoFotoRosto
+        ? arquivoFotoRosto.buffer
+        : null;
+
+
+const fotoRostoTipo =
+    arquivoFotoRosto
+        ? arquivoFotoRosto.mimetype
+        : null;
 
 
             // ==================================
@@ -1159,8 +1212,10 @@ app.post(
                         dia_pagamento,
 
                         documento_foto,
-                        documento_tipo
+documento_tipo,
 
+foto_rosto,
+foto_rosto_tipo
                     )
 
                     VALUES (
@@ -1179,7 +1234,9 @@ app.post(
                         $12,
                         $13,
                         $14,
-                        $15
+                        $15,
+                        $16,
+                        $17
 
                     )
 
@@ -1216,7 +1273,11 @@ app.post(
 
                         documentoFoto,
 
-                        documentoTipo
+                        documentoTipo,
+
+                        fotoRosto,
+
+                        fotoRostoTipo
 
                     ]
 
@@ -1284,6 +1345,9 @@ const resultado =
             c.documento_foto IS NOT NULL
             AS possui_documento,
 
+c.foto_rosto IS NOT NULL
+AS possui_foto_rosto,
+
             c.cpf,
 
             c.nascimento,
@@ -1332,6 +1396,12 @@ c.cidade,
             c.nome,
 
             c.documento_foto,
+
+            c.documento_tipo,
+
+            c.foto_rosto,
+
+            c.foto_rosto_tipo,
 
             c.cpf,
 
@@ -1499,6 +1569,128 @@ app.get(
 
                 erro:
                     "Erro ao carregar documento"
+
+            });
+
+        }
+
+    }
+
+);
+
+// ==========================================
+// VER FOTO DO ROSTO
+// ==========================================
+
+app.get(
+
+    "/clientes/:id/foto",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(
+                    req.params.id
+                );
+
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    SELECT
+
+                        foto_rosto,
+                        foto_rosto_tipo
+
+                    FROM clientes_financeiro
+
+                    WHERE
+
+                        id = $1
+
+                    AND
+
+                        usuario_id = $2
+                    `,
+
+                    [
+
+                        clienteId,
+
+                        req.usuario.id
+
+                    ]
+
+                );
+
+
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+
+            const cliente =
+                resultado.rows[0];
+
+
+            if (
+                !cliente.foto_rosto
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente não possui foto"
+
+                });
+
+            }
+
+
+            res.set(
+                "Content-Type",
+                cliente.foto_rosto_tipo ||
+                "image/jpeg"
+            );
+
+
+            res.send(
+                cliente.foto_rosto
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar foto:",
+                erro.message
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar foto"
 
             });
 
