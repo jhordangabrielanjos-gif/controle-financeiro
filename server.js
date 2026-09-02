@@ -1513,9 +1513,7 @@ app.get(
         try {
 
             const clienteId =
-                Number(
-                    req.params.id
-                );
+                Number(req.params.id);
 
 
             const resultado =
@@ -1535,8 +1533,11 @@ app.get(
                     `,
 
                     [
+
                         clienteId,
+
                         req.usuario.id
+
                     ]
 
                 );
@@ -1578,29 +1579,22 @@ app.get(
             }
 
 
-            // ==================================
-            // GARANTIR BUFFER DA IMAGEM
-            // ==================================
-
             const imagem =
                 Buffer.from(
                     cliente.documento_foto
                 );
 
 
-            // ==================================
-            // TIPO DA IMAGEM
-            // ==================================
-
+            // NÃO FORÇAR JPEG
             const tipoImagem =
-                cliente.documento_tipo &&
-                cliente.documento_tipo.startsWith(
-                    "image/"
-                )
+                cliente.documento_tipo ||
+                "application/octet-stream";
 
-                    ? cliente.documento_tipo
 
-                    : "image/jpeg";
+            console.log(
+                "Tipo do documento:",
+                tipoImagem
+            );
 
 
             res.setHeader(
@@ -1610,18 +1604,18 @@ app.get(
 
 
             res.setHeader(
-                "Content-Disposition",
-                "inline"
-            );
-
-
-            res.setHeader(
                 "Content-Length",
                 imagem.length
             );
 
 
-            return res.send(
+            res.setHeader(
+                "Content-Disposition",
+                "inline"
+            );
+
+
+            return res.end(
                 imagem
             );
 
@@ -1736,16 +1730,38 @@ app.get(
             }
 
 
-            res.set(
-                "Content-Type",
-                cliente.foto_rosto_tipo ||
-                "image/jpeg"
-            );
+            const imagem =
+    Buffer.from(
+        cliente.foto_rosto
+    );
 
+const tipoImagem =
+    cliente.foto_rosto_tipo ||
+    "application/octet-stream";
 
-            res.send(
-                cliente.foto_rosto
-            );
+console.log(
+    "Tipo da foto:",
+    tipoImagem
+);
+
+res.setHeader(
+    "Content-Type",
+    tipoImagem
+);
+
+res.setHeader(
+    "Content-Length",
+    imagem.length
+);
+
+res.setHeader(
+    "Content-Disposition",
+    "inline"
+);
+
+return res.end(
+    imagem
+);
 
 
         } catch (erro) {
