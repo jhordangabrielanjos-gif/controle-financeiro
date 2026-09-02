@@ -3138,7 +3138,9 @@ async function verDocumento(clienteId) {
 
         const resposta =
             await fetch(
+
                 `${API_URL}/clientes/${clienteId}/documento`,
+
                 {
 
                     headers: {
@@ -3149,37 +3151,58 @@ async function verDocumento(clienteId) {
                     }
 
                 }
+
             );
+
 
         if (!resposta.ok) {
 
             const dados =
                 await resposta.json()
-                .catch(
-                    () => null
-                );
+                    .catch(
+                        () => null
+                    );
+
 
             alert(
+
                 dados?.erro ||
+
                 "Não foi possível carregar o documento"
+
             );
 
             return;
 
         }
 
+
         const arquivo =
             await resposta.blob();
+
 
         const url =
             URL.createObjectURL(
                 arquivo
             );
 
-        window.open(
-            url,
-            "_blank"
+
+        const imagem =
+            document.getElementById(
+                "imagemDocumento"
+            );
+
+
+        imagem.src =
+            url;
+
+
+        document.getElementById(
+            "modalDocumento"
+        ).classList.remove(
+            "escondido"
         );
+
 
     } catch (erro) {
 
@@ -3188,11 +3211,45 @@ async function verDocumento(clienteId) {
             erro
         );
 
+
         alert(
             "Erro ao carregar documento"
         );
 
     }
+
+}
+
+// ==========================================
+// FECHAR DOCUMENTO
+// ==========================================
+
+function fecharDocumento() {
+
+    const imagem =
+        document.getElementById(
+            "imagemDocumento"
+        );
+
+
+    if (imagem) {
+
+        URL.revokeObjectURL(
+            imagem.src
+        );
+
+
+        imagem.src =
+            "";
+
+    }
+
+
+    document.getElementById(
+        "modalDocumento"
+    ).classList.add(
+        "escondido"
+    );
 
 }
 
