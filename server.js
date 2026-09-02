@@ -4,6 +4,7 @@ const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
+const convert = require("heic-convert");
 
 
 require("dotenv").config();
@@ -14,6 +15,76 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+
+async function converterHeicParaJpg(arquivo) {
+
+    if (!arquivo) {
+        return null;
+    }
+
+    const tipo =
+        String(
+            arquivo.mimetype || ""
+        ).toLowerCase();
+
+    const nome =
+        String(
+            arquivo.originalname || ""
+        ).toLowerCase();
+
+
+    const ehHeic =
+        tipo === "image/heic" ||
+        tipo === "image/heif" ||
+        nome.endsWith(".heic") ||
+        nome.endsWith(".heif");
+
+
+    // Se não for HEIC, mantém normal
+    if (!ehHeic) {
+
+        return {
+
+            buffer:
+                arquivo.buffer,
+
+            mimetype:
+                arquivo.mimetype
+
+        };
+
+    }
+
+
+    // Converte HEIC para JPEG
+    const bufferConvertido =
+        await convert({
+
+            buffer:
+                arquivo.buffer,
+
+            format:
+                "JPEG",
+
+            quality:
+                0.9
+
+        });
+
+
+    return {
+
+        buffer:
+            Buffer.from(
+                bufferConvertido
+            ),
+
+        mimetype:
+            "image/jpeg"
+
+    };
+
+}
 
 // ==========================================
 // UPLOAD DE FOTO EM MEMÓRIA
@@ -1157,8 +1228,7 @@ app.post(
 
             }
 
-
-            // ==================================
+// ==================================
 // DOCUMENTO
 // ==================================
 
@@ -1169,15 +1239,21 @@ const arquivoDocumento =
         : null;
 
 
+const documentoConvertido =
+    await converterHeicParaJpg(
+        arquivoDocumento
+    );
+
+
 const documentoFoto =
-    arquivoDocumento
-        ? arquivoDocumento.buffer
+    documentoConvertido
+        ? documentoConvertido.buffer
         : null;
 
 
 const documentoTipo =
-    arquivoDocumento
-        ? arquivoDocumento.mimetype
+    documentoConvertido
+        ? documentoConvertido.mimetype
         : null;
 
 
@@ -1192,15 +1268,21 @@ const arquivoFotoRosto =
         : null;
 
 
+const fotoRostoConvertida =
+    await converterHeicParaJpg(
+        arquivoFotoRosto
+    );
+
+
 const fotoRosto =
-    arquivoFotoRosto
-        ? arquivoFotoRosto.buffer
+    fotoRostoConvertida
+        ? fotoRostoConvertida.buffer
         : null;
 
 
 const fotoRostoTipo =
-    arquivoFotoRosto
-        ? arquivoFotoRosto.mimetype
+    fotoRostoConvertida
+        ? fotoRostoConvertida.mimetype
         : null;
 
 
