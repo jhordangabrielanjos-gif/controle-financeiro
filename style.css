@@ -936,3 +936,82 @@ font-size: 13px;
     flex: 1;
 
 }
+
+/* ==========================================
+   AÇÕES DO CLIENTE - CELULAR
+========================================== */
+
+.acoes-cliente {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    width: 100%;
+
+    margin-top: 15px;
+
+}
+
+
+.acoes-cliente button {
+
+    box-sizing: border-box;
+
+    max-width: 100%;
+
+}
+
+
+/* ==========================================
+   TELAS PEQUENAS
+========================================== */
+
+@media (max-width: 600px) {
+
+    .cliente-item {
+
+        width: 100%;
+
+        box-sizing: border-box;
+
+        overflow: hidden;
+
+    }
+
+
+    .cliente-cabecalho {
+
+        flex-direction: column;
+
+    }
+
+
+    .acoes-cliente {
+
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        width: 100%;
+
+        gap: 8px;
+
+    }
+
+
+    .acoes-cliente button {
+
+        width: 100%;
+
+        min-width: 0;
+
+        padding: 10px 5px;
+
+        font-size: 13px;
+
+    }
+
+}
