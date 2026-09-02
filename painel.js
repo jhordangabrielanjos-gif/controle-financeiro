@@ -169,6 +169,11 @@ const estado =
                     "clienteDocumento"
                 );
 
+            const campoFotoRosto =
+    document.getElementById(
+        "clienteFotoRosto"
+    );    
+
             // ==================================
             // CRIAR FORM DATA
             // ==================================
@@ -246,6 +251,22 @@ formulario.append(
                 );
 
             }
+
+// ==================================
+// ADICIONAR FOTO DO ROSTO
+// ==================================
+
+if (
+    campoFotoRosto &&
+    campoFotoRosto.files.length > 0
+) {
+
+    formulario.append(
+        "foto_rosto",
+        campoFotoRosto.files[0]
+    );
+
+}
 
             try {
 
@@ -608,11 +629,37 @@ function mostrarClientes(clientes) {
 
                     <div class="cliente-item">
 
-                        <div class="cliente-informacoes">
+    <div class="cliente-cabecalho">
 
-                            <h3>
-                                ${cliente.nome || "Sem nome"}
-                            </h3>
+        <div
+            class="foto-cliente-container"
+            onclick="verFotoRosto(${cliente.id})"
+        >
+
+            ${
+                cliente.possui_foto_rosto
+                    ? `
+                        <img
+                            id="foto-rosto-${cliente.id}"
+                            class="foto-cliente"
+                            src=""
+                            alt="Foto de ${cliente.nome || "Cliente"}"
+                        >
+                    `
+                    : `
+                        <div class="foto-cliente-sem-foto">
+                            👤
+                        </div>
+                    `
+            }
+
+        </div>
+
+        <div class="cliente-informacoes">
+
+            <h3>
+                ${cliente.nome || "Sem nome"}
+            </h3>
 
                             ${
                                 cliente.possui_documento
@@ -747,6 +794,180 @@ function mostrarClientes(clientes) {
             }
         )
         .join("");
+
+// ==================================
+// CARREGAR FOTOS
+// ==================================
+
+carregarFotosRosto(
+    clientes
+);
+
+}
+
+// ==========================================
+// VER FOTO DO ROSTO
+// ==========================================
+
+async function verFotoRosto(
+    clienteId
+) {
+
+    try {
+
+        const resposta =
+            await fetch(
+
+                `${API_URL}/clientes/${clienteId}/foto`,
+
+                {
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+
+            );
+
+
+        if (!resposta.ok) {
+
+            const dados =
+                await resposta.json()
+                    .catch(
+                        () => null
+                    );
+
+
+            alert(
+
+                dados?.erro ||
+
+                "Não foi possível carregar a foto"
+
+            );
+
+            return;
+
+        }
+
+
+        const arquivo =
+            await resposta.blob();
+
+
+        const url =
+            URL.createObjectURL(
+                arquivo
+            );
+
+
+        window.open(
+            url,
+            "_blank"
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao abrir foto:",
+            erro
+        );
+
+
+        alert(
+            "Erro ao carregar foto"
+        );
+
+    }
+
+}
+
+// ==========================================
+// CARREGAR FOTOS DOS CLIENTES
+// ==========================================
+
+async function carregarFotosRosto(
+    clientes
+) {
+
+    for (
+        const cliente of clientes
+    ) {
+
+        if (
+            !cliente.possui_foto_rosto
+        ) {
+            continue;
+        }
+
+
+        const imagem =
+            document.getElementById(
+                `foto-rosto-${cliente.id}`
+            );
+
+
+        if (!imagem) {
+            continue;
+        }
+
+
+        try {
+
+            const resposta =
+                await fetch(
+
+                    `${API_URL}/clientes/${cliente.id}/foto`,
+
+                    {
+
+                        headers: {
+
+                            "Authorization":
+                                `Bearer ${token}`
+
+                        }
+
+                    }
+
+                );
+
+
+            if (!resposta.ok) {
+                continue;
+            }
+
+
+            const arquivo =
+                await resposta.blob();
+
+
+            const url =
+                URL.createObjectURL(
+                    arquivo
+                );
+
+
+            imagem.src =
+                url;
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar foto do cliente:",
+                erro
+            );
+
+        }
+
+    }
 
 }
 
