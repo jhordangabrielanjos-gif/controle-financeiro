@@ -3157,19 +3157,8 @@ async function verDocumento(clienteId) {
 
         if (!resposta.ok) {
 
-            const dados =
-                await resposta.json()
-                    .catch(
-                        () => null
-                    );
-
-
             alert(
-
-                dados?.erro ||
-
                 "Não foi possível carregar o documento"
-
             );
 
             return;
@@ -3179,6 +3168,31 @@ async function verDocumento(clienteId) {
 
         const arquivo =
             await resposta.blob();
+
+
+        console.log(
+            "Tipo da imagem:",
+            arquivo.type
+        );
+
+
+        console.log(
+            "Tamanho da imagem:",
+            arquivo.size
+        );
+
+
+        if (
+            arquivo.size === 0
+        ) {
+
+            alert(
+                "A foto do documento está vazia."
+            );
+
+            return;
+
+        }
 
 
         const url =
@@ -3191,6 +3205,30 @@ async function verDocumento(clienteId) {
             document.getElementById(
                 "imagemDocumento"
             );
+
+
+        imagem.onload =
+            function () {
+
+                console.log(
+                    "Documento carregado!"
+                );
+
+            };
+
+
+        imagem.onerror =
+            function () {
+
+                console.error(
+                    "Erro ao interpretar a imagem"
+                );
+
+                alert(
+                    "O arquivo salvo não é uma imagem válida."
+                );
+
+            };
 
 
         imagem.src =
