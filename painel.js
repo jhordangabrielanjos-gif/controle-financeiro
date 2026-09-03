@@ -1106,7 +1106,8 @@ document.getElementById(
 }
 
 // ==========================================
-// SALVAR EDIÇÃO
+// SALVAR EDIÇÃO DO CLIENTE
+// INCLUINDO FOTO DO ROSTO E DOCUMENTO
 // ==========================================
 
 async function salvarEdicao(event) {
@@ -1120,198 +1121,188 @@ async function salvarEdicao(event) {
         ).value;
 
 
-    const nome =
+    // ======================================
+    // CRIAR FORMDATA
+    // ======================================
+
+    const formData =
+        new FormData();
+
+
+    // ======================================
+    // DADOS DO CLIENTE
+    // ======================================
+
+    formData.append(
+
+        "nome",
+
         document.getElementById(
             "editarClienteNome"
-        ).value;
+        ).value
+
+    );
 
 
-    const cpf =
+    formData.append(
+
+        "cpf",
+
         document.getElementById(
             "editarClienteCpf"
-        ).value;
+        ).value
+
+    );
 
 
-    const nascimento =
+    formData.append(
+
+        "nascimento",
+
         document.getElementById(
             "editarClienteNascimento"
-        ).value;
+        ).value
+
+    );
 
 
-    const rua =
+    formData.append(
+
+        "rua",
+
         document.getElementById(
             "editarClienteRua"
         ).value
-        .trim();
+
+    );
 
 
-    const numero =
+    formData.append(
+
+        "numero",
+
         document.getElementById(
             "editarClienteNumero"
         ).value
-        .trim();
+
+    );
 
 
-    const bairro =
+    formData.append(
+
+        "bairro",
+
         document.getElementById(
             "editarClienteBairro"
         ).value
-        .trim();
+
+    );
 
 
-    const cidade =
+    formData.append(
+
+        "cidade",
+
         document.getElementById(
             "editarClienteCidade"
         ).value
-        .trim();
+
+    );
 
 
-    const estado =
+    formData.append(
+
+        "estado",
+
         document.getElementById(
             "editarClienteEstado"
-        ).value;
+        ).value
+
+    );
 
 
-    const valor_devido =
+    formData.append(
+
+        "valor_devido",
+
         document.getElementById(
             "editarClienteValor"
-        ).value;
+        ).value
+
+    );
 
 
-    const valor_semanal =
+    formData.append(
+
+        "valor_semanal",
+
         document.getElementById(
             "editarClienteValorSemanal"
-        ).value;
+        ).value
+
+    );
 
 
-    const dia_pagamento =
+    formData.append(
+
+        "dia_pagamento",
+
         document.getElementById(
             "editarClienteDiaPagamento"
-        ).value;
+        ).value
+
+    );
 
 
     // ======================================
-    // CAMPOS DE FOTO
+    // FOTO DO ROSTO
     // ======================================
 
-    const campoDocumento =
-        document.getElementById(
-            "editarClienteDocumento"
-        );
-
-
-    const campoFotoRosto =
+    const inputFotoRosto =
         document.getElementById(
             "editarClienteFotoRosto"
         );
 
 
-    // ======================================
-    // CRIAR FORMDATA
-    // ======================================
-
-    const formulario =
-        new FormData();
-
-
-    formulario.append(
-        "nome",
-        nome
-    );
-
-
-    formulario.append(
-        "cpf",
-        cpf
-    );
-
-
-    formulario.append(
-        "nascimento",
-        nascimento
-    );
-
-
-    formulario.append(
-        "rua",
-        rua
-    );
-
-
-    formulario.append(
-        "numero",
-        numero
-    );
-
-
-    formulario.append(
-        "bairro",
-        bairro
-    );
-
-
-    formulario.append(
-        "cidade",
-        cidade
-    );
-
-
-    formulario.append(
-        "estado",
-        estado
-    );
-
-
-    formulario.append(
-        "valor_devido",
-        valor_devido
-    );
-
-
-    formulario.append(
-        "valor_semanal",
-        valor_semanal
-    );
-
-
-    formulario.append(
-        "dia_pagamento",
-        dia_pagamento
-    );
-
-
-    // ======================================
-    // ADICIONAR NOVO DOCUMENTO
-    // SOMENTE SE O USUÁRIO ESCOLHEU UM
-    // ======================================
-
     if (
-        campoDocumento &&
-        campoDocumento.files &&
-        campoDocumento.files.length > 0
+
+        inputFotoRosto.files.length > 0
+
     ) {
 
-        formulario.append(
-            "documento",
-            campoDocumento.files[0]
+        formData.append(
+
+            "foto_rosto",
+
+            inputFotoRosto.files[0]
+
         );
 
     }
 
 
     // ======================================
-    // ADICIONAR NOVA FOTO DO ROSTO
+    // DOCUMENTO
     // ======================================
 
+    const inputDocumento =
+        document.getElementById(
+            "editarClienteDocumento"
+        );
+
+
     if (
-        campoFotoRosto &&
-        campoFotoRosto.files &&
-        campoFotoRosto.files.length > 0
+
+        inputDocumento.files.length > 0
+
     ) {
 
-        formulario.append(
-            "foto_rosto",
-            campoFotoRosto.files[0]
+        formData.append(
+
+            "documento",
+
+            inputDocumento.files[0]
+
         );
 
     }
@@ -1321,90 +1312,81 @@ async function salvarEdicao(event) {
 
         const resposta =
             await fetch(
+
                 `${API_URL}/clientes/${clienteId}`,
+
                 {
 
-                    method:
-                        "PUT",
+                    method: "PUT",
 
                     headers: {
 
-                        "Authorization":
+                        Authorization:
+
                             `Bearer ${token}`
 
                     },
 
                     body:
-                        formulario
+                        formData
 
                 }
+
             );
 
 
-        const texto =
-            await resposta.text();
-
-
-        let dados;
-
-
-        try {
-
-            dados =
-                JSON.parse(
-                    texto
-                );
-
-        } catch {
-
-            console.error(
-                "Resposta do servidor:",
-                texto
-            );
-
-            throw new Error(
-                "O servidor não retornou uma resposta válida."
-            );
-
-        }
+        const dados =
+            await resposta.json();
 
 
         if (
-            !resposta.ok ||
-            !dados.sucesso
+
+            !resposta.ok
+
         ) {
 
-            alert(
-                dados.erro ||
-                "Erro ao editar cliente"
-            );
+            throw new Error(
 
-            return;
+                dados.erro ||
+
+                "Erro ao atualizar cliente"
+
+            );
 
         }
 
 
         alert(
+
             "Cliente atualizado com sucesso!"
+
         );
 
 
         fecharEditar();
 
 
-        await carregarClientes();
+        carregarClientes();
+
+
+        carregarPagamentosSemanais();
 
 
     } catch (erro) {
 
         console.error(
-            "Erro ao editar:",
+
+            "Erro ao salvar edição:",
+
             erro
+
         );
 
+
         alert(
-            erro.message ||
-            "Erro ao conectar ao servidor"
+
+            erro.message
+
         );
 
     }
