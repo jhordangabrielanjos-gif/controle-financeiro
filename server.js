@@ -2829,20 +2829,126 @@ app.put(
                 null;
 
 
-            console.log(
-                "DOCUMENTO:",
-                documento
-                    ? documento.originalname
-                    : "Nenhum novo documento"
-            );
+            // ==============================
+            // CONVERTER HEIC PARA JPEG
+            // ==============================
+
+            let documentoBuffer = null;
+            let documentoTipo = null;
 
 
-            console.log(
-                "FOTO ROSTO:",
-                fotoRosto
-                    ? fotoRosto.originalname
-                    : "Nenhuma nova foto"
-            );
+            if (documento) {
+
+                const tipoDocumento =
+
+                    documento.mimetype.toLowerCase();
+
+
+                if (
+
+                    tipoDocumento === "image/heic" ||
+
+                    tipoDocumento === "image/heif"
+
+                ) {
+
+                    console.log(
+                        "Convertendo documento HEIC para JPEG..."
+                    );
+
+
+                    documentoBuffer =
+
+                        await heicConvert({
+
+                            buffer:
+                                documento.buffer,
+
+                            format:
+                                "JPEG",
+
+                            quality:
+                                0.9
+
+                        });
+
+
+                    documentoTipo =
+                        "image/jpeg";
+
+                } else {
+
+                    documentoBuffer =
+                        documento.buffer;
+
+
+                    documentoTipo =
+                        documento.mimetype;
+
+                }
+
+            }
+
+
+            // ==============================
+            // CONVERTER FOTO ROSTO HEIC
+            // ==============================
+
+            let fotoRostoBuffer = null;
+            let fotoRostoTipo = null;
+
+
+            if (fotoRosto) {
+
+                const tipoFoto =
+
+                    fotoRosto.mimetype.toLowerCase();
+
+
+                if (
+
+                    tipoFoto === "image/heic" ||
+
+                    tipoFoto === "image/heif"
+
+                ) {
+
+                    console.log(
+                        "Convertendo foto do rosto HEIC para JPEG..."
+                    );
+
+
+                    fotoRostoBuffer =
+
+                        await heicConvert({
+
+                            buffer:
+                                fotoRosto.buffer,
+
+                            format:
+                                "JPEG",
+
+                            quality:
+                                0.9
+
+                        });
+
+
+                    fotoRostoTipo =
+                        "image/jpeg";
+
+                } else {
+
+                    fotoRostoBuffer =
+                        fotoRosto.buffer;
+
+
+                    fotoRostoTipo =
+                        fotoRosto.mimetype;
+
+                }
+
+            }
 
 
             // ==============================
@@ -2932,9 +3038,9 @@ app.put(
 
                 valores.push(
 
-                    documento.buffer,
+                    documentoBuffer,
 
-                    documento.mimetype
+                    documentoTipo
 
                 );
 
@@ -2961,9 +3067,9 @@ app.put(
 
                 valores.push(
 
-                    fotoRosto.buffer,
+                    fotoRostoBuffer,
 
-                    fotoRosto.mimetype
+                    fotoRostoTipo
 
                 );
 
