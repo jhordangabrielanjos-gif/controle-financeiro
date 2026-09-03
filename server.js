@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const convert = require("heic-convert");
+const heicConvert =
+    require("heic-convert");
 
 
 require("dotenv").config();
