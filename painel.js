@@ -808,7 +808,6 @@ carregarFotosRosto(
 // ==========================================
 // VER FOTO DO ROSTO
 // ==========================================
-
 async function verFotoRosto(clienteId) {
 
     try {
@@ -824,11 +823,21 @@ async function verFotoRosto(clienteId) {
                 }
             );
 
-
         if (!resposta.ok) {
 
-            const erro =
-                await resposta.json();
+            let erro = {};
+
+            try {
+
+                erro =
+                    await resposta.json();
+
+            } catch {
+
+                erro.erro =
+                    "Erro ao carregar foto";
+
+            }
 
             alert(
                 erro.erro ||
@@ -839,10 +848,8 @@ async function verFotoRosto(clienteId) {
 
         }
 
-
         const blob =
             await resposta.blob();
-
 
         if (
             !blob.type.startsWith(
@@ -858,35 +865,50 @@ async function verFotoRosto(clienteId) {
 
         }
 
+        const imagem =
+            document.getElementById(
+                "imagemFotoRosto"
+            );
+
+        const modal =
+            document.getElementById(
+                "modalFotoRosto"
+            );
+
+        // Verificar se os elementos existem
+        if (!imagem || !modal) {
+
+            console.error(
+                "Modal ou imagem da foto do rosto não encontrados no HTML."
+            );
+
+            alert(
+                "Erro: o modal da foto não foi encontrado no painel."
+            );
+
+            return;
+
+        }
 
         const imagemURL =
             URL.createObjectURL(
                 blob
             );
 
-
-        document.getElementById(
-            "imagemFotoRosto"
-        ).src =
+        imagem.src =
             imagemURL;
 
+        modal.classList.remove(
+            "escondido"
+        );
 
-        const modal =
-    document.getElementById(
-        "modalFotoRosto"
-    );
-
-modal.classList.remove(
-    "escondido"
-);
-
-modal.style.display =
-    "flex";
-
+        modal.style.display =
+            "flex";
 
     } catch (erro) {
 
         console.error(
+            "Erro ao carregar foto:",
             erro
         );
 
