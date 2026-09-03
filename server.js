@@ -3301,9 +3301,11 @@ app.delete(
 
 // ==========================================
 // RELATÓRIO FINANCEIRO
+// PAGAMENTOS SEMANAIS + FOLHA
 // ==========================================
 
 app.get(
+
     "/relatorios/pagamentos",
 
     verificarToken,
@@ -3319,6 +3321,10 @@ app.get(
 
             } = req.query;
 
+
+            // ==============================
+            // VALIDAR DATAS
+            // ==============================
 
             if (
 
@@ -3339,70 +3345,218 @@ app.get(
             }
 
 
+            // ==============================
+            // BUSCAR TODOS OS PAGAMENTOS
+            // ==============================
+
             const pagamentosResultado =
                 await pool.query(
 
                     `
                     SELECT
 
-                        p.id,
+                        pagamento_id AS id,
 
-                        p.valor,
+                        valor,
 
+                        tipo,
+
+                        cliente_id,
+
+                        cliente_nome,
+
+                        cliente_cpf,
+
+                        criado_em,
 
                         TO_CHAR(
 
-                            p.criado_em
+                            criado_em
                             AT TIME ZONE
                             'America/Maceio',
 
                             'DD/MM/YYYY HH24:MI:SS'
 
                         )
-                        AS data_formatada,
+                        AS data_formatada
 
 
-                        c.id
-                        AS cliente_id,
+                    FROM (
+
+                        /* =====================
+                           PAGAMENTOS ANTIGOS
+                           SEMANAIS
+                        ===================== */
+
+                        SELECT
+
+                            p.id
+                            AS pagamento_id,
+
+                            p.valor,
+
+                            'Pagamento semanal'
+                            AS tipo,
+
+                            c.id
+                            AS cliente_id,
+
+                            c.nome
+                            AS cliente_nome,
+
+                            c.cpf
+                            AS cliente_cpf,
+
+                            p.criado_em
+
+                        FROM
+                            pagamentos_financeiro p
+
+                        INNER JOIN
+                            clientes_financeiro c
+
+                        ON
+
+                            c.id =
+                            p.cliente_id
+
+                        WHERE
+
+                            c.usuario_id = $1
 
 
-                        c.nome
-                        AS cliente_nome,
+                        UNION ALL
 
 
-                        c.cpf
-                        AS cliente_cpf
+                        /* =====================
+                           PAGAMENTOS DA FOLHA
+                           DE PAGAMENTOS
+                        ===================== */
+
+                        SELECT
+
+                            pc.id
+                            AS pagamento_id,
+
+                            pc.valor,
+
+                            CASE
+
+                                WHEN
+                                    co.juros_valor > 0
+
+                                THEN
+
+                                    'Pagamento da folha com juros'
+
+                                ELSE
+
+                                    'Pagamento da folha'
+
+                            END
+                            AS tipo,
+
+                            c.id
+                            AS cliente_id,
+
+                            c.nome
+                            AS cliente_nome,
+
+                            c.cpf
+                            AS cliente_cpf,
+
+                            pc.criado_em
+
+                        FROM
+                            pagamentos_cobrancas_financeiro pc
+
+                        INNER JOIN
+                            cobrancas_financeiro co
+
+                        ON
+
+                            co.id =
+                            pc.cobranca_id
+
+                        INNER JOIN
+                            clientes_financeiro c
+
+                        ON
+
+                            c.id =
+                            co.cliente_id
+
+                        WHERE
+
+                            co.usuario_id = $1
 
 
-                    FROM pagamentos_financeiro p
+                        UNION ALL
 
 
-                    INNER JOIN clientes_financeiro c
+                        /* =====================
+                           QUITAÇÃO DA
+                           DÍVIDA TOTAL
+                        ===================== */
 
-                    ON
-                        c.id = p.cliente_id
+                        SELECT
+
+                            pd.id
+                            AS pagamento_id,
+
+                            pd.valor,
+
+                            'Quitação da dívida'
+                            AS tipo,
+
+                            c.id
+                            AS cliente_id,
+
+                            c.nome
+                            AS cliente_nome,
+
+                            c.cpf
+                            AS cliente_cpf,
+
+                            pd.criado_em
+
+                        FROM
+                            pagamentos_divida_financeiro pd
+
+                        INNER JOIN
+                            clientes_financeiro c
+
+                        ON
+
+                            c.id =
+                            pd.cliente_id
+
+                        WHERE
+
+                            c.usuario_id = $1
+
+                    ) AS pagamentos
 
 
                     WHERE
 
-                        c.usuario_id = $1
+                        criado_em >= $2::date
 
 
                     AND
 
-                        p.criado_em >= $2::date
+                        criado_em < (
 
-
-                    AND
-
-                        p.criado_em < (
                             $3::date +
+
                             INTERVAL '1 day'
+
                         )
 
 
                     ORDER BY
-                        p.criado_em DESC
+
+                        criado_em DESC
                     `,
 
                     [
@@ -3418,65 +3572,44 @@ app.get(
                 );
 
 
-            const resumoResultado =
-                await pool.query(
+            // ==============================
+            // CALCULAR RESUMO
+            // ==============================
 
-                    `
-                    SELECT
+            const quantidadePagamentos =
 
-                        COUNT(*)
-                        AS quantidade_pagamentos,
-
-
-                        COALESCE(
-                            SUM(p.valor),
-                            0
-                        )
-                        AS total_recebido
+                pagamentosResultado
+                    .rows
+                    .length;
 
 
-                    FROM pagamentos_financeiro p
+            const totalRecebido =
+
+                pagamentosResultado
+                    .rows
+                    .reduce(
+
+                        (
+
+                            total,
+                            pagamento
+
+                        ) =>
+
+                            total +
+
+                            Number(
+                                pagamento.valor
+                            ),
+
+                        0
+
+                    );
 
 
-                    INNER JOIN clientes_financeiro c
-
-                    ON
-                        c.id = p.cliente_id
-
-
-                    WHERE
-
-                        c.usuario_id = $1
-
-
-                    AND
-
-                        p.criado_em >= $2::date
-
-
-                    AND
-
-                        p.criado_em < (
-
-                            $3::date +
-
-                            INTERVAL '1 day'
-
-                        )
-                    `,
-
-                    [
-
-                        req.usuario.id,
-
-                        inicio,
-
-                        fim
-
-                    ]
-
-                );
-
+            // ==============================
+            // RETORNAR RELATÓRIO
+            // ==============================
 
             res.json({
 
@@ -3496,24 +3629,12 @@ app.get(
 
                     quantidade_pagamentos:
 
-                        Number(
-
-                            resumoResultado
-                                .rows[0]
-                                .quantidade_pagamentos
-
-                        ),
+                        quantidadePagamentos,
 
 
                     total_recebido:
 
-                        Number(
-
-                            resumoResultado
-                                .rows[0]
-                                .total_recebido
-
-                        )
+                        totalRecebido
 
                 },
 
@@ -3524,11 +3645,15 @@ app.get(
 
             });
 
+
         } catch (erro) {
 
             console.error(
+
                 "Erro ao gerar relatório:",
-                erro.message
+
+                erro
+
             );
 
 
@@ -3546,6 +3671,7 @@ app.get(
     }
 
 );
+
 
 // ==========================================
 // FOLHA DE PAGAMENTOS
