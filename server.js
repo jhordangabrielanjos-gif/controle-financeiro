@@ -2616,9 +2616,24 @@ AND
 // ==========================================
 
 app.put(
+
     "/clientes/:id",
 
     verificarToken,
+
+    upload.fields([
+
+        {
+            name: "documento",
+            maxCount: 1
+        },
+
+        {
+            name: "foto_rosto",
+            maxCount: 1
+        }
+
+    ]),
 
     async (req, res) => {
 
@@ -2629,17 +2644,21 @@ app.put(
 
 
             const {
+
                 nome,
                 cpf,
                 nascimento,
+
                 rua,
                 numero,
                 bairro,
                 cidade,
                 estado,
+
                 valor_devido,
                 valor_semanal,
                 dia_pagamento
+
             } = req.body;
 
 
@@ -2648,8 +2667,11 @@ app.put(
             // ==============================
 
             if (
+
                 !Number.isInteger(clienteId) ||
+
                 clienteId <= 0
+
             ) {
 
                 return res.status(400).json({
@@ -2715,8 +2737,11 @@ app.put(
             // ==============================
 
             if (
+
                 Number.isNaN(valor) ||
+
                 valor < 0
+
             ) {
 
                 return res.status(400).json({
@@ -2732,8 +2757,11 @@ app.put(
 
 
             if (
+
                 Number.isNaN(valorSemanal) ||
+
                 valorSemanal <= 0
+
             ) {
 
                 return res.status(400).json({
@@ -2749,9 +2777,13 @@ app.put(
 
 
             if (
+
                 !Number.isInteger(diaPagamento) ||
+
                 diaPagamento < 0 ||
+
                 diaPagamento > 6
+
             ) {
 
                 return res.status(400).json({
@@ -2767,99 +2799,227 @@ app.put(
 
 
             // ==============================
-            // MONTAR ENDEREÇO COMPLETO
+            // MONTAR ENDEREÇO
             // ==============================
 
             const enderecoCompleto =
+
                 `${rua.trim()}, ${numero.trim()} - ` +
+
                 `${bairro.trim()}, ${cidade.trim()} - ` +
+
                 `${estado.trim()}`;
 
 
             // ==============================
-            // ATUALIZAR CLIENTE
+            // PEGAR ARQUIVOS NOVOS
+            // ==============================
+
+            const documento =
+
+                req.files?.documento?.[0] ||
+
+                null;
+
+
+            const fotoRosto =
+
+                req.files?.foto_rosto?.[0] ||
+
+                null;
+
+
+            console.log(
+                "DOCUMENTO:",
+                documento
+                    ? documento.originalname
+                    : "Nenhum novo documento"
+            );
+
+
+            console.log(
+                "FOTO ROSTO:",
+                fotoRosto
+                    ? fotoRosto.originalname
+                    : "Nenhuma nova foto"
+            );
+
+
+            // ==============================
+            // ATUALIZAR DADOS BÁSICOS
+            // ==============================
+
+            let query = `
+
+                UPDATE clientes_financeiro
+
+                SET
+
+                    nome = $1,
+
+                    cpf = $2,
+
+                    nascimento = $3,
+
+                    endereco = $4,
+
+                    rua = $5,
+
+                    numero = $6,
+
+                    bairro = $7,
+
+                    cidade = $8,
+
+                    estado = $9,
+
+                    valor_devido = $10,
+
+                    valor_semanal = $11,
+
+                    dia_pagamento = $12
+
+            `;
+
+
+            const valores = [
+
+                nome.trim(),
+
+                cpf.trim(),
+
+                nascimento,
+
+                enderecoCompleto,
+
+                rua.trim(),
+
+                numero.trim(),
+
+                bairro.trim(),
+
+                cidade.trim(),
+
+                estado.trim(),
+
+                valor,
+
+                valorSemanal,
+
+                diaPagamento
+
+            ];
+
+
+            let contador =
+                13;
+
+
+            // ==============================
+            // ATUALIZAR DOCUMENTO
+            // ==============================
+
+            if (documento) {
+
+                query += `
+
+                    , documento_foto = $${contador}
+
+                    , documento_tipo = $${contador + 1}
+
+                `;
+
+
+                valores.push(
+
+                    documento.buffer,
+
+                    documento.mimetype
+
+                );
+
+
+                contador += 2;
+
+            }
+
+
+            // ==============================
+            // ATUALIZAR FOTO DO ROSTO
+            // ==============================
+
+            if (fotoRosto) {
+
+                query += `
+
+                    , foto_rosto = $${contador}
+
+                    , foto_rosto_tipo = $${contador + 1}
+
+                `;
+
+
+                valores.push(
+
+                    fotoRosto.buffer,
+
+                    fotoRosto.mimetype
+
+                );
+
+
+                contador += 2;
+
+            }
+
+
+            // ==============================
+            // WHERE
+            // ==============================
+
+            query += `
+
+                WHERE
+
+                    id = $${contador}
+
+                AND
+
+                    usuario_id = $${contador + 1}
+
+                RETURNING *
+
+            `;
+
+
+            valores.push(
+
+                clienteId,
+
+                req.usuario.id
+
+            );
+
+
+            // ==============================
+            // EXECUTAR UPDATE
             // ==============================
 
             const resultado =
+
                 await pool.query(
 
-                    `
-                    UPDATE clientes_financeiro
+                    query,
 
-                    SET
-
-                        nome = $1,
-
-                        cpf = $2,
-
-                        nascimento = $3,
-
-                        endereco = $4,
-
-                        rua = $5,
-
-                        numero = $6,
-
-                        bairro = $7,
-
-                        cidade = $8,
-
-                        estado = $9,
-
-                        valor_devido = $10,
-
-                        valor_semanal = $11,
-
-                        dia_pagamento = $12
-
-                    WHERE
-
-                        id = $13
-
-                    AND
-
-                        usuario_id = $14
-
-                    RETURNING *
-                    `,
-
-                    [
-
-                        nome.trim(),
-
-                        cpf.trim(),
-
-                        nascimento,
-
-                        enderecoCompleto,
-
-                        rua.trim(),
-
-                        numero.trim(),
-
-                        bairro.trim(),
-
-                        cidade.trim(),
-
-                        estado.trim(),
-
-                        valor,
-
-                        valorSemanal,
-
-                        diaPagamento,
-
-                        clienteId,
-
-                        req.usuario.id
-
-                    ]
+                    valores
 
                 );
 
 
             if (
+
                 resultado.rows.length === 0
+
             ) {
 
                 return res.status(404).json({
@@ -2886,11 +3046,15 @@ app.put(
 
             });
 
+
         } catch (erro) {
 
             console.error(
+
                 "Erro ao editar cliente:",
-                erro.message
+
+                erro
+
             );
 
 
