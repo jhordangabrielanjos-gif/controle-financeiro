@@ -1307,6 +1307,25 @@ async function salvarEdicao(event) {
 
     }
 
+console.log(
+    "========== DADOS DA EDIÇÃO =========="
+);
+
+for (
+    const [chave, valor]
+    of formData.entries()
+) {
+
+    console.log(
+        chave,
+        valor
+    );
+
+}
+
+console.log(
+    "====================================="
+);
 
     try {
 
