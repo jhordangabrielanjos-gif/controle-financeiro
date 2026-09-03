@@ -3829,6 +3829,19 @@ function abrirLocalizacaoPorId(clienteId) {
 }
 
 // ==========================================
+// FORMULÁRIO DE EDIÇÃO
+// ==========================================
+
+document
+    .getElementById(
+        "formEditar"
+    )
+    ?.addEventListener(
+        "submit",
+        salvarEdicao
+    );
+
+// ==========================================
 // INICIAR
 // ==========================================
 
