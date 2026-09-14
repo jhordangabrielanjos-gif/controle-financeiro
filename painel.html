@@ -1195,6 +1195,104 @@
 
 </div>
 
+<!-- =========================================
+     MODAL VEÍCULO DO CLIENTE
+========================================= -->
+
+<div
+    id="modalVeiculo"
+    class="modal escondido"
+>
+
+    <div class="modal-conteudo">
+
+        <button
+            type="button"
+            class="fechar-modal"
+            onclick="fecharVeiculo()"
+        >
+            ×
+        </button>
+
+
+        <h2>
+            🚗 Veículo do cliente
+        </h2>
+
+
+        <p id="nomeClienteVeiculo">
+        </p>
+
+
+        <form id="formVeiculo">
+
+            <input
+                type="hidden"
+                id="veiculoClienteId"
+            >
+
+
+            <!-- PLACA -->
+
+            <label>
+                🚘 Placa
+            </label>
+
+            <input
+                type="text"
+                id="veiculoPlaca"
+                maxlength="8"
+                placeholder="ABC1D23"
+                autocomplete="off"
+                required
+            >
+
+
+            <!-- MODELO -->
+
+            <label>
+                🏍️ Modelo
+            </label>
+
+            <input
+                type="text"
+                id="veiculoModelo"
+                placeholder="Ex: Honda CG 160"
+                autocomplete="off"
+            >
+
+
+            <button
+                type="submit"
+                class="btn-principal"
+            >
+                💾 Salvar veículo
+            </button>
+
+        </form>
+
+
+        <hr>
+
+
+        <h3>
+            🚗 Veículos cadastrados
+        </h3>
+
+
+        <div id="listaVeiculos">
+
+            <p>
+                Nenhum veículo cadastrado.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</div>
+
     <!-- JAVASCRIPT -->
 
     <script src="painel.js"></script>
