@@ -1051,21 +1051,19 @@ font-size: 13px;
 
 }
 /* ==========================================
-   LISTA DE CLIENTES - CORREÇÃO DEFINITIVA
+   LISTA DE CLIENTES - LAYOUT FIXO
 ========================================== */
 
 #listaClientes {
     width: 100%;
     max-width: 100%;
-    
-    display: grid;
-    grid-template-columns: repeat(
-        auto-fill,
-        minmax(360px, 1fr)
-    );
+    min-width: 0;
 
-    gap: 20px;
-    
+    display: flex;
+    flex-direction: column;
+
+    gap: 15px;
+
     box-sizing: border-box;
 }
 
@@ -1076,15 +1074,18 @@ font-size: 13px;
 
 #listaClientes .cliente-item {
     width: 100%;
-    max-width: none;
+    max-width: 100%;
     min-width: 0;
 
-    margin-top: 0;
+    margin: 0;
+
+    padding: 18px;
 
     box-sizing: border-box;
 
     display: flex;
     flex-direction: column;
+
     align-items: stretch;
 
     gap: 15px;
@@ -1092,14 +1093,16 @@ font-size: 13px;
 
 
 /* ==========================================
-   CABEÇALHO
+   CABEÇALHO DO CLIENTE
 ========================================== */
 
 #listaClientes .cliente-cabecalho {
     width: 100%;
+    max-width: 100%;
     min-width: 0;
 
     display: flex;
+
     align-items: flex-start;
 
     gap: 18px;
@@ -1109,13 +1112,18 @@ font-size: 13px;
 
 
 /* ==========================================
-   INFORMAÇÕES
+   INFORMAÇÕES DO CLIENTE
 ========================================== */
 
 #listaClientes .cliente-informacoes {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 auto;
+
     width: auto;
+
+    min-width: 0;
+    max-width: 100%;
+
+    box-sizing: border-box;
 }
 
 
@@ -1138,8 +1146,11 @@ font-size: 13px;
 
 #listaClientes .acoes-cliente {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
 
     display: flex;
+
     flex-wrap: wrap;
 
     gap: 8px;
@@ -1149,24 +1160,19 @@ font-size: 13px;
 
 
 #listaClientes .acoes-cliente button {
-    min-width: 0;
     max-width: 100%;
+    min-width: 0;
 
     box-sizing: border-box;
 }
 
 
 /* ==========================================
-   TELA MENOR
+   IMAGEM
 ========================================== */
 
-@media (max-width: 800px) {
-
-    #listaClientes {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-
+#listaClientes .foto-cliente-container {
+    flex-shrink: 0;
 }
 
 
@@ -1174,39 +1180,50 @@ font-size: 13px;
    CELULAR
 ========================================== */
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
+
+    #listaClientes {
+        width: 100%;
+        max-width: 100%;
+    }
+
 
     #listaClientes .cliente-item {
         width: 100%;
+        max-width: 100%;
     }
+
 
     #listaClientes .cliente-cabecalho {
         flex-direction: column;
+
+        width: 100%;
     }
 
+
     #listaClientes .acoes-cliente {
+        width: 100%;
+
         display: grid;
+
         grid-template-columns: 1fr 1fr;
+
+        gap: 8px;
     }
+
 
     #listaClientes .acoes-cliente button {
         width: 100%;
-        padding: 10px 5px;
-        font-size: 13px;
     }
 
 }
 
 
 /* ==========================================
-   CELULAR MUITO PEQUENO
+   CELULAR PEQUENO
 ========================================== */
 
 @media (max-width: 400px) {
-
-    #listaClientes {
-        grid-template-columns: 1fr;
-    }
 
     #listaClientes .acoes-cliente {
         grid-template-columns: 1fr;
