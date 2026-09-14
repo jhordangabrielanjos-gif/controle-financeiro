@@ -4543,6 +4543,89 @@ function fecharVeiculo() {
     }
 
 }
+
+// ==========================================
+// SALVAR VEÍCULO
+// ==========================================
+
+async function salvarVeiculo(event) {
+
+    event.preventDefault();
+
+    const clienteId =
+        document.getElementById("veiculoClienteId").value;
+
+    const placa =
+        document.getElementById("veiculoPlaca").value.trim();
+
+    const modelo =
+        document.getElementById("veiculoModelo").value.trim();
+
+    if (!clienteId) {
+        alert("Cliente não identificado.");
+        return;
+    }
+
+    if (!placa) {
+        alert("Digite a placa do veículo.");
+        return;
+    }
+
+    try {
+
+        const token =
+            localStorage.getItem("tokenFinanceiro");
+
+        const resposta = await fetch(
+            `${API_URL}/clientes/${clienteId}/veiculos`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+
+                body: JSON.stringify({
+                    placa: placa.toUpperCase(),
+                    modelo: modelo
+                })
+            }
+        );
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+
+            console.error("Erro ao salvar veículo:", dados);
+
+            alert(
+                dados.erro ||
+                dados.error ||
+                "Erro ao salvar veículo."
+            );
+
+            return;
+        }
+
+        alert("✅ Veículo salvo com sucesso!");
+
+        // Limpa os campos
+        document.getElementById("veiculoPlaca").value = "";
+        document.getElementById("veiculoModelo").value = "";
+
+        // Atualiza a lista
+        if (typeof carregarVeiculos === "function") {
+            carregarVeiculos(clienteId);
+        }
+
+    } catch (erro) {
+
+        console.error("Erro:", erro);
+
+        alert("Erro de conexão com o servidor.");
+    }
+}
     
 // ==========================================
 // INICIAR
