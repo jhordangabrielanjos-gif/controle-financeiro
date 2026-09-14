@@ -1705,6 +1705,90 @@ app.post(
     }
 );
 
+app.get(
+    "/clientes/:id/veiculos",
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(req.params.id);
+
+            // Verifica se o cliente pertence
+            // ao usuário logado
+            const cliente =
+                await pool.query(
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+                );
+
+            if (cliente.rows.length === 0) {
+
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Cliente não encontrado"
+                });
+
+            }
+
+            const resultado =
+                await pool.query(
+                    `
+                    SELECT
+                        id,
+                        cliente_id,
+                        placa,
+                        modelo,
+                        criado_em
+                    FROM veiculos_financeiro
+                    WHERE cliente_id = $1
+                    ORDER BY id DESC
+                    `,
+                    [
+                        clienteId
+                    ]
+                );
+
+            res.json({
+
+                sucesso: true,
+
+                veiculos:
+                    resultado.rows
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao listar veículos:",
+                erro
+            );
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar veículos"
+
+            });
+
+        }
+
+    }
+);
+
 // ==========================================
 // VER FOTO DO DOCUMENTO
 // ==========================================
