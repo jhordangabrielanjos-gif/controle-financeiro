@@ -1050,3 +1050,67 @@ font-size: 13px;
     margin-top: 15px;
 
 }
+/* ==========================================
+CORREÇÃO - LISTA DE CLIENTES
+========================================== */
+
+#listaClientes {
+width: 100%;
+max-width: 100%;
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+/* Cada cliente mantém sua largura */
+#listaClientes .cliente-item {
+width: 100%;
+max-width: 100%;
+min-width: 0;
+flex: 0 0 auto;
+margin-top: 0;
+}
+
+/* Evita que o conteúdo interno force
+o card a ficar estreito */
+#listaClientes .cliente-cabecalho {
+width: 100%;
+min-width: 0;
+}
+
+#listaClientes .cliente-informacoes {
+min-width: 0;
+width: 100%;
+}
+
+/* Textos longos não aumentam nem deformam o card */
+#listaClientes .cliente-informacoes h3,
+#listaClientes .cliente-informacoes p {
+overflow-wrap: anywhere;
+word-break: break-word;
+}
+
+/* Mantém o painel ocupando a largura correta */
+.painel {
+width: 90%;
+max-width: 1100px;
+margin: 30px auto;
+}
+
+/* No celular */
+@media (max-width: 600px) {
+
+.painel {
+    width: 94%;
+    max-width: 100%;
+}
+
+#listaClientes {
+    width: 100%;
+}
+
+#listaClientes .cliente-item {
+    width: 100%;
+}
+
+  }
