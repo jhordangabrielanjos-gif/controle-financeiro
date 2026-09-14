@@ -4626,6 +4626,133 @@ async function salvarVeiculo(event) {
         alert("Erro de conexão com o servidor.");
     }
 }
+
+// ==========================================
+// FORMULÁRIO DE VEÍCULO
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const formVeiculo =
+        document.getElementById("formVeiculo");
+
+    if (!formVeiculo) {
+        console.error("❌ formVeiculo não encontrado");
+        return;
+    }
+
+    formVeiculo.addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+        console.log("🚗 BOTÃO SALVAR VEÍCULO CLICADO");
+
+        const clienteId =
+            document.getElementById("veiculoClienteId").value;
+
+        const placa =
+            document.getElementById("veiculoPlaca").value.trim();
+
+        const modelo =
+            document.getElementById("veiculoModelo").value.trim();
+
+        console.log("Cliente:", clienteId);
+        console.log("Placa:", placa);
+        console.log("Modelo:", modelo);
+
+        if (!clienteId) {
+            alert("❌ Cliente não identificado.");
+            return;
+        }
+
+        if (!placa) {
+            alert("❌ Digite a placa.");
+            return;
+        }
+
+        try {
+
+            const token =
+                localStorage.getItem("tokenFinanceiro");
+
+            console.log("Enviando veículo...");
+
+            const resposta = await fetch(
+                `${API_URL}/clientes/${clienteId}/veiculos`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify({
+                        placa: placa.toUpperCase(),
+                        modelo: modelo
+                    })
+                }
+            );
+
+            console.log(
+                "Status da resposta:",
+                resposta.status
+            );
+
+            const dados =
+                await resposta.json();
+
+            console.log(
+                "Resposta do servidor:",
+                dados
+            );
+
+            if (!resposta.ok) {
+
+                alert(
+                    "❌ " +
+                    (
+                        dados.erro ||
+                        dados.error ||
+                        "Erro ao salvar veículo."
+                    )
+                );
+
+                return;
+            }
+
+            alert("✅ Veículo salvo com sucesso!");
+
+            document.getElementById(
+                "veiculoPlaca"
+            ).value = "";
+
+            document.getElementById(
+                "veiculoModelo"
+            ).value = "";
+
+            if (
+                typeof carregarVeiculos === "function"
+            ) {
+                carregarVeiculos(clienteId);
+            }
+
+        } catch (erro) {
+
+            console.error(
+                "❌ ERRO AO SALVAR VEÍCULO:",
+                erro
+            );
+
+            alert(
+                "❌ Erro de conexão com o servidor."
+            );
+
+        }
+
+    });
+
+});
     
 // ==========================================
 // INICIAR
