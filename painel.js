@@ -591,16 +591,13 @@ function formatarDiaPagamento(dia) {
 
 function mostrarClientes(clientes) {
 
-    const lista =
-        document.getElementById(
-            "listaClientes"
-        );
+    const lista = document.getElementById("listaClientes");
 
     if (!lista) {
         return;
     }
 
-    if (clientes.length === 0) {
+    if (!Array.isArray(clientes) || clientes.length === 0) {
 
         lista.innerHTML =
             "<p>Nenhum cliente encontrado.</p>";
@@ -608,192 +605,194 @@ function mostrarClientes(clientes) {
         return;
     }
 
-    lista.innerHTML =
-        clientes.map(
-            (cliente) => {
+    lista.innerHTML = clientes.map((cliente) => {
 
-                const nomeSeguro =
-                    String(
-                        cliente.nome || ""
-                    )
-                    .replace(
-                        /\\/g,
-                        "\\\\"
-                    )
-                    .replace(
-                        /'/g,
-                        "\\'"
-                    );
+        const nomeSeguro = String(cliente.nome || "")
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'");
 
-                return `
+        return `
+            <div class="cliente-item">
 
-                    <div class="cliente-item">
+                <div class="cliente-cabecalho">
 
-    <div class="cliente-cabecalho">
+                    <div
+                        class="foto-cliente-container"
+                        onclick="verFotoRosto(${cliente.id})"
+                    >
 
-        <div
-            class="foto-cliente-container"
-            onclick="verFotoRosto(${cliente.id})"
-        >
+                        ${
+                            cliente.possui_foto_rosto
+                                ? `
+                                    <img
+                                        id="foto-rosto-${cliente.id}"
+                                        class="foto-cliente"
+                                        src=""
+                                        alt="Foto de ${cliente.nome || "Cliente"}"
+                                    >
+                                `
+                                : `
+                                    <div class="foto-cliente-sem-foto">
+                                        👤
+                                    </div>
+                                `
+                        }
 
-            ${
-                cliente.possui_foto_rosto
-                    ? `
-                        <img
-                            id="foto-rosto-${cliente.id}"
-                            class="foto-cliente"
-                            src=""
-                            alt="Foto de ${cliente.nome || "Cliente"}"
+                    </div>
+
+
+                    <div class="cliente-informacoes">
+
+                        <h3>
+                            ${cliente.nome || "Sem nome"}
+                        </h3>
+
+
+                        ${
+                            cliente.possui_documento
+                                ? `
+                                    <button
+                                        class="btn-documento"
+                                        onclick="verDocumento(${cliente.id})"
+                                    >
+                                        📷 Ver documento
+                                    </button>
+                                `
+                                : `
+                                    <p class="sem-documento">
+                                        📄 Sem documento
+                                    </p>
+                                `
+                        }
+
+
+                        <p>
+                            <strong>CPF:</strong>
+                            ${cliente.cpf || "Não informado"}
+                        </p>
+
+
+                        <p>
+                            🎂
+                            <strong>Nascimento:</strong>
+
+                            ${
+                                cliente.nascimento
+                                    ? formatarDataSimples(
+                                        cliente.nascimento
+                                    )
+                                    : "Não informado"
+                            }
+                        </p>
+
+
+                        ${
+                            Number(cliente.saldo_restante) > 0
+                                ? `
+                                    <p>
+                                        <strong>
+                                            Saldo restante:
+                                        </strong>
+
+                                        <strong>
+                                            ${formatarMoeda(
+                                                cliente.saldo_restante
+                                            )}
+                                        </strong>
+                                    </p>
+                                `
+                                : `
+                                    <p>
+                                        <strong class="cliente-quitado">
+                                            ✅ Cliente quitado
+                                        </strong>
+                                    </p>
+                                `
+                        }
+
+
+                        <p>
+                            <strong>
+                                📅 Pagamento semanal:
+                            </strong>
+
+                            ${formatarMoeda(
+                                cliente.valor_semanal
+                            )}
+                        </p>
+
+
+                        <p>
+                            <strong>
+                                📆 Dia:
+                            </strong>
+
+                            ${formatarDiaPagamento(
+                                cliente.dia_pagamento
+                            )}
+                        </p>
+
+                    </div>
+
+
+                    <div class="acoes-cliente">
+
+                        <button
+                            class="btn-pagamento"
+                            onclick="abrirPagamento(
+                                ${cliente.id},
+                                '${nomeSeguro}'
+                            )"
                         >
-                    `
-                    : `
-                        <div class="foto-cliente-sem-foto">
-                            👤
-                        </div>
-                    `
-            }
+                            💰 Pagamento
+                        </button>
 
-        </div>
 
-        <div class="cliente-informacoes">
+                        <button
+                            class="btn-localizacao"
+                            onclick="abrirLocalizacaoPorId(${cliente.id})"
+                        >
+                            📍 Localização
+                        </button>
 
-            <h3>
-                ${cliente.nome || "Sem nome"}
-            </h3>
 
-                            ${
-                                cliente.possui_documento
-                                    ? `
-                                        <button
-                                            class="btn-documento"
-                                            onclick="verDocumento(${cliente.id})"
-                                        >
-                                            📷 Ver documento
-                                        </button>
-                                    `
-                                    : `
-                                        <p class="sem-documento">
-                                            📄 Sem documento
-                                        </p>
-                                    `
-                            }
+                        <button
+                            class="btn-quitar"
+                            onclick="abrirModalQuitarDivida(${cliente.id})"
+                        >
+                            ✅ Quitar dívida
+                        </button>
 
-                            <p>
-                                <strong>CPF:</strong>
-                                ${cliente.cpf || "Não informado"}
-                            </p>
 
-                            <p>
-                                🎂
-                                <strong>Nascimento:</strong>
+                        <button
+                            class="btn-editar"
+                            onclick="abrirEditar(${cliente.id})"
+                        >
+                            ✏️ Editar
+                        </button>
 
-                                ${
-                                    cliente.nascimento
-                                        ? formatarDataSimples(
-                                            cliente.nascimento
-                                        )
-                                        : "Não informado"
-                                }
-                            </p>
 
-                            ${
-                                Number(cliente.saldo_restante) > 0
-                                    ? `
-                                        <p>
-                                            <strong>
-                                                Saldo restante:
-                                            </strong>
-
-                                            <strong>
-                                                ${formatarMoeda(
-                                                    cliente.saldo_restante
-                                                )}
-                                            </strong>
-                                        </p>
-                                    `
-                                    : `
-                                        <p>
-                                            <strong class="cliente-quitado">
-                                                ✅ Cliente quitado
-                                            </strong>
-                                        </p>
-                                    `
-                            }
-
-                            <p>
-                                <strong>
-                                    📅 Pagamento semanal:
-                                </strong>
-
-                                ${formatarMoeda(
-                                    cliente.valor_semanal
-                                )}
-                            </p>
-
-                            <p>
-                                <strong>
-                                    📆 Dia:
-                                </strong>
-
-                                ${formatarDiaPagamento(
-                                    cliente.dia_pagamento
-                                )}
-                            </p>
-
-                        </div>
-
-                        <div class="acoes-cliente">
-
-                            <button
-                                class="btn-pagamento"
-                                onclick="abrirPagamento(
-                                    ${cliente.id},
-                                    '${nomeSeguro}'
-                                )"
-                            >
-                                💰 Pagamento
-                            </button>
-
-                            <button
-                                class="btn-localizacao"
-                                onclick="abrirLocalizacaoPorId(${cliente.id})"
-                            >
-                                📍 Localização
-                            </button>
-
-                            <button
-                                class="btn-quitar"
-                                onclick="abrirModalQuitarDivida(${cliente.id})"
-                            >
-                                ✅ Quitar dívida
-                            </button>
-
-                            <button
-                                class="btn-editar"
-                                onclick="abrirEditar(${cliente.id})"
-                            >
-                                ✏️ Editar
-                            </button>
-
-                            <button
-                                class="btn-excluir"
-                                onclick="excluirCliente(
-                                    ${cliente.id},
-                                    '${nomeSeguro}'
-                                )"
-                            >
-                                🗑️ Excluir
-                            </button>
+                        <button
+                            class="btn-excluir"
+                            onclick="excluirCliente(
+                                ${cliente.id},
+                                '${nomeSeguro}'
+                            )"
+                        >
+                            🗑️ Excluir
+                        </button>
 
                     </div>
 
                 </div>
 
-                `;
+            </div>
+        `;
 
-            }
-        )
-        .join("");
+    }).join("");
+
+
+    carregarFotosRosto(clientes);
 }
 
 // ==================================
@@ -803,8 +802,6 @@ function mostrarClientes(clientes) {
 carregarFotosRosto(
     clientes
 );
-
-}
 
 // ==========================================
 // VER FOTO DO ROSTO
