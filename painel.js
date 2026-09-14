@@ -4488,6 +4488,61 @@ function fecharVeiculos() {
         null;
 
 }
+
+// ==========================================
+// ABRIR MODAL DE VEÍCULO
+// ==========================================
+
+function abrirVeiculos(clienteId) {
+
+    const modal = document.getElementById("modalVeiculo");
+
+    if (!modal) {
+        console.error("Modal modalVeiculo não encontrado.");
+        return;
+    }
+
+    const cliente = todosClientes.find(
+        c => Number(c.id) === Number(clienteId)
+    );
+
+    if (!cliente) {
+        console.error("Cliente não encontrado:", clienteId);
+        return;
+    }
+
+    // Guarda o ID do cliente
+    document.getElementById("veiculoClienteId").value =
+        cliente.id;
+
+    // Mostra o nome
+    document.getElementById("nomeClienteVeiculo").textContent =
+        cliente.nome || "Cliente";
+
+    // Limpa os campos
+    document.getElementById("veiculoPlaca").value = "";
+    document.getElementById("veiculoModelo").value = "";
+
+    // Abre o modal
+    modal.classList.remove("escondido");
+
+    console.log("Modal de veículo aberto para:", cliente.nome);
+}
+
+
+// ==========================================
+// FECHAR MODAL DE VEÍCULO
+// ==========================================
+
+function fecharVeiculo() {
+
+    const modal = document.getElementById("modalVeiculo");
+
+    if (modal) {
+        modal.classList.add("escondido");
+    }
+
+}
     
 // ==========================================
 // INICIAR
