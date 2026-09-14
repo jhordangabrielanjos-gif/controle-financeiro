@@ -1232,3 +1232,49 @@ font-size: 13px;
         grid-template-columns: 1fr !important;
     }
 }
+/* ========================================== */
+/* VEÍCULOS */
+/* ========================================== */
+
+.btn-veiculo {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-salvar-veiculo {
+    width: 100%;
+    padding: 11px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#veiculoPlaca,
+#veiculoModelo {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.veiculo-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+#listaVeiculos {
+    margin-top: 10px;
+}
