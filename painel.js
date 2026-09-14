@@ -4495,40 +4495,45 @@ function fecharVeiculos() {
 
 function abrirVeiculos(clienteId) {
 
-    const modal = document.getElementById("modalVeiculo");
+    const modal =
+        document.getElementById("modalVeiculo");
 
-    if (!modal) {
-        console.error("Modal modalVeiculo não encontrado.");
-        return;
-    }
-
-    const cliente = todosClientes.find(
-        c => Number(c.id) === Number(clienteId)
-    );
+    const cliente =
+        todosClientes.find(
+            c => Number(c.id) === Number(clienteId)
+        );
 
     if (!cliente) {
-        console.error("Cliente não encontrado:", clienteId);
+
+        alert("Cliente não encontrado.");
+
         return;
     }
 
-    // Guarda o ID do cliente
-    document.getElementById("veiculoClienteId").value =
-        cliente.id;
+    document.getElementById(
+        "veiculoClienteId"
+    ).value = cliente.id;
 
-    // Mostra o nome
-    document.getElementById("nomeClienteVeiculo").textContent =
-        cliente.nome || "Cliente";
+    document.getElementById(
+        "nomeClienteVeiculo"
+    ).textContent =
+        cliente.nome;
 
-    // Limpa os campos
-    document.getElementById("veiculoPlaca").value = "";
-    document.getElementById("veiculoModelo").value = "";
+    document.getElementById(
+        "veiculoPlaca"
+    ).value = "";
 
-    // Abre o modal
+    document.getElementById(
+        "veiculoModelo"
+    ).value = "";
+
     modal.classList.remove("escondido");
 
-    console.log("Modal de veículo aberto para:", cliente.nome);
+    // IMPORTANTE:
+    // carrega somente os veículos
+    // deste cliente
+    carregarVeiculos(cliente.id);
 }
-
 
 // ==========================================
 // FECHAR MODAL DE VEÍCULO
@@ -4754,6 +4759,91 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
     
+async function carregarVeiculos(clienteId) {
+
+    const lista =
+        document.getElementById("listaVeiculos");
+
+    if (!lista) return;
+
+    lista.innerHTML =
+        "<p>Carregando veículos...</p>";
+
+    try {
+
+        const token =
+            localStorage.getItem("tokenFinanceiro");
+
+        const resposta =
+            await fetch(
+                `${API_URL}/clientes/${clienteId}/veiculos`,
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+        const dados =
+            await resposta.json();
+
+        if (!resposta.ok) {
+
+            lista.innerHTML =
+                "<p>Erro ao carregar veículos.</p>";
+
+            return;
+        }
+
+        if (
+            !dados.veiculos ||
+            dados.veiculos.length === 0
+        ) {
+
+            lista.innerHTML =
+                "<p>🚗 Nenhum veículo cadastrado.</p>";
+
+            return;
+        }
+
+        lista.innerHTML =
+            dados.veiculos.map(veiculo => `
+
+                <div class="veiculo-item">
+
+                    <strong>
+                        🚘 ${veiculo.placa}
+                    </strong>
+
+                    <p>
+                        🏍️ ${veiculo.modelo || "Modelo não informado"}
+                    </p>
+
+                    <button
+                        type="button"
+                        class="btn-excluir"
+                        onclick="excluirVeiculo(${veiculo.id}, ${clienteId})"
+                    >
+                        🗑️ Excluir
+                    </button>
+
+                </div>
+
+            `).join("");
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao carregar veículos:",
+            erro
+        );
+
+        lista.innerHTML =
+            "<p>Erro de conexão.</p>";
+    }
+}
+
 // ==========================================
 // INICIAR
 // ==========================================
