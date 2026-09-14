@@ -795,14 +795,6 @@ function mostrarClientes(clientes) {
     carregarFotosRosto(clientes);
 }
 
-// ==================================
-// CARREGAR FOTOS
-// ==================================
-
-carregarFotosRosto(
-    clientes
-);
-
 // ==========================================
 // VER FOTO DO ROSTO
 // ==========================================
