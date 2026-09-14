@@ -785,15 +785,18 @@ function mostrarClientes(clientes) {
                                 🗑️ Excluir
                             </button>
 
-                        </div>
+                                                </div>
 
                     </div>
+
+                </div>
 
                 `;
 
             }
         )
         .join("");
+}
 
 // ==================================
 // CARREGAR FOTOS
