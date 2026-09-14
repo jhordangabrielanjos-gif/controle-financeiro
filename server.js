@@ -1790,6 +1790,201 @@ app.get(
 );
 
 // ==========================================
+// EDITAR VEÍCULO
+// ==========================================
+
+app.put(
+    "/veiculos/:id",
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const veiculoId =
+                Number(req.params.id);
+
+            const {
+                placa,
+                modelo
+            } = req.body;
+
+            if (!placa) {
+
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Informe a placa"
+                });
+
+            }
+
+            // Verifica se o veículo pertence
+            // a um cliente do usuário logado
+            const verificacao =
+                await pool.query(
+                    `
+                    SELECT v.id
+                    FROM veiculos_financeiro v
+                    INNER JOIN clientes_financeiro c
+                        ON c.id = v.cliente_id
+                    WHERE v.id = $1
+                    AND c.usuario_id = $2
+                    `,
+                    [
+                        veiculoId,
+                        req.usuario.id
+                    ]
+                );
+
+            if (verificacao.rows.length === 0) {
+
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Veículo não encontrado"
+                });
+
+            }
+
+            const resultado =
+                await pool.query(
+                    `
+                    UPDATE veiculos_financeiro
+
+                    SET
+                        placa = $1,
+                        modelo = $2
+
+                    WHERE id = $3
+
+                    RETURNING *
+                    `,
+                    [
+                        placa.trim().toUpperCase(),
+                        modelo
+                            ? modelo.trim()
+                            : null,
+                        veiculoId
+                    ]
+                );
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+                    "Veículo atualizado com sucesso",
+
+                veiculo:
+                    resultado.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao editar veículo:",
+                erro
+            );
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao editar veículo"
+
+            });
+
+        }
+
+    }
+);
+
+// ==========================================
+// EXCLUIR VEÍCULO
+// ==========================================
+
+app.delete(
+    "/veiculos/:id",
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const veiculoId =
+                Number(req.params.id);
+
+            // Garante que o veículo pertence
+            // a um cliente do usuário logado
+            const verificacao =
+                await pool.query(
+                    `
+                    SELECT v.id
+                    FROM veiculos_financeiro v
+
+                    INNER JOIN clientes_financeiro c
+                        ON c.id = v.cliente_id
+
+                    WHERE v.id = $1
+                    AND c.usuario_id = $2
+                    `,
+                    [
+                        veiculoId,
+                        req.usuario.id
+                    ]
+                );
+
+            if (verificacao.rows.length === 0) {
+
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Veículo não encontrado"
+                });
+
+            }
+
+            await pool.query(
+                `
+                DELETE FROM veiculos_financeiro
+                WHERE id = $1
+                `,
+                [
+                    veiculoId
+                ]
+            );
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+                    "Veículo excluído com sucesso"
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao excluir veículo:",
+                erro
+            );
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao excluir veículo"
+
+            });
+
+        }
+
+    }
+);
+
+// ==========================================
 // VER FOTO DO DOCUMENTO
 // ==========================================
 
