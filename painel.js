@@ -785,8 +785,6 @@ function mostrarClientes(clientes) {
                                 🗑️ Excluir
                             </button>
 
-                                                </div>
-
                     </div>
 
                 </div>
