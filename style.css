@@ -1051,128 +1051,90 @@ font-size: 13px;
 
 }
 /* ==========================================
-   LISTA DE CLIENTES - LAYOUT FIXO
+   CORREÇÃO DEFINITIVA - CLIENTES NO CELULAR
 ========================================== */
 
 #listaClientes {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+    display: flex !important;
+    flex-direction: column !important;
 
-    display: flex;
-    flex-direction: column;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
 
-    gap: 15px;
+    margin: 0 !important;
+    padding: 0 !important;
 
-    box-sizing: border-box;
+    gap: 15px !important;
+
+    box-sizing: border-box !important;
 }
-
-
-/* ==========================================
-   CARD DO CLIENTE
-========================================== */
 
 #listaClientes .cliente-item {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+    display: block !important;
 
-    margin: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
 
-    padding: 18px;
+    margin: 0 !important;
+    padding: 18px !important;
 
-    box-sizing: border-box;
+    box-sizing: border-box !important;
 
-    display: flex;
-    flex-direction: column;
-
-    align-items: stretch;
-
-    gap: 15px;
+    overflow: hidden !important;
 }
-
-
-/* ==========================================
-   CABEÇALHO DO CLIENTE
-========================================== */
 
 #listaClientes .cliente-cabecalho {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+    display: flex !important;
 
-    display: flex;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
 
-    align-items: flex-start;
+    box-sizing: border-box !important;
 
-    gap: 18px;
-
-    box-sizing: border-box;
+    gap: 12px !important;
 }
-
-
-/* ==========================================
-   INFORMAÇÕES DO CLIENTE
-========================================== */
 
 #listaClientes .cliente-informacoes {
-    flex: 1 1 auto;
+    flex: 1 1 0 !important;
 
-    width: auto;
+    width: 0 !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
 
-    min-width: 0;
-    max-width: 100%;
+    box-sizing: border-box !important;
 
-    box-sizing: border-box;
+    overflow: hidden !important;
 }
-
-
-/* ==========================================
-   TEXTOS
-========================================== */
 
 #listaClientes .cliente-informacoes h3,
 #listaClientes .cliente-informacoes p {
-    max-width: 100%;
+    max-width: 100% !important;
 
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
 }
-
-
-/* ==========================================
-   AÇÕES
-========================================== */
 
 #listaClientes .acoes-cliente {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+    display: flex !important;
+    flex-wrap: wrap !important;
 
-    display: flex;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
 
-    flex-wrap: wrap;
+    box-sizing: border-box !important;
 
-    gap: 8px;
-
-    box-sizing: border-box;
+    gap: 8px !important;
 }
-
 
 #listaClientes .acoes-cliente button {
-    max-width: 100%;
-    min-width: 0;
+    max-width: 100% !important;
+    min-width: 0 !important;
 
-    box-sizing: border-box;
-}
-
-
-/* ==========================================
-   IMAGEM
-========================================== */
-
-#listaClientes .foto-cliente-container {
-    flex-shrink: 0;
+    box-sizing: border-box !important;
 }
 
 
@@ -1182,51 +1144,91 @@ font-size: 13px;
 
 @media (max-width: 700px) {
 
-    #listaClientes {
-        width: 100%;
-        max-width: 100%;
+    .painel {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 10px 0 !important;
+        padding: 0 10px !important;
+
+        box-sizing: border-box !important;
     }
 
+    .card-painel {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        padding: 15px !important;
+
+        box-sizing: border-box !important;
+
+        overflow: hidden !important;
+    }
+
+    #listaClientes {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 
     #listaClientes .cliente-item {
-        width: 100%;
-        max-width: 100%;
-    }
+        width: 100% !important;
+        max-width: 100% !important;
 
+        padding: 14px !important;
+    }
 
     #listaClientes .cliente-cabecalho {
-        flex-direction: column;
+        flex-direction: column !important;
 
-        width: 100%;
+        width: 100% !important;
     }
 
+    #listaClientes .foto-cliente-container {
+        flex-shrink: 0 !important;
+    }
+
+    #listaClientes .cliente-informacoes {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 
     #listaClientes .acoes-cliente {
-        width: 100%;
+        display: grid !important;
 
-        display: grid;
+        width: 100% !important;
+        max-width: 100% !important;
 
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr !important;
 
-        gap: 8px;
+        gap: 8px !important;
     }
-
 
     #listaClientes .acoes-cliente button {
-        width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
     }
-
 }
 
 
 /* ==========================================
-   CELULAR PEQUENO
+   CELULARES PEQUENOS
 ========================================== */
 
 @media (max-width: 400px) {
 
-    #listaClientes .acoes-cliente {
-        grid-template-columns: 1fr;
+    .painel {
+        padding: 0 6px !important;
     }
 
+    .card-painel {
+        padding: 10px !important;
+    }
+
+    #listaClientes .cliente-item {
+        padding: 12px !important;
+    }
+
+    #listaClientes .acoes-cliente {
+        grid-template-columns: 1fr !important;
+    }
 }
