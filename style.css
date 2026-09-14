@@ -1113,4 +1113,81 @@ margin: 30px auto;
     width: 100%;
 }
 
-  }
+}
+/* ==========================================
+LISTA DE CLIENTES
+========================================== */
+
+.lista-clientes {
+width: 100%;
+max-width: 100%;
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+/* CARD INDIVIDUAL DO CLIENTE */
+
+.lista-clientes .cliente-item {
+width: 100%;
+max-width: 100%;
+min-width: 0;
+flex: 0 0 auto;
+
+margin-top: 0;
+
+}
+
+/* ==========================================
+EVITA QUE O CONTEÚDO DEFORME O CARD
+========================================== */
+
+.lista-clientes .cliente-cabecalho {
+width: 100%;
+min-width: 0;
+}
+
+.lista-clientes .cliente-informacoes {
+width: 100%;
+min-width: 0;
+}
+
+/* Nome e informações não podem
+aumentar/diminuir o card */
+
+.lista-clientes .cliente-informacoes h3,
+.lista-clientes .cliente-informacoes p {
+overflow-wrap: anywhere;
+word-break: break-word;
+}
+
+/* ==========================================
+PAINEL
+========================================== */
+
+.painel {
+width: 90%;
+max-width: 1100px;
+margin: 30px auto;
+}
+
+/* ==========================================
+CELULAR
+========================================== */
+
+@media (max-width: 600px) {
+
+.painel {
+    width: 94%;
+    max-width: 100%;
+}
+
+.lista-clientes {
+    width: 100%;
+}
+
+.lista-clientes .cliente-item {
+    width: 100%;
+}
+
+      }
