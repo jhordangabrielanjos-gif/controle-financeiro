@@ -1583,6 +1583,129 @@ c.cidade,
 );
 
 // ==========================================
+// SALVAR VEÍCULO DO CLIENTE
+// ==========================================
+
+app.post(
+    "/clientes/:id/veiculos",
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(req.params.id);
+
+            const {
+                placa,
+                modelo
+            } = req.body;
+
+            if (!clienteId) {
+
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Cliente inválido"
+                });
+
+            }
+
+            if (!placa) {
+
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Informe a placa"
+                });
+
+            }
+
+            // Verifica se o cliente pertence ao usuário logado
+            const cliente =
+                await pool.query(
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+                );
+
+            if (cliente.rows.length === 0) {
+
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Cliente não encontrado"
+                });
+
+            }
+
+            const resultado =
+                await pool.query(
+                    `
+                    INSERT INTO veiculos_financeiro
+                    (
+                        cliente_id,
+                        placa,
+                        modelo
+                    )
+                    VALUES
+                    (
+                        $1,
+                        $2,
+                        $3
+                    )
+                    RETURNING *
+                    `,
+                    [
+                        clienteId,
+                        placa
+                            .trim()
+                            .toUpperCase(),
+                        modelo
+                            ? modelo.trim()
+                            : null
+                    ]
+                );
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+                    "Veículo cadastrado com sucesso",
+
+                veiculo:
+                    resultado.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao salvar veículo:",
+                erro
+            );
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao salvar veículo"
+
+            });
+
+        }
+
+    }
+);
+
+// ==========================================
 // VER FOTO DO DOCUMENTO
 // ==========================================
 
