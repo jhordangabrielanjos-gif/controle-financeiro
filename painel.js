@@ -737,6 +737,13 @@ function mostrarClientes(clientes) {
 
                     <div class="acoes-cliente">
 
+                    <button
+    class="btn-veiculos"
+    onclick="abrirVeiculos(${cliente.id})"
+>
+    🚗 Veículos
+</button>
+
                         <button
                             class="btn-pagamento"
                             onclick="abrirPagamento(
@@ -3832,6 +3839,656 @@ document
         salvarEdicao
     );
 
+// ==========================================
+// VEÍCULOS DO CLIENTE
+// ==========================================
+
+let clienteVeiculosAtual = null;
+
+
+// ==========================================
+// ABRIR VEÍCULOS
+// ==========================================
+
+async function abrirVeiculos(clienteId) {
+
+    clienteVeiculosAtual =
+        Number(clienteId);
+
+    const cliente =
+        todosClientes.find(
+            (item) =>
+                Number(item.id) ===
+                Number(clienteId)
+        );
+
+    if (!cliente) {
+
+        alert(
+            "Cliente não encontrado."
+        );
+
+        return;
+    }
+
+
+    const nome =
+        document.getElementById(
+            "nomeClienteVeiculos"
+        );
+
+    if (nome) {
+
+        nome.textContent =
+            `Veículos de ${cliente.nome}`;
+
+    }
+
+
+    const lista =
+        document.getElementById(
+            "listaVeiculos"
+        );
+
+    if (lista) {
+
+        lista.innerHTML =
+            "<p>Carregando veículos...</p>";
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            "modalVeiculos"
+        );
+
+    if (modal) {
+
+        modal.classList.remove(
+            "escondido"
+        );
+
+        modal.style.display =
+            "flex";
+
+    }
+
+
+    await carregarVeiculos(
+        clienteId
+    );
+
+}
+
+
+// ==========================================
+// CARREGAR VEÍCULOS
+// ==========================================
+
+async function carregarVeiculos(clienteId) {
+
+    const lista =
+        document.getElementById(
+            "listaVeiculos"
+        );
+
+    if (!lista) {
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/clientes/${clienteId}/veiculos`,
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            lista.innerHTML =
+                `
+                <p>
+                    ${escaparHtml(
+                        dados.erro ||
+                        "Erro ao carregar veículos."
+                    )}
+                </p>
+                `;
+
+            return;
+        }
+
+
+        const veiculos =
+            dados.veiculos || [];
+
+
+        if (
+            veiculos.length === 0
+        ) {
+
+            lista.innerHTML =
+                `
+                <p class="sem-veiculos">
+                    🚗 Nenhum veículo cadastrado.
+                </p>
+                `;
+
+            return;
+        }
+
+
+        lista.innerHTML =
+            veiculos.map(
+                (veiculo) => {
+
+                    return `
+
+                        <div
+                            class="veiculo-item"
+                        >
+
+                            <div
+                                class="veiculo-informacoes"
+                            >
+
+                                <strong>
+                                    🚗
+                                    ${escaparHtml(
+                                        veiculo.placa
+                                    )}
+                                </strong>
+
+                                ${
+                                    veiculo.modelo
+                                        ? `
+                                            <span>
+                                                ${escaparHtml(
+                                                    veiculo.modelo
+                                                )}
+                                            </span>
+                                        `
+                                        : `
+                                            <span>
+                                                Modelo não informado
+                                            </span>
+                                        `
+                                }
+
+                            </div>
+
+
+                            <div
+                                class="acoes-veiculo"
+                            >
+
+                                <button
+                                    type="button"
+                                    onclick="editarVeiculo(
+                                        ${veiculo.id},
+                                        '${String(
+                                            veiculo.placa || ""
+                                        ).replace(
+                                            /'/g,
+                                            "\\'"
+                                        )}',
+                                        '${String(
+                                            veiculo.modelo || ""
+                                        ).replace(
+                                            /'/g,
+                                            "\\'"
+                                        )}'
+                                    )"
+                                >
+                                    ✏️
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    onclick="excluirVeiculo(
+                                        ${veiculo.id}
+                                    )"
+                                >
+                                    🗑️
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+                }
+            ).join("");
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao carregar veículos:",
+            erro
+        );
+
+        lista.innerHTML =
+            `
+            <p>
+                Erro ao carregar veículos.
+            </p>
+            `;
+
+    }
+
+}
+
+
+// ==========================================
+// CADASTRAR VEÍCULO
+// ==========================================
+
+async function cadastrarVeiculo() {
+
+    if (
+        !clienteVeiculosAtual
+    ) {
+
+        alert(
+            "Nenhum cliente selecionado."
+        );
+
+        return;
+    }
+
+
+    const campoPlaca =
+        document.getElementById(
+            "veiculoPlaca"
+        );
+
+    const campoModelo =
+        document.getElementById(
+            "veiculoModelo"
+        );
+
+
+    const placa =
+        String(
+            campoPlaca?.value || ""
+        )
+        .trim()
+        .toUpperCase();
+
+
+    const modelo =
+        String(
+            campoModelo?.value || ""
+        )
+        .trim();
+
+
+    if (!placa) {
+
+        alert(
+            "Digite a placa do veículo."
+        );
+
+        campoPlaca?.focus();
+
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/clientes/${clienteVeiculosAtual}/veiculos`,
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            placa:
+                                placa,
+
+                            modelo:
+                                modelo
+
+                        })
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao cadastrar veículo."
+            );
+
+            return;
+        }
+
+
+        alert(
+            "🚗 Veículo cadastrado com sucesso!"
+        );
+
+
+        if (campoPlaca) {
+            campoPlaca.value = "";
+        }
+
+        if (campoModelo) {
+            campoModelo.value = "";
+        }
+
+
+        await carregarVeiculos(
+            clienteVeiculosAtual
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao cadastrar veículo:",
+            erro
+        );
+
+        alert(
+            "Erro ao conectar ao servidor."
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// EDITAR VEÍCULO
+// ==========================================
+
+async function editarVeiculo(
+    veiculoId,
+    placaAtual,
+    modeloAtual
+) {
+
+    const novaPlaca =
+        prompt(
+            "Digite a nova placa:",
+            placaAtual
+        );
+
+
+    if (
+        novaPlaca === null
+    ) {
+
+        return;
+    }
+
+
+    const placa =
+        novaPlaca
+            .trim()
+            .toUpperCase();
+
+
+    if (!placa) {
+
+        alert(
+            "A placa não pode ficar vazia."
+        );
+
+        return;
+    }
+
+
+    const novoModelo =
+        prompt(
+            "Digite o modelo do veículo:",
+            modeloAtual
+        );
+
+
+    if (
+        novoModelo === null
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/veiculos/${veiculoId}`,
+                {
+
+                    method:
+                        "PUT",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            placa:
+                                placa,
+
+                            modelo:
+                                novoModelo.trim()
+
+                        })
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao editar veículo."
+            );
+
+            return;
+        }
+
+
+        alert(
+            "🚗 Veículo atualizado com sucesso!"
+        );
+
+
+        await carregarVeiculos(
+            clienteVeiculosAtual
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao editar veículo:",
+            erro
+        );
+
+        alert(
+            "Erro ao conectar ao servidor."
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// EXCLUIR VEÍCULO
+// ==========================================
+
+async function excluirVeiculo(
+    veiculoId
+) {
+
+    const confirmar =
+        confirm(
+            "Deseja realmente excluir este veículo?"
+        );
+
+
+    if (!confirmar) {
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `${API_URL}/veiculos/${veiculoId}`,
+                {
+
+                    method:
+                        "DELETE",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok ||
+            !dados.sucesso
+        ) {
+
+            alert(
+                dados.erro ||
+                "Erro ao excluir veículo."
+            );
+
+            return;
+        }
+
+
+        alert(
+            "🚗 Veículo excluído com sucesso!"
+        );
+
+
+        await carregarVeiculos(
+            clienteVeiculosAtual
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao excluir veículo:",
+            erro
+        );
+
+        alert(
+            "Erro ao conectar ao servidor."
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// FECHAR MODAL DE VEÍCULOS
+// ==========================================
+
+function fecharVeiculos() {
+
+    const modal =
+        document.getElementById(
+            "modalVeiculos"
+        );
+
+    if (modal) {
+
+        modal.classList.add(
+            "escondido"
+        );
+
+        modal.style.display =
+            "none";
+
+    }
+
+
+    clienteVeiculosAtual =
+        null;
+
+}
+    
 // ==========================================
 // INICIAR
 // ==========================================
