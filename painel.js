@@ -4808,29 +4808,58 @@ async function carregarVeiculos(clienteId) {
         }
 
         lista.innerHTML =
-            dados.veiculos.map(veiculo => `
+    dados.veiculos.map(veiculo => `
 
-                <div class="veiculo-item">
+        <div class="veiculo-item">
 
-                    <strong>
-                        🚘 ${veiculo.placa}
-                    </strong>
+            <div class="veiculo-informacoes">
 
-                    <p>
-                        🏍️ ${veiculo.modelo || "Modelo não informado"}
-                    </p>
+                <strong>
+                    🚘 ${veiculo.placa}
+                </strong>
 
-                    <button
-                        type="button"
-                        class="btn-excluir"
-                        onclick="excluirVeiculo(${veiculo.id}, ${clienteId})"
-                    >
-                        🗑️ Excluir
-                    </button>
+                <p>
+                    🏍️ ${
+                        veiculo.modelo ||
+                        "Modelo não informado"
+                    }
+                </p>
 
-                </div>
+            </div>
 
-            `).join("");
+            <div class="veiculo-acoes">
+
+                <button
+                    type="button"
+                    class="btn-editar"
+                    onclick="editarVeiculo(
+                        ${veiculo.id},
+                        '${String(veiculo.placa || "")
+                            .replace(/'/g, "\\'")}',
+                        '${String(veiculo.modelo || "")
+                            .replace(/'/g, "\\'")}',
+                        ${clienteId}
+                    )"
+                >
+                    ✏️ Editar
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-excluir"
+                    onclick="excluirVeiculo(
+                        ${veiculo.id},
+                        ${clienteId}
+                    )"
+                >
+                    🗑️ Excluir
+                </button>
+
+            </div>
+
+        </div>
+
+    `).join("");
 
     } catch (erro) {
 
@@ -4842,6 +4871,192 @@ async function carregarVeiculos(clienteId) {
         lista.innerHTML =
             "<p>Erro de conexão.</p>";
     }
+}
+
+// ==========================================
+// EDITAR VEÍCULO
+// ==========================================
+
+async function editarVeiculo(
+    veiculoId,
+    placa,
+    modelo,
+    clienteId
+) {
+
+    const novaPlaca =
+        prompt(
+            "Digite a nova placa:",
+            placa
+        );
+
+    if (novaPlaca === null) {
+        return;
+    }
+
+    const novoModelo =
+        prompt(
+            "Digite o modelo:",
+            modelo
+        );
+
+    if (novoModelo === null) {
+        return;
+    }
+
+    if (!novaPlaca.trim()) {
+
+        alert(
+            "❌ A placa é obrigatória."
+        );
+
+        return;
+    }
+
+    try {
+
+        const token =
+            localStorage.getItem(
+                "tokenFinanceiro"
+            );
+
+        const resposta =
+            await fetch(
+                `${API_URL}/veiculos/${veiculoId}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    },
+
+                    body: JSON.stringify({
+
+                        placa:
+                            novaPlaca.trim(),
+
+                        modelo:
+                            novoModelo.trim()
+
+                    })
+                }
+            );
+
+        const dados =
+            await resposta.json();
+
+        if (!resposta.ok) {
+
+            alert(
+                dados.erro ||
+                "Erro ao editar veículo."
+            );
+
+            return;
+        }
+
+        alert(
+            "✅ Veículo atualizado!"
+        );
+
+        // Atualiza somente os veículos
+        // deste cliente
+        carregarVeiculos(clienteId);
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao editar veículo:",
+            erro
+        );
+
+        alert(
+            "❌ Erro de conexão com o servidor."
+        );
+
+    }
+
+}
+
+// ==========================================
+// EXCLUIR VEÍCULO
+// ==========================================
+
+async function excluirVeiculo(
+    veiculoId,
+    clienteId
+) {
+
+    const confirmar =
+        confirm(
+            "⚠️ Tem certeza que deseja excluir este veículo?"
+        );
+
+    if (!confirmar) {
+        return;
+    }
+
+    try {
+
+        const token =
+            localStorage.getItem(
+                "tokenFinanceiro"
+            );
+
+        const resposta =
+            await fetch(
+                `${API_URL}/veiculos/${veiculoId}`,
+                {
+                    method: "DELETE",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+
+                    }
+                }
+            );
+
+        const dados =
+            await resposta.json();
+
+        if (!resposta.ok) {
+
+            alert(
+                dados.erro ||
+                "Erro ao excluir veículo."
+            );
+
+            return;
+        }
+
+        alert(
+            "🗑️ Veículo excluído!"
+        );
+
+        // Atualiza a lista daquele cliente
+        carregarVeiculos(clienteId);
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao excluir veículo:",
+            erro
+        );
+
+        alert(
+            "❌ Erro de conexão com o servidor."
+        );
+
+    }
+
 }
 
 // ==========================================
