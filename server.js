@@ -1728,6 +1728,470 @@ app.get(
 );
 
 // ==========================================
+// LISTAR VEÍCULOS DO CLIENTE
+// ==========================================
+
+app.get(
+    "/clientes/:id/veiculos",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(req.params.id);
+
+            // Verifica se o cliente pertence ao usuário logado
+            const cliente =
+                await pool.query(
+
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+
+                );
+
+            if (cliente.rows.length === 0) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    SELECT
+                        id,
+                        cliente_id,
+                        placa,
+                        modelo,
+                        criado_em
+
+                    FROM veiculos_financeiro
+
+                    WHERE cliente_id = $1
+
+                    ORDER BY id DESC
+                    `,
+
+                    [clienteId]
+
+                );
+
+            return res.json({
+
+                sucesso: true,
+
+                veiculos:
+                    resultado.rows
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao listar veículos:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar veículos"
+
+            });
+
+        }
+
+    }
+
+);
+
+
+// ==========================================
+// CADASTRAR VEÍCULO
+// ==========================================
+
+app.post(
+    "/clientes/:id/veiculos",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const clienteId =
+                Number(req.params.id);
+
+            let placa =
+                String(
+                    req.body.placa || ""
+                )
+                .trim()
+                .toUpperCase();
+
+            let modelo =
+                String(
+                    req.body.modelo || ""
+                )
+                .trim();
+
+
+            if (!placa) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Informe a placa do veículo"
+
+                });
+
+            }
+
+
+            // Verifica se o cliente pertence ao usuário
+            const cliente =
+                await pool.query(
+
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+
+                );
+
+
+            if (cliente.rows.length === 0) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    INSERT INTO veiculos_financeiro
+                    (
+                        cliente_id,
+                        placa,
+                        modelo
+                    )
+
+                    VALUES
+                    (
+                        $1,
+                        $2,
+                        $3
+                    )
+
+                    RETURNING
+                        id,
+                        cliente_id,
+                        placa,
+                        modelo,
+                        criado_em
+                    `,
+
+                    [
+                        clienteId,
+                        placa,
+                        modelo || null
+                    ]
+
+                );
+
+
+            return res.status(201).json({
+
+                sucesso: true,
+
+                veiculo:
+                    resultado.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao cadastrar veículo:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao cadastrar veículo"
+
+            });
+
+        }
+
+    }
+
+);
+
+
+// ==========================================
+// EDITAR VEÍCULO
+// ==========================================
+
+app.put(
+    "/veiculos/:id",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const veiculoId =
+                Number(req.params.id);
+
+            let placa =
+                String(
+                    req.body.placa || ""
+                )
+                .trim()
+                .toUpperCase();
+
+            let modelo =
+                String(
+                    req.body.modelo || ""
+                )
+                .trim();
+
+
+            if (!placa) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Informe a placa do veículo"
+
+                });
+
+            }
+
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    UPDATE veiculos_financeiro v
+
+                    SET
+                        placa = $1,
+                        modelo = $2
+
+                    FROM clientes_financeiro c
+
+                    WHERE
+                        v.id = $3
+
+                    AND
+                        v.cliente_id = c.id
+
+                    AND
+                        c.usuario_id = $4
+
+                    RETURNING
+                        v.id,
+                        v.cliente_id,
+                        v.placa,
+                        v.modelo,
+                        v.criado_em
+                    `,
+
+                    [
+                        placa,
+                        modelo || null,
+                        veiculoId,
+                        req.usuario.id
+                    ]
+
+                );
+
+
+            if (resultado.rows.length === 0) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Veículo não encontrado"
+
+                });
+
+            }
+
+
+            return res.json({
+
+                sucesso: true,
+
+                veiculo:
+                    resultado.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao editar veículo:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao editar veículo"
+
+            });
+
+        }
+
+    }
+
+);
+
+
+// ==========================================
+// EXCLUIR VEÍCULO
+// ==========================================
+
+app.delete(
+    "/veiculos/:id",
+
+    verificarToken,
+
+    async (req, res) => {
+
+        try {
+
+            const veiculoId =
+                Number(req.params.id);
+
+
+            const resultado =
+                await pool.query(
+
+                    `
+                    DELETE FROM veiculos_financeiro v
+
+                    USING clientes_financeiro c
+
+                    WHERE
+                        v.id = $1
+
+                    AND
+                        v.cliente_id = c.id
+
+                    AND
+                        c.usuario_id = $2
+
+                    RETURNING v.id
+                    `,
+
+                    [
+                        veiculoId,
+                        req.usuario.id
+                    ]
+
+                );
+
+
+            if (resultado.rows.length === 0) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Veículo não encontrado"
+
+                });
+
+            }
+
+
+            return res.json({
+
+                sucesso: true,
+
+                mensagem:
+                    "Veículo excluído com sucesso"
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao excluir veículo:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao excluir veículo"
+
+            });
+
+        }
+
+    }
+
+);
+
+// ==========================================
 // VER FOTO DO ROSTO
 // ==========================================
 
@@ -3301,11 +3765,9 @@ app.delete(
 
 // ==========================================
 // RELATÓRIO FINANCEIRO
-// PAGAMENTOS SEMANAIS + FOLHA
 // ==========================================
 
 app.get(
-
     "/relatorios/pagamentos",
 
     verificarToken,
@@ -3321,10 +3783,6 @@ app.get(
 
             } = req.query;
 
-
-            // ==============================
-            // VALIDAR DATAS
-            // ==============================
 
             if (
 
@@ -3345,218 +3803,70 @@ app.get(
             }
 
 
-            // ==============================
-            // BUSCAR TODOS OS PAGAMENTOS
-            // ==============================
-
             const pagamentosResultado =
                 await pool.query(
 
                     `
                     SELECT
 
-                        pagamento_id AS id,
+                        p.id,
 
-                        valor,
+                        p.valor,
 
-                        tipo,
-
-                        cliente_id,
-
-                        cliente_nome,
-
-                        cliente_cpf,
-
-                        criado_em,
 
                         TO_CHAR(
 
-                            criado_em
+                            p.criado_em
                             AT TIME ZONE
                             'America/Maceio',
 
                             'DD/MM/YYYY HH24:MI:SS'
 
                         )
-                        AS data_formatada
+                        AS data_formatada,
 
 
-                    FROM (
-
-                        /* =====================
-                           PAGAMENTOS ANTIGOS
-                           SEMANAIS
-                        ===================== */
-
-                        SELECT
-
-                            p.id
-                            AS pagamento_id,
-
-                            p.valor,
-
-                            'Pagamento semanal'
-                            AS tipo,
-
-                            c.id
-                            AS cliente_id,
-
-                            c.nome
-                            AS cliente_nome,
-
-                            c.cpf
-                            AS cliente_cpf,
-
-                            p.criado_em
-
-                        FROM
-                            pagamentos_financeiro p
-
-                        INNER JOIN
-                            clientes_financeiro c
-
-                        ON
-
-                            c.id =
-                            p.cliente_id
-
-                        WHERE
-
-                            c.usuario_id = $1
+                        c.id
+                        AS cliente_id,
 
 
-                        UNION ALL
+                        c.nome
+                        AS cliente_nome,
 
 
-                        /* =====================
-                           PAGAMENTOS DA FOLHA
-                           DE PAGAMENTOS
-                        ===================== */
-
-                        SELECT
-
-                            pc.id
-                            AS pagamento_id,
-
-                            pc.valor,
-
-                            CASE
-
-                                WHEN
-                                    co.juros_valor > 0
-
-                                THEN
-
-                                    'Pagamento da folha com juros'
-
-                                ELSE
-
-                                    'Pagamento da folha'
-
-                            END
-                            AS tipo,
-
-                            c.id
-                            AS cliente_id,
-
-                            c.nome
-                            AS cliente_nome,
-
-                            c.cpf
-                            AS cliente_cpf,
-
-                            pc.criado_em
-
-                        FROM
-                            pagamentos_cobrancas_financeiro pc
-
-                        INNER JOIN
-                            cobrancas_financeiro co
-
-                        ON
-
-                            co.id =
-                            pc.cobranca_id
-
-                        INNER JOIN
-                            clientes_financeiro c
-
-                        ON
-
-                            c.id =
-                            co.cliente_id
-
-                        WHERE
-
-                            co.usuario_id = $1
+                        c.cpf
+                        AS cliente_cpf
 
 
-                        UNION ALL
+                    FROM pagamentos_financeiro p
 
 
-                        /* =====================
-                           QUITAÇÃO DA
-                           DÍVIDA TOTAL
-                        ===================== */
+                    INNER JOIN clientes_financeiro c
 
-                        SELECT
-
-                            pd.id
-                            AS pagamento_id,
-
-                            pd.valor,
-
-                            'Quitação da dívida'
-                            AS tipo,
-
-                            c.id
-                            AS cliente_id,
-
-                            c.nome
-                            AS cliente_nome,
-
-                            c.cpf
-                            AS cliente_cpf,
-
-                            pd.criado_em
-
-                        FROM
-                            pagamentos_divida_financeiro pd
-
-                        INNER JOIN
-                            clientes_financeiro c
-
-                        ON
-
-                            c.id =
-                            pd.cliente_id
-
-                        WHERE
-
-                            c.usuario_id = $1
-
-                    ) AS pagamentos
+                    ON
+                        c.id = p.cliente_id
 
 
                     WHERE
 
-                        criado_em >= $2::date
+                        c.usuario_id = $1
 
 
                     AND
 
-                        criado_em < (
+                        p.criado_em >= $2::date
 
+
+                    AND
+
+                        p.criado_em < (
                             $3::date +
-
                             INTERVAL '1 day'
-
                         )
 
 
                     ORDER BY
-
-                        criado_em DESC
+                        p.criado_em DESC
                     `,
 
                     [
@@ -3572,44 +3882,65 @@ app.get(
                 );
 
 
-            // ==============================
-            // CALCULAR RESUMO
-            // ==============================
+            const resumoResultado =
+                await pool.query(
 
-            const quantidadePagamentos =
+                    `
+                    SELECT
 
-                pagamentosResultado
-                    .rows
-                    .length;
-
-
-            const totalRecebido =
-
-                pagamentosResultado
-                    .rows
-                    .reduce(
-
-                        (
-
-                            total,
-                            pagamento
-
-                        ) =>
-
-                            total +
-
-                            Number(
-                                pagamento.valor
-                            ),
-
-                        0
-
-                    );
+                        COUNT(*)
+                        AS quantidade_pagamentos,
 
 
-            // ==============================
-            // RETORNAR RELATÓRIO
-            // ==============================
+                        COALESCE(
+                            SUM(p.valor),
+                            0
+                        )
+                        AS total_recebido
+
+
+                    FROM pagamentos_financeiro p
+
+
+                    INNER JOIN clientes_financeiro c
+
+                    ON
+                        c.id = p.cliente_id
+
+
+                    WHERE
+
+                        c.usuario_id = $1
+
+
+                    AND
+
+                        p.criado_em >= $2::date
+
+
+                    AND
+
+                        p.criado_em < (
+
+                            $3::date +
+
+                            INTERVAL '1 day'
+
+                        )
+                    `,
+
+                    [
+
+                        req.usuario.id,
+
+                        inicio,
+
+                        fim
+
+                    ]
+
+                );
+
 
             res.json({
 
@@ -3629,12 +3960,24 @@ app.get(
 
                     quantidade_pagamentos:
 
-                        quantidadePagamentos,
+                        Number(
+
+                            resumoResultado
+                                .rows[0]
+                                .quantidade_pagamentos
+
+                        ),
 
 
                     total_recebido:
 
-                        totalRecebido
+                        Number(
+
+                            resumoResultado
+                                .rows[0]
+                                .total_recebido
+
+                        )
 
                 },
 
@@ -3645,15 +3988,11 @@ app.get(
 
             });
 
-
         } catch (erro) {
 
             console.error(
-
                 "Erro ao gerar relatório:",
-
-                erro
-
+                erro.message
             );
 
 
@@ -3671,7 +4010,6 @@ app.get(
     }
 
 );
-
 
 // ==========================================
 // FOLHA DE PAGAMENTOS
