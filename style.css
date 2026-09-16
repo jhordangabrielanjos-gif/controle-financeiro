@@ -1278,3 +1278,11 @@ font-size: 13px;
 #listaVeiculos {
     margin-top: 10px;
 }
+@media (max-width: 700px) {
+  #listaClientes .cliente-informacoes {
+    flex: none !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
