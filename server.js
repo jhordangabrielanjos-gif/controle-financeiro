@@ -2988,18 +2988,18 @@ const valorPagamento =
                 await client.query(
 
                     `
-                    SELECT id
+                    
+SELECT
+    id,
+    valor_semanal
+FROM clientes_financeiro
+WHERE
+    usuario_id = $1
+AND
+    dia_pagamento = $2
+AND
+    COALESCE(valor_devido, 0) > 0
 
-                    FROM pagamentos_financeiro
-
-                    WHERE
-
-                        cliente_id = $1
-
-                    AND
-
-                        semana_referencia = $2
-                    `,
 
                     [
 
@@ -4509,22 +4509,19 @@ app.get(
                         co.id
 
 
-                    WHERE
+WHERE
+    co.usuario_id = $1
 
-                        co.usuario_id = $1
+AND
+    COALESCE(c.valor_devido, 0) > 0
 
+AND (
+    co.status != 'quitado'
+    OR
+    co.data_cobranca = $2
+)
 
-                    AND (
-
-                        co.status != 'quitado'
-
-                        OR
-
-                        co.data_cobranca = $2
-
-                    )
-
-
+                    
                     GROUP BY
 
                         co.id,
@@ -4555,7 +4552,7 @@ app.get(
                         c.dia_pagamento
 
 
-                    ORDER BY
+                      ORDER BY
 
                         CASE
 
