@@ -6,11 +6,13 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const convert = require("heic-convert");
 const heicConvert =
-require("heic-convert");
+    require("heic-convert");
+
 
 require("dotenv").config();
 
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
@@ -18,71 +20,71 @@ app.use(express.static(__dirname));
 
 async function converterHeicParaJpg(arquivo) {
 
-if (!arquivo) {  
-    return null;  
-}  
+    if (!arquivo) {
+        return null;
+    }
 
-const tipo =  
-    String(  
-        arquivo.mimetype || ""  
-    ).toLowerCase();  
+    const tipo =
+        String(
+            arquivo.mimetype || ""
+        ).toLowerCase();
 
-const nome =  
-    String(  
-        arquivo.originalname || ""  
-    ).toLowerCase();  
-
-
-const ehHeic =  
-    tipo === "image/heic" ||  
-    tipo === "image/heif" ||  
-    nome.endsWith(".heic") ||  
-    nome.endsWith(".heif");  
+    const nome =
+        String(
+            arquivo.originalname || ""
+        ).toLowerCase();
 
 
-// Se não for HEIC, mantém normal  
-if (!ehHeic) {  
-
-    return {  
-
-        buffer:  
-            arquivo.buffer,  
-
-        mimetype:  
-            arquivo.mimetype  
-
-    };  
-
-}  
+    const ehHeic =
+        tipo === "image/heic" ||
+        tipo === "image/heif" ||
+        nome.endsWith(".heic") ||
+        nome.endsWith(".heif");
 
 
-// Converte HEIC para JPEG  
-const bufferConvertido =  
-    await convert({  
+    // Se não for HEIC, mantém normal
+    if (!ehHeic) {
 
-        buffer:  
-            arquivo.buffer,  
+        return {
 
-        format:  
-            "JPEG",  
+            buffer:
+                arquivo.buffer,
 
-        quality:  
-            0.9  
+            mimetype:
+                arquivo.mimetype
 
-    });  
+        };
+
+    }
 
 
-return {  
+    // Converte HEIC para JPEG
+    const bufferConvertido =
+        await convert({
 
-    buffer:  
-        Buffer.from(  
-            bufferConvertido  
-        ),  
+            buffer:
+                arquivo.buffer,
 
-    mimetype:  
-        "image/jpeg"  
+            format:
+                "JPEG",
 
-};
+            quality:
+                0.9
+
+        });
+
+
+    return {
+
+        buffer:
+            Buffer.from(
+                bufferConvertido
+            ),
+
+        mimetype:
+            "image/jpeg"
+
+    };
 
 }
 
@@ -91,50 +93,50 @@ return {
 // ==========================================
 
 const storage =
-multer.memoryStorage();
+    multer.memoryStorage();
 
 const upload =
-multer({
+    multer({
 
-storage,  
+        storage,
 
-    limits: {  
+        limits: {
 
-        fileSize:  
-            5 * 1024 * 1024  
+            fileSize:
+                5 * 1024 * 1024
 
-    },  
+        },
 
-    fileFilter: (  
-        req,  
-        file,  
-        cb  
-    ) => {  
+        fileFilter: (
+            req,
+            file,
+            cb
+        ) => {
 
-        if (  
-            file.mimetype.startsWith(  
-                "image/"  
-            )  
-        ) {  
+            if (
+                file.mimetype.startsWith(
+                    "image/"
+                )
+            ) {
 
-            cb(  
-                null,  
-                true  
-            );  
+                cb(
+                    null,
+                    true
+                );
 
-        } else {  
+            } else {
 
-            cb(  
-                new Error(  
-                    "Apenas imagens são permitidas"  
-                )  
-            );  
+                cb(
+                    new Error(
+                        "Apenas imagens são permitidas"
+                    )
+                );
 
-        }  
+            }
 
-    }  
+        }
 
-});
+    });
 
 // ==========================================
 // CONFIGURAÇÕES
@@ -144,9 +146,9 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-console.error(
-"ERRO: JWT_SECRET não foi encontrada no .env"
-);
+    console.error(
+        "ERRO: JWT_SECRET não foi encontrada no .env"
+    );
 }
 
 // ==========================================
@@ -154,12 +156,11 @@ console.error(
 // ==========================================
 
 const pool = new Pool({
-connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL,
 
-ssl: {  
-    rejectUnauthorized: false  
-}
-
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // ==========================================
@@ -167,23 +168,23 @@ ssl: {
 // ==========================================
 
 pool.connect()
-.then((client) => {
+    .then((client) => {
 
-console.log(  
-        "Banco PostgreSQL conectado!"  
-    );  
+        console.log(
+            "Banco PostgreSQL conectado!"
+        );
 
-    client.release();  
+        client.release();
 
-})  
-.catch((erro) => {  
+    })
+    .catch((erro) => {
 
-    console.error(  
-        "Erro ao conectar no banco:",  
-        erro.message  
-    );  
+        console.error(
+            "Erro ao conectar no banco:",
+            erro.message
+        );
 
-});
+    });
 
 // ==========================================
 // CRIAR TABELAS
@@ -191,166 +192,198 @@ console.log(
 
 async function criarTabelas() {
 
-try {  
+    try {
 
-    // ----------------------------------  
-    // USUÁRIOS  
-    // ----------------------------------  
+        // ----------------------------------
+        // USUÁRIOS
+        // ----------------------------------
 
-    await pool.query(`  
-        CREATE TABLE IF NOT EXISTS usuarios_financeiro (  
-            id SERIAL PRIMARY KEY,  
-            nome VARCHAR(150) NOT NULL,  
-            email VARCHAR(150) UNIQUE NOT NULL,  
-            senha TEXT NOT NULL,  
-            criado_em TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP  
-        )  
-    `);  
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS usuarios_financeiro (
+                id SERIAL PRIMARY KEY,
+                nome VARCHAR(150) NOT NULL,
+                email VARCHAR(150) UNIQUE NOT NULL,
+                senha TEXT NOT NULL,
+                criado_em TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
 
-    // ----------------------------------  
-    // CLIENTES  
-    // ----------------------------------  
+        // ----------------------------------
+        // CLIENTES
+        // ----------------------------------
 
-    await pool.query(`  
-        CREATE TABLE IF NOT EXISTS clientes_financeiro (  
-            id SERIAL PRIMARY KEY,  
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS clientes_financeiro (
+                id SERIAL PRIMARY KEY,
 
-            usuario_id INTEGER NOT NULL,  
+                usuario_id INTEGER NOT NULL,
 
-            nome VARCHAR(200) NOT NULL,  
+                nome VARCHAR(200) NOT NULL,
 
-            cpf VARCHAR(20) NOT NULL,  
+                cpf VARCHAR(20) NOT NULL,
 
-            nascimento DATE NOT NULL,  
+                nascimento DATE NOT NULL,
 
-            endereco TEXT NOT NULL,  
+                endereco TEXT NOT NULL,
 
-            valor_devido NUMERIC(12, 2)  
-            NOT NULL DEFAULT 0,  
+                valor_devido NUMERIC(12, 2)
+                NOT NULL DEFAULT 0,
 
-            criado_em TIMESTAMPTZ  
-            DEFAULT CURRENT_TIMESTAMP,  
+                criado_em TIMESTAMPTZ
+                DEFAULT CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (usuario_id)  
-            REFERENCES usuarios_financeiro(id)  
-            ON DELETE CASCADE  
-        )  
-    `);  
+                FOREIGN KEY (usuario_id)
+                REFERENCES usuarios_financeiro(id)
+                ON DELETE CASCADE
+            )
+        `);
 
-   // ==========================================
-
+       // ==========================================
 // FOTO DO DOCUMENTO
 // ==========================================
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS documento_foto BYTEA  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS documento_foto BYTEA
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS documento_tipo TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS documento_tipo TEXT
+`);
 
 // ==========================================
 // FOTO DO ROSTO DO CLIENTE
 // ==========================================
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS foto_rosto BYTEA  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS foto_rosto BYTEA
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS foto_rosto_tipo TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS foto_rosto_tipo TEXT
+`);
 
-// ----------------------------------  
-    // REMOVER VENCIMENTO SE EXISTIR  
-    // ----------------------------------  
 
-    await pool.query(`  
-        ALTER TABLE clientes_financeiro  
-        DROP COLUMN IF EXISTS vencimento  
-    `);  
+        // ----------------------------------
+        // REMOVER VENCIMENTO SE EXISTIR
+        // ----------------------------------
 
-    // ----------------------------------
+        await pool.query(`
+            ALTER TABLE clientes_financeiro
+            DROP COLUMN IF EXISTS vencimento
+        `);
 
+        // ----------------------------------
 // PAGAMENTO SEMANAL DO CLIENTE
 // ----------------------------------
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS valor_semanal   NUMERIC(12, 2)  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS valor_semanal
+    NUMERIC(12, 2)
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS dia_pagamento   INTEGER  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS dia_pagamento
+    INTEGER
+`);
 
 // ==========================================
 // CAMPOS SEPARADOS DO ENDEREÇO
 // ==========================================
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS rua TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS rua TEXT
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS numero TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS numero TEXT
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS bairro TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS bairro TEXT
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS cidade TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS cidade TEXT
+`);
 
-await pool.query(  ALTER TABLE clientes_financeiro   ADD COLUMN IF NOT EXISTS estado TEXT  );
+await pool.query(`
+    ALTER TABLE clientes_financeiro
+    ADD COLUMN IF NOT EXISTS estado TEXT
+`);
 
-// ----------------------------------  
-    // PAGAMENTOS  
-    // ----------------------------------  
+        // ----------------------------------
+        // PAGAMENTOS
+        // ----------------------------------
 
-    await pool.query(`  
-        CREATE TABLE IF NOT EXISTS pagamentos_financeiro (  
-            id SERIAL PRIMARY KEY,  
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS pagamentos_financeiro (
+                id SERIAL PRIMARY KEY,
 
-            cliente_id INTEGER NOT NULL,  
+                cliente_id INTEGER NOT NULL,
 
-            valor NUMERIC(12, 2)  
-            NOT NULL,  
+                valor NUMERIC(12, 2)
+                NOT NULL,
 
-            criado_em TIMESTAMPTZ  
-            DEFAULT CURRENT_TIMESTAMP,  
+                criado_em TIMESTAMPTZ
+                DEFAULT CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (cliente_id)  
-            REFERENCES clientes_financeiro(id)  
-            ON DELETE CASCADE  
-        )  
-    `);  
+                FOREIGN KEY (cliente_id)
+                REFERENCES clientes_financeiro(id)
+                ON DELETE CASCADE
+            )
+        `);
 
-    // ----------------------------------
-
+        // ----------------------------------
 // COBRANÇAS INDIVIDUAIS
 // ----------------------------------
 
 await pool.query(`
-CREATE TABLE IF NOT EXISTS cobrancas_financeiro (
+    CREATE TABLE IF NOT EXISTS cobrancas_financeiro (
 
-id SERIAL PRIMARY KEY,  
+        id SERIAL PRIMARY KEY,
 
-    cliente_id INTEGER NOT NULL,  
+        cliente_id INTEGER NOT NULL,
 
-    usuario_id INTEGER NOT NULL,  
+        usuario_id INTEGER NOT NULL,
 
-    data_cobranca DATE NOT NULL,  
+        data_cobranca DATE NOT NULL,
 
-    valor_original NUMERIC(12, 2)  
-    NOT NULL,  
+        valor_original NUMERIC(12, 2)
+        NOT NULL,
 
-    juros_percentual NUMERIC(8, 2)  
-    DEFAULT 0,  
+        juros_percentual NUMERIC(8, 2)
+        DEFAULT 0,
 
-    juros_valor NUMERIC(12, 2)  
-    DEFAULT 0,  
+        juros_valor NUMERIC(12, 2)
+        DEFAULT 0,
 
-    status VARCHAR(30)  
-    NOT NULL DEFAULT 'pendente',  
+        status VARCHAR(30)
+        NOT NULL DEFAULT 'pendente',
 
-    quitado_em TIMESTAMPTZ,  
+        quitado_em TIMESTAMPTZ,
 
-    criado_em TIMESTAMPTZ  
-    DEFAULT CURRENT_TIMESTAMP,  
+        criado_em TIMESTAMPTZ
+        DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (cliente_id)  
-    REFERENCES clientes_financeiro(id)  
-    ON DELETE CASCADE,  
+        FOREIGN KEY (cliente_id)
+        REFERENCES clientes_financeiro(id)
+        ON DELETE CASCADE,
 
-    FOREIGN KEY (usuario_id)  
-    REFERENCES usuarios_financeiro(id)  
-    ON DELETE CASCADE  
-)
-
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios_financeiro(id)
+        ON DELETE CASCADE
+    )
 `);
 
 // ----------------------------------
@@ -358,33 +391,32 @@ id SERIAL PRIMARY KEY,
 // ----------------------------------
 
 await pool.query(`
-CREATE TABLE IF NOT EXISTS
-pagamentos_cobrancas_financeiro (
+    CREATE TABLE IF NOT EXISTS
+    pagamentos_cobrancas_financeiro (
 
-id SERIAL PRIMARY KEY,  
+        id SERIAL PRIMARY KEY,
 
-    cobranca_id INTEGER NOT NULL,  
+        cobranca_id INTEGER NOT NULL,
 
-    valor NUMERIC(12, 2)  
-    NOT NULL,  
+        valor NUMERIC(12, 2)
+        NOT NULL,
 
-    criado_em TIMESTAMPTZ  
-    DEFAULT CURRENT_TIMESTAMP,  
+        criado_em TIMESTAMPTZ
+        DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (cobranca_id)  
-    REFERENCES cobrancas_financeiro(id)  
-    ON DELETE CASCADE  
-)
+        FOREIGN KEY (cobranca_id)
+        REFERENCES cobrancas_financeiro(id)
+        ON DELETE CASCADE
+    )
+`);
+await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    cobranca_cliente_data_unica
 
-);   await pool.query(
-CREATE UNIQUE INDEX IF NOT EXISTS
-cobranca_cliente_data_unica
-
-ON cobrancas_financeiro (  
-    cliente_id,  
-    data_cobranca  
-)
-
+    ON cobrancas_financeiro (
+        cliente_id,
+        data_cobranca
+    )
 `);
 
 // ----------------------------------
@@ -392,31 +424,33 @@ ON cobrancas_financeiro (
 // ----------------------------------
 
 await pool.query(`
-CREATE TABLE IF NOT EXISTS
-pagamentos_divida_financeiro (
+    CREATE TABLE IF NOT EXISTS
+    pagamentos_divida_financeiro (
 
-id SERIAL PRIMARY KEY,  
+        id SERIAL PRIMARY KEY,
 
-    cliente_id INTEGER NOT NULL,  
+        cliente_id INTEGER NOT NULL,
 
-    valor NUMERIC(12, 2)  
-    NOT NULL,  
+        valor NUMERIC(12, 2)
+        NOT NULL,
 
-    criado_em TIMESTAMPTZ  
-    DEFAULT CURRENT_TIMESTAMP,  
+        criado_em TIMESTAMPTZ
+        DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (cliente_id)  
-    REFERENCES clientes_financeiro(id)  
-    ON DELETE CASCADE  
-)
-
+        FOREIGN KEY (cliente_id)
+        REFERENCES clientes_financeiro(id)
+        ON DELETE CASCADE
+    )
 `);
 
-// ----------------------------------
+  // ----------------------------------
 // SEMANA DE REFERÊNCIA DO PAGAMENTO
 // ----------------------------------
 
-await pool.query(  ALTER TABLE pagamentos_financeiro   ADD COLUMN IF NOT EXISTS semana_referencia DATE  );
+await pool.query(`
+    ALTER TABLE pagamentos_financeiro
+    ADD COLUMN IF NOT EXISTS semana_referencia DATE
+`);
 
 // ----------------------------------
 // IMPEDIR PAGAMENTO DUPLICADO
@@ -424,30 +458,29 @@ await pool.query(  ALTER TABLE pagamentos_financeiro   ADD COLUMN IF NOT EXISTS 
 // ----------------------------------
 
 await pool.query(`
-CREATE UNIQUE INDEX IF NOT EXISTS
-pagamentos_cliente_semana_unico
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    pagamentos_cliente_semana_unico
 
-ON pagamentos_financeiro (  
-    cliente_id,  
-    semana_referencia  
-)  
+    ON pagamentos_financeiro (
+        cliente_id,
+        semana_referencia
+    )
 
-WHERE semana_referencia IS NOT NULL
-
+    WHERE semana_referencia IS NOT NULL
 `);
 
-console.log(  
-        "Tabelas prontas!"  
-    );  
+        console.log(
+            "Tabelas prontas!"
+        );
 
-} catch (erro) {  
+    } catch (erro) {
 
-    console.error(  
-        "Erro ao criar tabelas:",  
-        erro.message  
-    );  
+        console.error(
+            "Erro ao criar tabelas:",
+            erro.message
+        );
 
-}
+    }
 
 }
 
@@ -458,534 +491,538 @@ criarTabelas();
 // ==========================================
 
 async function gerarCobrancasDoDia(
-usuarioId
+    usuarioId
 ) {
 
-const agoraBrasil = new Date(  
-    new Date().toLocaleString(  
-        "en-US",  
-        {  
-            timeZone:  
-                "America/Maceio"  
-        }  
-    )  
-);  
+    const agoraBrasil = new Date(
+        new Date().toLocaleString(
+            "en-US",
+            {
+                timeZone:
+                    "America/Maceio"
+            }
+        )
+    );
 
 
-const ano =  
-    agoraBrasil.getFullYear();  
+    const ano =
+        agoraBrasil.getFullYear();
 
 
-const mes =  
-    String(  
-        agoraBrasil.getMonth() + 1  
-    ).padStart(  
-        2,  
-        "0"  
-    );  
+    const mes =
+        String(
+            agoraBrasil.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
 
 
-const dia =  
-    String(  
-        agoraBrasil.getDate()  
-    ).padStart(  
-        2,  
-        "0"  
-    );  
+    const dia =
+        String(
+            agoraBrasil.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
 
 
-const dataHoje =  
-    `${ano}-${mes}-${dia}`;  
+    const dataHoje =
+        `${ano}-${mes}-${dia}`;
 
 
-const diaSemana =  
-    agoraBrasil.getDay();  
+    const diaSemana =
+        agoraBrasil.getDay();
 
 
-// BUSCAR CLIENTES QUE PAGAM HOJE  
+    // BUSCAR CLIENTES QUE PAGAM HOJE
 
-const clientes =  
-    await pool.query(  
+    const clientes =
+        await pool.query(
 
-        `  
-        SELECT  
+            `
+            SELECT
 
-            id,  
+                id,
 
-            valor_semanal  
+                valor_semanal
 
-        FROM clientes_financeiro  
+            FROM clientes_financeiro
 
-        WHERE  
+            WHERE
 
-            usuario_id = $1  
+                usuario_id = $1
 
-        AND  
+            AND
 
-            dia_pagamento = $2  
+                dia_pagamento = $2
 
-        `,  
+            `,
 
-        [  
+            [
 
-            usuarioId,  
+                usuarioId,
 
-            diaSemana  
+                diaSemana
 
-        ]  
+            ]
 
-    );  
-
-
-// CRIAR COBRANÇA PARA CADA CLIENTE  
-
-for (  
-    const cliente of clientes.rows  
-) {  
-
-    await pool.query(  
-
-        `  
-        INSERT INTO  
-        cobrancas_financeiro (  
-
-            cliente_id,  
-
-            usuario_id,  
-
-            data_cobranca,  
-
-            valor_original  
-
-        )  
-
-        VALUES (  
-
-            $1,  
-
-            $2,  
-
-            $3,  
-
-            $4  
-
-        )  
-
-        ON CONFLICT (  
-
-            cliente_id,  
-
-            data_cobranca  
-
-        )  
-
-        DO NOTHING  
-        `,  
-
-        [  
-
-            cliente.id,  
-
-            usuarioId,  
-
-            dataHoje,  
-
-            cliente.valor_semanal  
-
-        ]  
-
-    );  
-
-}  
+        );
 
 
-return dataHoje;
+    // CRIAR COBRANÇA PARA CADA CLIENTE
+
+    for (
+        const cliente of clientes.rows
+    ) {
+
+        await pool.query(
+
+            `
+            INSERT INTO
+            cobrancas_financeiro (
+
+                cliente_id,
+
+                usuario_id,
+
+                data_cobranca,
+
+                valor_original
+
+            )
+
+            VALUES (
+
+                $1,
+
+                $2,
+
+                $3,
+
+                $4
+
+            )
+
+            ON CONFLICT (
+
+                cliente_id,
+
+                data_cobranca
+
+            )
+
+            DO NOTHING
+            `,
+
+            [
+
+                cliente.id,
+
+                usuarioId,
+
+                dataHoje,
+
+                cliente.valor_semanal
+
+            ]
+
+        );
+
+    }
+
+
+    return dataHoje;
 
 }
+
 
 // ==========================================
 // VERIFICAR TOKEN
 // ==========================================
 
 function verificarToken(
-req,
-res,
-next
+    req,
+    res,
+    next
 ) {
 
-const autorizacao =  
-    req.headers.authorization;  
+    const autorizacao =
+        req.headers.authorization;
 
 
-if (!autorizacao) {  
+    if (!autorizacao) {
 
-    return res.status(401).json({  
+        return res.status(401).json({
 
-        sucesso: false,  
+            sucesso: false,
 
-        erro:  
-            "Token não informado"  
+            erro:
+                "Token não informado"
 
-    });  
+        });
 
-}  
-
-
-const partes =  
-    autorizacao.split(" ");  
+    }
 
 
-if (  
-    partes.length !== 2 ||  
-    partes[0] !== "Bearer"  
-) {  
-
-    return res.status(401).json({  
-
-        sucesso: false,  
-
-        erro:  
-            "Formato do token inválido"  
-
-    });  
-
-}  
+    const partes =
+        autorizacao.split(" ");
 
 
-const token =  
-    partes[1];  
+    if (
+        partes.length !== 2 ||
+        partes[0] !== "Bearer"
+    ) {
+
+        return res.status(401).json({
+
+            sucesso: false,
+
+            erro:
+                "Formato do token inválido"
+
+        });
+
+    }
 
 
-try {  
-
-    const dados =  
-        jwt.verify(  
-            token,  
-            JWT_SECRET  
-        );  
+    const token =
+        partes[1];
 
 
-    req.usuario =  
-        dados;  
+    try {
+
+        const dados =
+            jwt.verify(
+                token,
+                JWT_SECRET
+            );
 
 
-    next();  
-
-} catch (erro) {  
-
-    console.error(  
-        "Erro ao verificar token:",  
-        erro.message  
-    );  
+        req.usuario =
+            dados;
 
 
-    return res.status(401).json({  
+        next();
 
-        sucesso: false,  
+    } catch (erro) {
 
-        erro:  
-            "Sessão inválida ou expirada"  
+        console.error(
+            "Erro ao verificar token:",
+            erro.message
+        );
 
-    });  
+
+        return res.status(401).json({
+
+            sucesso: false,
+
+            erro:
+                "Sessão inválida ou expirada"
+
+        });
+
+    }
 
 }
 
-}
 
 // ==========================================
 // CADASTRAR USUÁRIO
 // ==========================================
 
 app.post(
-"/usuarios/cadastro",
+    "/usuarios/cadastro",
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const {  
-            nome,  
-            email,  
-            senha  
-        } = req.body;  
-
-
-        if (  
-            !nome ||  
-            !email ||  
-            !senha  
-        ) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Preencha todos os campos"  
-
-            });  
-
-        }  
+            const {
+                nome,
+                email,
+                senha
+            } = req.body;
 
 
-        const senhaCriptografada =  
-            await bcrypt.hash(  
-                senha,  
-                10  
-            );  
+            if (
+                !nome ||
+                !email ||
+                !senha
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Preencha todos os campos"
+
+                });
+
+            }
 
 
-        const resultado =  
-            await pool.query(  
-
-                `  
-                INSERT INTO usuarios_financeiro (  
-                    nome,  
-                    email,  
-                    senha  
-                )  
-
-                VALUES (  
-                    $1,  
-                    $2,  
-                    $3  
-                )  
-
-                RETURNING  
-                    id,  
-                    nome,  
-                    email,  
-                    criado_em  
-                `,  
-
-                [  
-                    nome.trim(),  
-
-                    email  
-                        .trim()  
-                        .toLowerCase(),  
-
-                    senhaCriptografada  
-                ]  
-
-            );  
+            const senhaCriptografada =
+                await bcrypt.hash(
+                    senha,
+                    10
+                );
 
 
-        res.status(201).json({  
+            const resultado =
+                await pool.query(
 
-            sucesso: true,  
+                    `
+                    INSERT INTO usuarios_financeiro (
+                        nome,
+                        email,
+                        senha
+                    )
 
-            mensagem:  
-                "Usuário cadastrado com sucesso!",  
+                    VALUES (
+                        $1,
+                        $2,
+                        $3
+                    )
 
-            usuario:  
-                resultado.rows[0]  
+                    RETURNING
+                        id,
+                        nome,
+                        email,
+                        criado_em
+                    `,
 
-        });  
+                    [
+                        nome.trim(),
 
-    } catch (erro) {  
+                        email
+                            .trim()
+                            .toLowerCase(),
 
-        console.error(  
-            "Erro cadastro:",  
-            erro.message  
-        );  
+                        senhaCriptografada
+                    ]
 
-
-        if (  
-            erro.code === "23505"  
-        ) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Este e-mail já está cadastrado"  
-
-            });  
-
-        }  
+                );
 
 
-        res.status(500).json({  
+            res.status(201).json({
 
-            sucesso: false,  
+                sucesso: true,
 
-            erro:  
-                "Erro ao cadastrar usuário"  
+                mensagem:
+                    "Usuário cadastrado com sucesso!",
 
-        });  
+                usuario:
+                    resultado.rows[0]
 
-    }  
+            });
 
-}
+        } catch (erro) {
+
+            console.error(
+                "Erro cadastro:",
+                erro.message
+            );
+
+
+            if (
+                erro.code === "23505"
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este e-mail já está cadastrado"
+
+                });
+
+            }
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao cadastrar usuário"
+
+            });
+
+        }
+
+    }
 
 );
+
 
 // ==========================================
 // LOGIN
 // ==========================================
 
 app.post(
-"/usuarios/login",
+    "/usuarios/login",
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const {  
-            email,  
-            senha  
-        } = req.body;  
+            const {
+                email,
+                senha
+            } = req.body;
 
 
-        if (  
-            !email ||  
-            !senha  
-        ) {  
+            if (
+                !email ||
+                !senha
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "E-mail e senha são obrigatórios"  
+                    erro:
+                        "E-mail e senha são obrigatórios"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const resultado =  
-            await pool.query(  
+            const resultado =
+                await pool.query(
 
-                `  
-                SELECT *  
-                FROM usuarios_financeiro  
-                WHERE email = $1  
-                `,  
+                    `
+                    SELECT *
+                    FROM usuarios_financeiro
+                    WHERE email = $1
+                    `,
 
-                [  
-                    email  
-                        .trim()  
-                        .toLowerCase()  
-                ]  
+                    [
+                        email
+                            .trim()
+                            .toLowerCase()
+                    ]
 
-            );  
+                );
 
 
-        if (  
-            resultado.rows.length === 0  
-        ) {  
+            if (
+                resultado.rows.length === 0
+            ) {
 
-            return res.status(401).json({  
+                return res.status(401).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "E-mail ou senha incorretos"  
+                    erro:
+                        "E-mail ou senha incorretos"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const usuario =  
-            resultado.rows[0];  
+            const usuario =
+                resultado.rows[0];
 
 
-        const senhaCorreta =  
-            await bcrypt.compare(  
-                senha,  
-                usuario.senha  
-            );  
+            const senhaCorreta =
+                await bcrypt.compare(
+                    senha,
+                    usuario.senha
+                );
 
 
-        if (!senhaCorreta) {  
+            if (!senhaCorreta) {
 
-            return res.status(401).json({  
+                return res.status(401).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "E-mail ou senha incorretos"  
+                    erro:
+                        "E-mail ou senha incorretos"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const token =  
-            jwt.sign(  
+            const token =
+                jwt.sign(
 
-                {  
+                    {
 
-                    id:  
-                        usuario.id,  
+                        id:
+                            usuario.id,
 
-                    email:  
-                        usuario.email  
+                        email:
+                            usuario.email
 
-                },  
+                    },
 
-                JWT_SECRET,  
+                    JWT_SECRET,
 
-                {  
+                    {
 
-                    expiresIn:  
-                        "7d"  
+                        expiresIn:
+                            "7d"
 
-                }  
+                    }
 
-            );  
+                );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
-                "Login realizado com sucesso!",  
+                mensagem:
+                    "Login realizado com sucesso!",
 
-            token,  
+                token,
 
-            usuario: {  
+                usuario: {
 
-                id:  
-                    usuario.id,  
+                    id:
+                        usuario.id,
 
-                nome:  
-                    usuario.nome,  
+                    nome:
+                        usuario.nome,
 
-                email:  
-                    usuario.email  
+                    email:
+                        usuario.email
 
-            }  
+                }
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro login:",  
-            erro.message  
-        );  
+            console.error(
+                "Erro login:",
+                erro.message
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao fazer login"  
+                erro:
+                    "Erro ao fazer login"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
+
 
 // ==========================================
 // UPLOAD DE DOCUMENTOS
@@ -993,44 +1030,44 @@ async (req, res) => {
 
 const uploadDocumento = multer({
 
-storage,  
+    storage,
 
-limits: {  
+    limits: {
 
-    fileSize:  
-        10 * 1024 * 1024  
+        fileSize:
+            10 * 1024 * 1024
 
-},  
+    },
 
-fileFilter: (  
-    req,  
-    file,  
-    cb  
-) => {  
+    fileFilter: (
+        req,
+        file,
+        cb
+    ) => {
 
-    if (  
-        file.mimetype &&  
-        file.mimetype.startsWith(  
-            "image/"  
-        )  
-    ) {  
+        if (
+            file.mimetype &&
+            file.mimetype.startsWith(
+                "image/"
+            )
+        ) {
 
-        cb(  
-            null,  
-            true  
-        );  
+            cb(
+                null,
+                true
+            );
 
-    } else {  
+        } else {
 
-        cb(  
-            new Error(  
-                "Apenas imagens são permitidas"  
-            )  
-        );  
+            cb(
+                new Error(
+                    "Apenas imagens são permitidas"
+                )
+            );
 
-    }  
+        }
 
-}
+    }
 
 });
 
@@ -1040,354 +1077,360 @@ fileFilter: (
 
 app.post(
 
-"/clientes",  
+    "/clientes",
 
-verificarToken,  
+    verificarToken,
 
-uploadDocumento.fields([  
-{  
-    name: "documento",  
-    maxCount: 1  
-},  
-{  
-    name: "foto_rosto",  
-    maxCount: 1  
-}
-
+    uploadDocumento.fields([
+    {
+        name: "documento",
+        maxCount: 1
+    },
+    {
+        name: "foto_rosto",
+        maxCount: 1
+    }
 ]),
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const {  
+            const {
 
-            nome,  
-            cpf,  
-            nascimento,  
+                nome,
+                cpf,
+                nascimento,
 
-            rua,  
-            numero,  
-            bairro,  
-            cidade,  
-            estado,  
+                rua,
+                numero,
+                bairro,
+                cidade,
+                estado,
 
-            valor_devido,  
-            valor_semanal,  
-            dia_pagamento  
+                valor_devido,
+                valor_semanal,
+                dia_pagamento
 
-        } = req.body;  
-
-
-        // ==================================  
-        // VALIDAR CAMPOS  
-        // ==================================  
-
-        if (  
-
-            !nome ||  
-            !cpf ||  
-            !nascimento ||  
-
-            !rua ||  
-            !numero ||  
-            !bairro ||  
-            !cidade ||  
-            !estado ||  
-
-            valor_devido === undefined ||  
-            valor_semanal === undefined ||  
-            dia_pagamento === undefined  
-
-        ) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Preencha todos os campos obrigatórios"  
-
-            });  
-
-        }  
+            } = req.body;
 
 
-        const valor =  
-            Number(valor_devido);  
+            // ==================================
+            // VALIDAR CAMPOS
+            // ==================================
+
+            if (
+
+                !nome ||
+                !cpf ||
+                !nascimento ||
+
+                !rua ||
+                !numero ||
+                !bairro ||
+                !cidade ||
+                !estado ||
+
+                valor_devido === undefined ||
+                valor_semanal === undefined ||
+                dia_pagamento === undefined
+
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Preencha todos os campos obrigatórios"
+
+                });
+
+            }
 
 
-        const valorSemanal =  
-            Number(valor_semanal);  
+            const valor =
+                Number(valor_devido);
 
 
-        const diaPagamento =  
-            Number(dia_pagamento);  
+            const valorSemanal =
+                Number(valor_semanal);
 
 
-        // ==================================  
-        // VALIDAR VALOR DEVIDO  
-        // ==================================  
-
-        if (  
-
-            Number.isNaN(valor) ||  
-            valor < 0  
-
-        ) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Valor devido inválido"  
-
-            });  
-
-        }  
+            const diaPagamento =
+                Number(dia_pagamento);
 
 
-        // ==================================  
-        // VALIDAR VALOR SEMANAL  
-        // ==================================  
+            // ==================================
+            // VALIDAR VALOR DEVIDO
+            // ==================================
 
-        if (  
+            if (
 
-            Number.isNaN(valorSemanal) ||  
-            valorSemanal <= 0  
+                Number.isNaN(valor) ||
+                valor < 0
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Valor semanal inválido"  
+                    erro:
+                        "Valor devido inválido"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        // ==================================  
-        // VALIDAR DIA DE PAGAMENTO  
-        // ==================================  
+            // ==================================
+            // VALIDAR VALOR SEMANAL
+            // ==================================
 
-        if (  
+            if (
 
-            !Number.isInteger(diaPagamento) ||  
-            diaPagamento < 0 ||  
-            diaPagamento > 6  
+                Number.isNaN(valorSemanal) ||
+                valorSemanal <= 0
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Dia de pagamento inválido"  
+                    erro:
+                        "Valor semanal inválido"
 
-            });  
+                });
 
-        }
+            }
+
+
+            // ==================================
+            // VALIDAR DIA DE PAGAMENTO
+            // ==================================
+
+            if (
+
+                !Number.isInteger(diaPagamento) ||
+                diaPagamento < 0 ||
+                diaPagamento > 6
+
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Dia de pagamento inválido"
+
+                });
+
+            }
 
 // ==================================
 // DOCUMENTO
 // ==================================
 
 const arquivoDocumento =
-req.files &&
-req.files.documento
-? req.files.documento[0]
-: null;
+    req.files &&
+    req.files.documento
+        ? req.files.documento[0]
+        : null;
+
 
 const documentoConvertido =
-await converterHeicParaJpg(
-arquivoDocumento
-);
+    await converterHeicParaJpg(
+        arquivoDocumento
+    );
+
 
 const documentoFoto =
-documentoConvertido
-? documentoConvertido.buffer
-: null;
+    documentoConvertido
+        ? documentoConvertido.buffer
+        : null;
+
 
 const documentoTipo =
-documentoConvertido
-? documentoConvertido.mimetype
-: null;
+    documentoConvertido
+        ? documentoConvertido.mimetype
+        : null;
+
 
 // ==================================
 // FOTO DO ROSTO
 // ==================================
 
 const arquivoFotoRosto =
-req.files &&
-req.files.foto_rosto
-? req.files.foto_rosto[0]
-: null;
+    req.files &&
+    req.files.foto_rosto
+        ? req.files.foto_rosto[0]
+        : null;
+
 
 const fotoRostoConvertida =
-await converterHeicParaJpg(
-arquivoFotoRosto
-);
+    await converterHeicParaJpg(
+        arquivoFotoRosto
+    );
+
 
 const fotoRosto =
-fotoRostoConvertida
-? fotoRostoConvertida.buffer
-: null;
+    fotoRostoConvertida
+        ? fotoRostoConvertida.buffer
+        : null;
+
 
 const fotoRostoTipo =
-fotoRostoConvertida
-? fotoRostoConvertida.mimetype
-: null;
-
-// ==================================  
-        // ENDEREÇO COMPLETO  
-        // ==================================  
-
-        const enderecoCompleto =  
-            `${rua.trim()}, ${numero.trim()} - ` +  
-            `${bairro.trim()}, ${cidade.trim()} - ` +  
-            `${estado.trim()}`;  
+    fotoRostoConvertida
+        ? fotoRostoConvertida.mimetype
+        : null;
 
 
-        // ==================================  
-        // CADASTRAR CLIENTE  
-        // ==================================  
+            // ==================================
+            // ENDEREÇO COMPLETO
+            // ==================================
 
-        const resultado =  
-            await pool.query(  
+            const enderecoCompleto =
+                `${rua.trim()}, ${numero.trim()} - ` +
+                `${bairro.trim()}, ${cidade.trim()} - ` +
+                `${estado.trim()}`;
 
-                `  
-                INSERT INTO clientes_financeiro (  
 
-                    usuario_id,  
-                    nome,  
-                    cpf,  
-                    nascimento,  
+            // ==================================
+            // CADASTRAR CLIENTE
+            // ==================================
 
-                    endereco,  
+            const resultado =
+                await pool.query(
 
-                    rua,  
-                    numero,  
-                    bairro,  
-                    cidade,  
-                    estado,  
+                    `
+                    INSERT INTO clientes_financeiro (
 
-                    valor_devido,  
-                    valor_semanal,  
-                    dia_pagamento,  
+                        usuario_id,
+                        nome,
+                        cpf,
+                        nascimento,
 
-                    documento_foto,
+                        endereco,
 
+                        rua,
+                        numero,
+                        bairro,
+                        cidade,
+                        estado,
+
+                        valor_devido,
+                        valor_semanal,
+                        dia_pagamento,
+
+                        documento_foto,
 documento_tipo,
 
 foto_rosto,
 foto_rosto_tipo
-)
+                    )
 
-VALUES (  
+                    VALUES (
 
-                    $1,  
-                    $2,  
-                    $3,  
-                    $4,  
-                    $5,  
-                    $6,  
-                    $7,  
-                    $8,  
-                    $9,  
-                    $10,  
-                    $11,  
-                    $12,  
-                    $13,  
-                    $14,  
-                    $15,  
-                    $16,  
-                    $17  
+                        $1,
+                        $2,
+                        $3,
+                        $4,
+                        $5,
+                        $6,
+                        $7,
+                        $8,
+                        $9,
+                        $10,
+                        $11,
+                        $12,
+                        $13,
+                        $14,
+                        $15,
+                        $16,
+                        $17
 
-                )  
+                    )
 
-                RETURNING *  
-                `,  
+                    RETURNING *
+                    `,
 
-                [  
+                    [
 
-                    req.usuario.id,  
+                        req.usuario.id,
 
-                    nome.trim(),  
+                        nome.trim(),
 
-                    cpf.trim(),  
+                        cpf.trim(),
 
-                    nascimento,  
+                        nascimento,
 
-                    enderecoCompleto,  
+                        enderecoCompleto,
 
-                    rua.trim(),  
+                        rua.trim(),
 
-                    numero.trim(),  
+                        numero.trim(),
 
-                    bairro.trim(),  
+                        bairro.trim(),
 
-                    cidade.trim(),  
+                        cidade.trim(),
 
-                    estado.trim(),  
+                        estado.trim(),
 
-                    valor,  
+                        valor,
 
-                    valorSemanal,  
+                        valorSemanal,
 
-                    diaPagamento,  
+                        diaPagamento,
 
-                    documentoFoto,  
+                        documentoFoto,
 
-                    documentoTipo,  
+                        documentoTipo,
 
-                    fotoRosto,  
+                        fotoRosto,
 
-                    fotoRostoTipo  
+                        fotoRostoTipo
 
-                ]  
+                    ]
 
-            );  
-
-
-        res.status(201).json({  
-
-            sucesso: true,  
-
-            mensagem:  
-                "Cliente cadastrado com sucesso!",  
-
-            cliente:  
-                resultado.rows[0]  
-
-        });  
+                );
 
 
-    } catch (erro) {  
+            res.status(201).json({
 
-        console.error(  
-            "Erro ao cadastrar cliente:",  
-            erro  
-        );  
+                sucesso: true,
+
+                mensagem:
+                    "Cliente cadastrado com sucesso!",
+
+                cliente:
+                    resultado.rows[0]
+
+            });
 
 
-        res.status(500).json({  
+        } catch (erro) {
 
-            sucesso: false,  
+            console.error(
+                "Erro ao cadastrar cliente:",
+                erro
+            );
 
-            erro:  
-                "Erro ao cadastrar cliente"  
 
-        });  
+            res.status(500).json({
 
-    }  
+                sucesso: false,
 
-}
+                erro:
+                    "Erro ao cadastrar cliente"
+
+            });
+
+        }
+
+    }
 
 );
 
@@ -1396,92 +1439,36 @@ VALUES (
 // ==========================================
 
 app.get(
-"/clientes",
+    "/clientes",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {
-
+        try {
 const resultado =
-await pool.query(
+    await pool.query(
 
-`  
-    SELECT  
+        `
+        SELECT
 
-        c.id,  
+            c.id,
 
-        c.nome,  
+            c.nome,
 
-        c.documento_foto IS NOT NULL  
-        AS possui_documento,
+            c.documento_foto IS NOT NULL
+            AS possui_documento,
 
 c.foto_rosto IS NOT NULL
 AS possui_foto_rosto,
 
-c.cpf,  
+            c.cpf,
 
-        c.nascimento,  
+            c.nascimento,
 
-        c.endereco,  
+            c.endereco,
 
-        c.rua,
-
-c.numero,
-
-c.bairro,
-
-c.cidade,
-
-c.valor_devido,  
-
-        c.valor_semanal,  
-
-        c.dia_pagamento,  
-
-        c.criado_em,  
-
-        COALESCE(  
-            SUM(p.valor),  
-            0  
-        ) AS total_pago,  
-
-        c.valor_devido  
-        AS saldo_restante  
-
-    FROM clientes_financeiro c  
-
-    LEFT JOIN pagamentos_financeiro p  
-
-    ON  
-        p.cliente_id = c.id  
-
-    WHERE  
-
-        c.usuario_id = $1  
-
-    GROUP BY  
-
-        c.id,  
-
-        c.nome,  
-
-        c.documento_foto,  
-
-        c.documento_tipo,  
-
-        c.foto_rosto,  
-
-        c.foto_rosto_tipo,  
-
-        c.cpf,  
-
-        c.nascimento,  
-
-        c.endereco,  
-
-        c.rua,
+            c.rua,
 
 c.numero,
 
@@ -1489,54 +1476,109 @@ c.bairro,
 
 c.cidade,
 
-c.valor_devido,  
+            c.valor_devido,
 
-        c.valor_semanal,  
+            c.valor_semanal,
 
-        c.dia_pagamento,  
+            c.dia_pagamento,
 
-        c.criado_em  
+            c.criado_em,
 
-    ORDER BY  
-        c.id DESC  
-    `,  
+            COALESCE(
+                SUM(p.valor),
+                0
+            ) AS total_pago,
 
-    [  
-        req.usuario.id  
-    ]  
+            c.valor_devido
+            AS saldo_restante
 
-);  
+        FROM clientes_financeiro c
+
+        LEFT JOIN pagamentos_financeiro p
+
+        ON
+            p.cliente_id = c.id
+
+        WHERE
+
+            c.usuario_id = $1
+
+        GROUP BY
+
+            c.id,
+
+            c.nome,
+
+            c.documento_foto,
+
+            c.documento_tipo,
+
+            c.foto_rosto,
+
+            c.foto_rosto_tipo,
+
+            c.cpf,
+
+            c.nascimento,
+
+            c.endereco,
+
+            c.rua,
+
+c.numero,
+
+c.bairro,
+
+c.cidade,
+
+            c.valor_devido,
+
+            c.valor_semanal,
+
+            c.dia_pagamento,
+
+            c.criado_em
+
+        ORDER BY
+            c.id DESC
+        `,
+
+        [
+            req.usuario.id
+        ]
+
+    );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            clientes:  
-                resultado.rows  
+                clientes:
+                    resultado.rows
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao listar clientes:",  
-            erro.message  
-        );  
+            console.error(
+                "Erro ao listar clientes:",
+                erro.message
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao carregar clientes"  
+                erro:
+                    "Erro ao carregar clientes"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -1545,208 +1587,206 @@ c.valor_devido,
 // ==========================================
 
 app.post(
-"/clientes/:id/veiculos",
-verificarToken,
+    "/clientes/:id/veiculos",
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
+            const clienteId =
+                Number(req.params.id);
 
-        const {  
-            placa,  
-            modelo  
-        } = req.body;  
+            const {
+                placa,
+                modelo
+            } = req.body;
 
-        if (!clienteId) {  
+            if (!clienteId) {
 
-            return res.status(400).json({  
-                sucesso: false,  
-                erro: "Cliente inválido"  
-            });  
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Cliente inválido"
+                });
 
-        }  
+            }
 
-        if (!placa) {  
+            if (!placa) {
 
-            return res.status(400).json({  
-                sucesso: false,  
-                erro: "Informe a placa"  
-            });  
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Informe a placa"
+                });
 
-        }  
+            }
 
-        // Verifica se o cliente pertence ao usuário logado  
-        const cliente =  
-            await pool.query(  
-                `  
-                SELECT id  
-                FROM clientes_financeiro  
-                WHERE id = $1  
-                AND usuario_id = $2  
-                `,  
-                [  
-                    clienteId,  
-                    req.usuario.id  
-                ]  
-            );  
+            // Verifica se o cliente pertence ao usuário logado
+            const cliente =
+                await pool.query(
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+                );
 
-        if (cliente.rows.length === 0) {  
+            if (cliente.rows.length === 0) {
 
-            return res.status(404).json({  
-                sucesso: false,  
-                erro: "Cliente não encontrado"  
-            });  
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Cliente não encontrado"
+                });
 
-        }  
+            }
 
-        const resultado =  
-            await pool.query(  
-                `  
-                INSERT INTO veiculos_financeiro  
-                (  
-                    cliente_id,  
-                    placa,  
-                    modelo  
-                )  
-                VALUES  
-                (  
-                    $1,  
-                    $2,  
-                    $3  
-                )  
-                RETURNING *  
-                `,  
-                [  
-                    clienteId,  
-                    placa  
-                        .trim()  
-                        .toUpperCase(),  
-                    modelo  
-                        ? modelo.trim()  
-                        : null  
-                ]  
-            );  
+            const resultado =
+                await pool.query(
+                    `
+                    INSERT INTO veiculos_financeiro
+                    (
+                        cliente_id,
+                        placa,
+                        modelo
+                    )
+                    VALUES
+                    (
+                        $1,
+                        $2,
+                        $3
+                    )
+                    RETURNING *
+                    `,
+                    [
+                        clienteId,
+                        placa
+                            .trim()
+                            .toUpperCase(),
+                        modelo
+                            ? modelo.trim()
+                            : null
+                    ]
+                );
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
-                "Veículo cadastrado com sucesso",  
+                mensagem:
+                    "Veículo cadastrado com sucesso",
 
-            veiculo:  
-                resultado.rows[0]  
+                veiculo:
+                    resultado.rows[0]
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao salvar veículo:",  
-            erro  
-        );  
+            console.error(
+                "Erro ao salvar veículo:",
+                erro
+            );
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao salvar veículo"  
+                erro:
+                    "Erro ao salvar veículo"
 
-        });  
+            });
 
-    }  
+        }
 
-}
-
+    }
 );
 
 app.get(
-"/clientes/:id/veiculos",
-verificarToken,
+    "/clientes/:id/veiculos",
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
+            const clienteId =
+                Number(req.params.id);
 
-        // Verifica se o cliente pertence  
-        // ao usuário logado  
-        const cliente =  
-            await pool.query(  
-                `  
-                SELECT id  
-                FROM clientes_financeiro  
-                WHERE id = $1  
-                AND usuario_id = $2  
-                `,  
-                [  
-                    clienteId,  
-                    req.usuario.id  
-                ]  
-            );  
+            // Verifica se o cliente pertence
+            // ao usuário logado
+            const cliente =
+                await pool.query(
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+                );
 
-        if (cliente.rows.length === 0) {  
+            if (cliente.rows.length === 0) {
 
-            return res.status(404).json({  
-                sucesso: false,  
-                erro: "Cliente não encontrado"  
-            });  
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Cliente não encontrado"
+                });
 
-        }  
+            }
 
-        const resultado =  
-            await pool.query(  
-                `  
-                SELECT  
-                    id,  
-                    cliente_id,  
-                    placa,  
-                    modelo,  
-                    criado_em  
-                FROM veiculos_financeiro  
-                WHERE cliente_id = $1  
-                ORDER BY id DESC  
-                `,  
-                [  
-                    clienteId  
-                ]  
-            );  
+            const resultado =
+                await pool.query(
+                    `
+                    SELECT
+                        id,
+                        cliente_id,
+                        placa,
+                        modelo,
+                        criado_em
+                    FROM veiculos_financeiro
+                    WHERE cliente_id = $1
+                    ORDER BY id DESC
+                    `,
+                    [
+                        clienteId
+                    ]
+                );
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            veiculos:  
-                resultado.rows  
+                veiculos:
+                    resultado.rows
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao listar veículos:",  
-            erro  
-        );  
+            console.error(
+                "Erro ao listar veículos:",
+                erro
+            );
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao carregar veículos"  
+                erro:
+                    "Erro ao carregar veículos"
 
-        });  
+            });
 
-    }  
+        }
 
-}
-
+    }
 );
 
 // ==========================================
@@ -1754,111 +1794,110 @@ async (req, res) => {
 // ==========================================
 
 app.put(
-"/veiculos/:id",
-verificarToken,
+    "/veiculos/:id",
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const veiculoId =  
-            Number(req.params.id);  
+            const veiculoId =
+                Number(req.params.id);
 
-        const {  
-            placa,  
-            modelo  
-        } = req.body;  
+            const {
+                placa,
+                modelo
+            } = req.body;
 
-        if (!placa) {  
+            if (!placa) {
 
-            return res.status(400).json({  
-                sucesso: false,  
-                erro: "Informe a placa"  
-            });  
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: "Informe a placa"
+                });
 
-        }  
+            }
 
-        // Verifica se o veículo pertence  
-        // a um cliente do usuário logado  
-        const verificacao =  
-            await pool.query(  
-                `  
-                SELECT v.id  
-                FROM veiculos_financeiro v  
-                INNER JOIN clientes_financeiro c  
-                    ON c.id = v.cliente_id  
-                WHERE v.id = $1  
-                AND c.usuario_id = $2  
-                `,  
-                [  
-                    veiculoId,  
-                    req.usuario.id  
-                ]  
-            );  
+            // Verifica se o veículo pertence
+            // a um cliente do usuário logado
+            const verificacao =
+                await pool.query(
+                    `
+                    SELECT v.id
+                    FROM veiculos_financeiro v
+                    INNER JOIN clientes_financeiro c
+                        ON c.id = v.cliente_id
+                    WHERE v.id = $1
+                    AND c.usuario_id = $2
+                    `,
+                    [
+                        veiculoId,
+                        req.usuario.id
+                    ]
+                );
 
-        if (verificacao.rows.length === 0) {  
+            if (verificacao.rows.length === 0) {
 
-            return res.status(404).json({  
-                sucesso: false,  
-                erro: "Veículo não encontrado"  
-            });  
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Veículo não encontrado"
+                });
 
-        }  
+            }
 
-        const resultado =  
-            await pool.query(  
-                `  
-                UPDATE veiculos_financeiro  
+            const resultado =
+                await pool.query(
+                    `
+                    UPDATE veiculos_financeiro
 
-                SET  
-                    placa = $1,  
-                    modelo = $2  
+                    SET
+                        placa = $1,
+                        modelo = $2
 
-                WHERE id = $3  
+                    WHERE id = $3
 
-                RETURNING *  
-                `,  
-                [  
-                    placa.trim().toUpperCase(),  
-                    modelo  
-                        ? modelo.trim()  
-                        : null,  
-                    veiculoId  
-                ]  
-            );  
+                    RETURNING *
+                    `,
+                    [
+                        placa.trim().toUpperCase(),
+                        modelo
+                            ? modelo.trim()
+                            : null,
+                        veiculoId
+                    ]
+                );
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
-                "Veículo atualizado com sucesso",  
+                mensagem:
+                    "Veículo atualizado com sucesso",
 
-            veiculo:  
-                resultado.rows[0]  
+                veiculo:
+                    resultado.rows[0]
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao editar veículo:",  
-            erro  
-        );  
+            console.error(
+                "Erro ao editar veículo:",
+                erro
+            );
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao editar veículo"  
+                erro:
+                    "Erro ao editar veículo"
 
-        });  
+            });
 
-    }  
+        }
 
-}
-
+    }
 );
 
 // ==========================================
@@ -1866,84 +1905,83 @@ async (req, res) => {
 // ==========================================
 
 app.delete(
-"/veiculos/:id",
-verificarToken,
+    "/veiculos/:id",
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const veiculoId =  
-            Number(req.params.id);  
+            const veiculoId =
+                Number(req.params.id);
 
-        // Garante que o veículo pertence  
-        // a um cliente do usuário logado  
-        const verificacao =  
-            await pool.query(  
-                `  
-                SELECT v.id  
-                FROM veiculos_financeiro v  
+            // Garante que o veículo pertence
+            // a um cliente do usuário logado
+            const verificacao =
+                await pool.query(
+                    `
+                    SELECT v.id
+                    FROM veiculos_financeiro v
 
-                INNER JOIN clientes_financeiro c  
-                    ON c.id = v.cliente_id  
+                    INNER JOIN clientes_financeiro c
+                        ON c.id = v.cliente_id
 
-                WHERE v.id = $1  
-                AND c.usuario_id = $2  
-                `,  
-                [  
-                    veiculoId,  
-                    req.usuario.id  
-                ]  
-            );  
+                    WHERE v.id = $1
+                    AND c.usuario_id = $2
+                    `,
+                    [
+                        veiculoId,
+                        req.usuario.id
+                    ]
+                );
 
-        if (verificacao.rows.length === 0) {  
+            if (verificacao.rows.length === 0) {
 
-            return res.status(404).json({  
-                sucesso: false,  
-                erro: "Veículo não encontrado"  
-            });  
+                return res.status(404).json({
+                    sucesso: false,
+                    erro: "Veículo não encontrado"
+                });
 
-        }  
+            }
 
-        await pool.query(  
-            `  
-            DELETE FROM veiculos_financeiro  
-            WHERE id = $1  
-            `,  
-            [  
-                veiculoId  
-            ]  
-        );  
+            await pool.query(
+                `
+                DELETE FROM veiculos_financeiro
+                WHERE id = $1
+                `,
+                [
+                    veiculoId
+                ]
+            );
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
-                "Veículo excluído com sucesso"  
+                mensagem:
+                    "Veículo excluído com sucesso"
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao excluir veículo:",  
-            erro  
-        );  
+            console.error(
+                "Erro ao excluir veículo:",
+                erro
+            );
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao excluir veículo"  
+                erro:
+                    "Erro ao excluir veículo"
 
-        });  
+            });
 
-    }  
+        }
 
-}
-
+    }
 );
 
 // ==========================================
@@ -1952,142 +1990,142 @@ async (req, res) => {
 
 app.get(
 
-"/clientes/:id/documento",  
+    "/clientes/:id/documento",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
-
-
-        const resultado =  
-            await pool.query(  
-
-                `  
-                SELECT  
-
-                    documento_foto,  
-                    documento_tipo  
-
-                FROM clientes_financeiro  
-
-                WHERE id = $1  
-
-                AND usuario_id = $2  
-                `,  
-
-                [  
-
-                    clienteId,  
-
-                    req.usuario.id  
-
-                ]  
-
-            );  
+            const clienteId =
+                Number(req.params.id);
 
 
-        if (  
-            resultado.rows.length === 0  
-        ) {  
+            const resultado =
+                await pool.query(
 
-            return res.status(404).json({  
+                    `
+                    SELECT
 
-                sucesso: false,  
+                        documento_foto,
+                        documento_tipo
 
-                erro:  
-                    "Cliente não encontrado"  
+                    FROM clientes_financeiro
 
-            });  
+                    WHERE id = $1
 
-        }  
+                    AND usuario_id = $2
+                    `,
 
+                    [
 
-        const cliente =  
-            resultado.rows[0];  
+                        clienteId,
 
+                        req.usuario.id
 
-        if (  
-            !cliente.documento_foto  
-        ) {  
+                    ]
 
-            return res.status(404).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Este cliente não possui documento"  
-
-            });  
-
-        }  
+                );
 
 
-        const imagem =  
-            Buffer.from(  
-                cliente.documento_foto  
-            );  
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
 
 
-        // NÃO FORÇAR JPEG  
-        const tipoImagem =  
-            cliente.documento_tipo ||  
-            "application/octet-stream";  
+            const cliente =
+                resultado.rows[0];
 
 
-        console.log(  
-            "Tipo do documento:",  
-            tipoImagem  
-        );  
+            if (
+                !cliente.documento_foto
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente não possui documento"
+
+                });
+
+            }
 
 
-        res.setHeader(  
-            "Content-Type",  
-            tipoImagem  
-        );  
+            const imagem =
+                Buffer.from(
+                    cliente.documento_foto
+                );
 
 
-        res.setHeader(  
-            "Content-Length",  
-            imagem.length  
-        );  
+            // NÃO FORÇAR JPEG
+            const tipoImagem =
+                cliente.documento_tipo ||
+                "application/octet-stream";
 
 
-        res.setHeader(  
-            "Content-Disposition",  
-            "inline"  
-        );  
+            console.log(
+                "Tipo do documento:",
+                tipoImagem
+            );
 
 
-        return res.end(  
-            imagem  
-        );  
+            res.setHeader(
+                "Content-Type",
+                tipoImagem
+            );
 
 
-    } catch (erro) {  
-
-        console.error(  
-            "Erro ao carregar documento:",  
-            erro  
-        );  
+            res.setHeader(
+                "Content-Length",
+                imagem.length
+            );
 
 
-        return res.status(500).json({  
+            res.setHeader(
+                "Content-Disposition",
+                "inline"
+            );
 
-            sucesso: false,  
 
-            erro:  
-                "Erro ao carregar documento"  
+            return res.end(
+                imagem
+            );
 
-        });  
 
-    }  
+        } catch (erro) {
 
-}
+            console.error(
+                "Erro ao carregar documento:",
+                erro
+            );
+
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar documento"
+
+            });
+
+        }
+
+    }
 
 );
 
@@ -2096,459 +2134,462 @@ async (req, res) => {
 // ==========================================
 
 app.get(
-"/clientes/:id/veiculos",
+    "/clientes/:id/veiculos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
+            const clienteId =
+                Number(req.params.id);
 
-        // Verifica se o cliente pertence ao usuário logado  
-        const cliente =  
-            await pool.query(  
+            // Verifica se o cliente pertence ao usuário logado
+            const cliente =
+                await pool.query(
 
-                `  
-                SELECT id  
-                FROM clientes_financeiro  
-                WHERE id = $1  
-                AND usuario_id = $2  
-                `,  
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
 
-                [  
-                    clienteId,  
-                    req.usuario.id  
-                ]  
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
 
-            );  
+                );
 
-        if (cliente.rows.length === 0) {  
+            if (cliente.rows.length === 0) {
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cliente não encontrado"  
+                    erro:
+                        "Cliente não encontrado"
 
-            });  
+                });
 
-        }  
+            }
 
-        const resultado =  
-            await pool.query(  
+            const resultado =
+                await pool.query(
 
-                `  
-                SELECT  
-                    id,  
-                    cliente_id,  
-                    placa,  
-                    modelo,  
-                    criado_em  
+                    `
+                    SELECT
+                        id,
+                        cliente_id,
+                        placa,
+                        modelo,
+                        criado_em
 
-                FROM veiculos_financeiro  
+                    FROM veiculos_financeiro
 
-                WHERE cliente_id = $1  
+                    WHERE cliente_id = $1
 
-                ORDER BY id DESC  
-                `,  
+                    ORDER BY id DESC
+                    `,
 
-                [clienteId]  
+                    [clienteId]
 
-            );  
+                );
 
-        return res.json({  
+            return res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            veiculos:  
-                resultado.rows  
+                veiculos:
+                    resultado.rows
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao listar veículos:",  
-            erro  
-        );  
+            console.error(
+                "Erro ao listar veículos:",
+                erro
+            );
 
-        return res.status(500).json({  
+            return res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao carregar veículos"  
+                erro:
+                    "Erro ao carregar veículos"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
+
 
 // ==========================================
 // CADASTRAR VEÍCULO
 // ==========================================
 
 app.post(
-"/clientes/:id/veiculos",
+    "/clientes/:id/veiculos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
+            const clienteId =
+                Number(req.params.id);
 
-        let placa =  
-            String(  
-                req.body.placa || ""  
-            )  
-            .trim()  
-            .toUpperCase();  
+            let placa =
+                String(
+                    req.body.placa || ""
+                )
+                .trim()
+                .toUpperCase();
 
-        let modelo =  
-            String(  
-                req.body.modelo || ""  
-            )  
-            .trim();  
-
-
-        if (!placa) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Informe a placa do veículo"  
-
-            });  
-
-        }  
+            let modelo =
+                String(
+                    req.body.modelo || ""
+                )
+                .trim();
 
 
-        // Verifica se o cliente pertence ao usuário  
-        const cliente =  
-            await pool.query(  
+            if (!placa) {
 
-                `  
-                SELECT id  
-                FROM clientes_financeiro  
-                WHERE id = $1  
-                AND usuario_id = $2  
-                `,  
+                return res.status(400).json({
 
-                [  
-                    clienteId,  
-                    req.usuario.id  
-                ]  
+                    sucesso: false,
 
-            );  
+                    erro:
+                        "Informe a placa do veículo"
+
+                });
+
+            }
 
 
-        if (cliente.rows.length === 0) {  
+            // Verifica se o cliente pertence ao usuário
+            const cliente =
+                await pool.query(
 
-            return res.status(404).json({  
+                    `
+                    SELECT id
+                    FROM clientes_financeiro
+                    WHERE id = $1
+                    AND usuario_id = $2
+                    `,
 
-                sucesso: false,  
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
 
-                erro:  
-                    "Cliente não encontrado"  
-
-            });  
-
-        }  
-
-
-        const resultado =  
-            await pool.query(  
-
-                `  
-                INSERT INTO veiculos_financeiro  
-                (  
-                    cliente_id,  
-                    placa,  
-                    modelo  
-                )  
-
-                VALUES  
-                (  
-                    $1,  
-                    $2,  
-                    $3  
-                )  
-
-                RETURNING  
-                    id,  
-                    cliente_id,  
-                    placa,  
-                    modelo,  
-                    criado_em  
-                `,  
-
-                [  
-                    clienteId,  
-                    placa,  
-                    modelo || null  
-                ]  
-
-            );  
+                );
 
 
-        return res.status(201).json({  
+            if (cliente.rows.length === 0) {
 
-            sucesso: true,  
+                return res.status(404).json({
 
-            veiculo:  
-                resultado.rows[0]  
+                    sucesso: false,
 
-        });  
+                    erro:
+                        "Cliente não encontrado"
 
-    } catch (erro) {  
+                });
 
-        console.error(  
-            "Erro ao cadastrar veículo:",  
-            erro  
-        );  
+            }
 
-        return res.status(500).json({  
 
-            sucesso: false,  
+            const resultado =
+                await pool.query(
 
-            erro:  
-                "Erro ao cadastrar veículo"  
+                    `
+                    INSERT INTO veiculos_financeiro
+                    (
+                        cliente_id,
+                        placa,
+                        modelo
+                    )
 
-        });  
+                    VALUES
+                    (
+                        $1,
+                        $2,
+                        $3
+                    )
 
-    }  
+                    RETURNING
+                        id,
+                        cliente_id,
+                        placa,
+                        modelo,
+                        criado_em
+                    `,
 
-}
+                    [
+                        clienteId,
+                        placa,
+                        modelo || null
+                    ]
+
+                );
+
+
+            return res.status(201).json({
+
+                sucesso: true,
+
+                veiculo:
+                    resultado.rows[0]
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao cadastrar veículo:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao cadastrar veículo"
+
+            });
+
+        }
+
+    }
 
 );
+
 
 // ==========================================
 // EDITAR VEÍCULO
 // ==========================================
 
 app.put(
-"/veiculos/:id",
+    "/veiculos/:id",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const veiculoId =  
-            Number(req.params.id);  
+            const veiculoId =
+                Number(req.params.id);
 
-        let placa =  
-            String(  
-                req.body.placa || ""  
-            )  
-            .trim()  
-            .toUpperCase();  
+            let placa =
+                String(
+                    req.body.placa || ""
+                )
+                .trim()
+                .toUpperCase();
 
-        let modelo =  
-            String(  
-                req.body.modelo || ""  
-            )  
-            .trim();  
-
-
-        if (!placa) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Informe a placa do veículo"  
-
-            });  
-
-        }  
+            let modelo =
+                String(
+                    req.body.modelo || ""
+                )
+                .trim();
 
 
-        const resultado =  
-            await pool.query(  
+            if (!placa) {
 
-                `  
-                UPDATE veiculos_financeiro v  
+                return res.status(400).json({
 
-                SET  
-                    placa = $1,  
-                    modelo = $2  
+                    sucesso: false,
 
-                FROM clientes_financeiro c  
+                    erro:
+                        "Informe a placa do veículo"
 
-                WHERE  
-                    v.id = $3  
+                });
 
-                AND  
-                    v.cliente_id = c.id  
-
-                AND  
-                    c.usuario_id = $4  
-
-                RETURNING  
-                    v.id,  
-                    v.cliente_id,  
-                    v.placa,  
-                    v.modelo,  
-                    v.criado_em  
-                `,  
-
-                [  
-                    placa,  
-                    modelo || null,  
-                    veiculoId,  
-                    req.usuario.id  
-                ]  
-
-            );  
+            }
 
 
-        if (resultado.rows.length === 0) {  
+            const resultado =
+                await pool.query(
 
-            return res.status(404).json({  
+                    `
+                    UPDATE veiculos_financeiro v
 
-                sucesso: false,  
+                    SET
+                        placa = $1,
+                        modelo = $2
 
-                erro:  
-                    "Veículo não encontrado"  
+                    FROM clientes_financeiro c
 
-            });  
+                    WHERE
+                        v.id = $3
 
-        }  
+                    AND
+                        v.cliente_id = c.id
+
+                    AND
+                        c.usuario_id = $4
+
+                    RETURNING
+                        v.id,
+                        v.cliente_id,
+                        v.placa,
+                        v.modelo,
+                        v.criado_em
+                    `,
+
+                    [
+                        placa,
+                        modelo || null,
+                        veiculoId,
+                        req.usuario.id
+                    ]
+
+                );
 
 
-        return res.json({  
+            if (resultado.rows.length === 0) {
 
-            sucesso: true,  
+                return res.status(404).json({
 
-            veiculo:  
-                resultado.rows[0]  
+                    sucesso: false,
 
-        });  
+                    erro:
+                        "Veículo não encontrado"
 
-    } catch (erro) {  
+                });
 
-        console.error(  
-            "Erro ao editar veículo:",  
-            erro  
-        );  
+            }
 
-        return res.status(500).json({  
 
-            sucesso: false,  
+            return res.json({
 
-            erro:  
-                "Erro ao editar veículo"  
+                sucesso: true,
 
-        });  
+                veiculo:
+                    resultado.rows[0]
 
-    }  
+            });
 
-}
+        } catch (erro) {
+
+            console.error(
+                "Erro ao editar veículo:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao editar veículo"
+
+            });
+
+        }
+
+    }
 
 );
+
 
 // ==========================================
 // EXCLUIR VEÍCULO
 // ==========================================
 
 app.delete(
-"/veiculos/:id",
+    "/veiculos/:id",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const veiculoId =  
-            Number(req.params.id);  
-
-
-        const resultado =  
-            await pool.query(  
-
-                `  
-                DELETE FROM veiculos_financeiro v  
-
-                USING clientes_financeiro c  
-
-                WHERE  
-                    v.id = $1  
-
-                AND  
-                    v.cliente_id = c.id  
-
-                AND  
-                    c.usuario_id = $2  
-
-                RETURNING v.id  
-                `,  
-
-                [  
-                    veiculoId,  
-                    req.usuario.id  
-                ]  
-
-            );  
+            const veiculoId =
+                Number(req.params.id);
 
 
-        if (resultado.rows.length === 0) {  
+            const resultado =
+                await pool.query(
 
-            return res.status(404).json({  
+                    `
+                    DELETE FROM veiculos_financeiro v
 
-                sucesso: false,  
+                    USING clientes_financeiro c
 
-                erro:  
-                    "Veículo não encontrado"  
+                    WHERE
+                        v.id = $1
 
-            });  
+                    AND
+                        v.cliente_id = c.id
 
-        }  
+                    AND
+                        c.usuario_id = $2
+
+                    RETURNING v.id
+                    `,
+
+                    [
+                        veiculoId,
+                        req.usuario.id
+                    ]
+
+                );
 
 
-        return res.json({  
+            if (resultado.rows.length === 0) {
 
-            sucesso: true,  
+                return res.status(404).json({
 
-            mensagem:  
-                "Veículo excluído com sucesso"  
+                    sucesso: false,
 
-        });  
+                    erro:
+                        "Veículo não encontrado"
 
-    } catch (erro) {  
+                });
 
-        console.error(  
-            "Erro ao excluir veículo:",  
-            erro  
-        );  
+            }
 
-        return res.status(500).json({  
 
-            sucesso: false,  
+            return res.json({
 
-            erro:  
-                "Erro ao excluir veículo"  
+                sucesso: true,
 
-        });  
+                mensagem:
+                    "Veículo excluído com sucesso"
 
-    }  
+            });
 
-}
+        } catch (erro) {
+
+            console.error(
+                "Erro ao excluir veículo:",
+                erro
+            );
+
+            return res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao excluir veículo"
+
+            });
+
+        }
+
+    }
 
 );
 
@@ -2558,140 +2599,141 @@ async (req, res) => {
 
 app.get(
 
-"/clientes/:id/foto",  
+    "/clientes/:id/foto",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(  
-                req.params.id  
-            );  
-
-
-        const resultado =  
-            await pool.query(  
-
-                `  
-                SELECT  
-
-                    foto_rosto,  
-                    foto_rosto_tipo  
-
-                FROM clientes_financeiro  
-
-                WHERE  
-
-                    id = $1  
-
-                AND  
-
-                    usuario_id = $2  
-                `,  
-
-                [  
-
-                    clienteId,  
-
-                    req.usuario.id  
-
-                ]  
-
-            );  
+            const clienteId =
+                Number(
+                    req.params.id
+                );
 
 
-        if (  
-            resultado.rows.length === 0  
-        ) {  
+            const resultado =
+                await pool.query(
 
-            return res.status(404).json({  
+                    `
+                    SELECT
 
-                sucesso: false,  
+                        foto_rosto,
+                        foto_rosto_tipo
 
-                erro:  
-                    "Cliente não encontrado"  
+                    FROM clientes_financeiro
 
-            });  
+                    WHERE
 
-        }  
+                        id = $1
 
+                    AND
 
-        const cliente =  
-            resultado.rows[0];  
+                        usuario_id = $2
+                    `,
 
+                    [
 
-        if (  
-            !cliente.foto_rosto  
-        ) {  
+                        clienteId,
 
-            return res.status(404).json({  
+                        req.usuario.id
 
-                sucesso: false,  
+                    ]
 
-                erro:  
-                    "Este cliente não possui foto"  
-
-            });  
-
-        }  
+                );
 
 
-        const imagem =  
-Buffer.from(  
-    cliente.foto_rosto  
-);
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+
+            const cliente =
+                resultado.rows[0];
+
+
+            if (
+                !cliente.foto_rosto
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Este cliente não possui foto"
+
+                });
+
+            }
+
+
+            const imagem =
+    Buffer.from(
+        cliente.foto_rosto
+    );
 
 const tipoImagem =
-cliente.foto_rosto_tipo ||
-"application/octet-stream";
+    cliente.foto_rosto_tipo ||
+    "application/octet-stream";
 
 console.log(
-"Tipo da foto:",
-tipoImagem
+    "Tipo da foto:",
+    tipoImagem
 );
 
 res.setHeader(
-"Content-Type",
-tipoImagem
+    "Content-Type",
+    tipoImagem
 );
 
 res.setHeader(
-"Content-Length",
-imagem.length
+    "Content-Length",
+    imagem.length
 );
 
 res.setHeader(
-"Content-Disposition",
-"inline"
+    "Content-Disposition",
+    "inline"
 );
 
 return res.end(
-imagem
+    imagem
 );
 
-} catch (erro) {  
 
-        console.error(  
-            "Erro ao carregar foto:",  
-            erro.message  
-        );  
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar foto:",
+                erro.message
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao carregar foto"  
+                erro:
+                    "Erro ao carregar foto"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -2700,426 +2742,426 @@ imagem
 // ==========================================
 
 app.post(
-"/clientes/:id/pagamentos",
+    "/clientes/:id/pagamentos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    const clienteId =  
-        Number(  
-            req.params.id  
-        );  
+        const clienteId =
+            Number(
+                req.params.id
+            );
 
 
-    if (  
+        if (
 
-        !Number.isInteger(clienteId) ||  
-        clienteId <= 0  
+            !Number.isInteger(clienteId) ||
+            clienteId <= 0
 
-    ) {  
+        ) {
 
-        return res.status(400).json({  
+            return res.status(400).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Cliente inválido"  
+                erro:
+                    "Cliente inválido"
 
-        });  
+            });
 
-    }  
+        }
 
 
-    let client;  
+        let client;
 
 
-    try {  
+        try {
 
-        client =  
-            await pool.connect();  
+            client =
+                await pool.connect();
 
 
-        await client.query(  
-            "BEGIN"  
-        );  
+            await client.query(
+                "BEGIN"
+            );
 
 
-        // ==================================  
-        // BUSCAR CLIENTE  
-        // ==================================  
+            // ==================================
+            // BUSCAR CLIENTE
+            // ==================================
 
-        const clienteResultado =  
-            await client.query(  
+            const clienteResultado =
+                await client.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    c.id,  
+                        c.id,
 
-                    c.valor_devido,  
+                        c.valor_devido,
 
-                    c.valor_semanal,  
+                        c.valor_semanal,
 
-                    c.dia_pagamento,  
+                        c.dia_pagamento,
 
 
-                    COALESCE(  
-                        SUM(p.valor),  
-                        0  
-                    ) AS total_pago  
+                        COALESCE(
+                            SUM(p.valor),
+                            0
+                        ) AS total_pago
 
 
-                FROM clientes_financeiro c  
+                    FROM clientes_financeiro c
 
 
-                LEFT JOIN pagamentos_financeiro p  
+                    LEFT JOIN pagamentos_financeiro p
 
-                ON  
-                    p.cliente_id = c.id  
+                    ON
+                        p.cliente_id = c.id
 
 
-                WHERE  
+                    WHERE
 
-                    c.id = $1  
+                        c.id = $1
 
-                AND  
+                    AND
 
-                    c.usuario_id = $2  
+                        c.usuario_id = $2
 
 
-                GROUP BY  
+                    GROUP BY
 
-                    c.id,  
+                        c.id,
 
-                    c.valor_devido,  
+                        c.valor_devido,
 
-                    c.valor_semanal,  
+                        c.valor_semanal,
 
-                    c.dia_pagamento  
-                `,  
+                        c.dia_pagamento
+                    `,
 
-                [  
+                    [
 
-                    clienteId,  
+                        clienteId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        if (  
+            if (
 
-            clienteResultado.rows.length === 0  
+                clienteResultado.rows.length === 0
 
-        ) {  
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cliente não encontrado"  
+                    erro:
+                        "Cliente não encontrado"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const cliente =  
-            clienteResultado.rows[0];  
+            const cliente =
+                clienteResultado.rows[0];
 
 
-        const valorSemanal =  
-            Number(  
-                cliente.valor_semanal  
-            );  
+            const valorSemanal =
+                Number(
+                    cliente.valor_semanal
+                );
 
 
 
-      
+        
 
-        // CALCULAR VALOR DO PAGAMENTO
-
+            // CALCULAR VALOR DO PAGAMENTO
 // O pagamento semanal NÃO altera a dívida total
 
 const valorPagamento =
-valorSemanal;
+    valorSemanal;
 
-if (  
 
-            !valorPagamento ||  
-            valorPagamento <= 0  
+            if (
 
-        ) {  
+                !valorPagamento ||
+                valorPagamento <= 0
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+            ) {
 
+                await client.query(
+                    "ROLLBACK"
+                );
 
-            return res.status(400).json({  
 
-                sucesso: false,  
+                return res.status(400).json({
 
-                erro:  
-                    "Valor semanal inválido"  
+                    sucesso: false,
 
-            });  
+                    erro:
+                        "Valor semanal inválido"
 
-        }  
+                });
 
+            }
 
-        // ==================================  
-        // DEFINIR SEMANA DE REFERÊNCIA  
-        // ==================================  
 
-        const hoje =  
-            new Date();  
+            // ==================================
+            // DEFINIR SEMANA DE REFERÊNCIA
+            // ==================================
 
+            const hoje =
+                new Date();
 
-        const diaDaSemana =  
-            hoje.getDay();  
 
+            const diaDaSemana =
+                hoje.getDay();
 
-        const diferenca =  
-            hoje.getDate() -  
-            diaDaSemana;  
 
+            const diferenca =
+                hoje.getDate() -
+                diaDaSemana;
 
-        const domingo =  
-            new Date(  
-                hoje  
-            );  
 
+            const domingo =
+                new Date(
+                    hoje
+                );
 
-        domingo.setDate(  
-            diferenca  
-        );  
 
+            domingo.setDate(
+                diferenca
+            );
 
-        domingo.setHours(  
-            0,  
-            0,  
-            0,  
-            0  
-        );  
 
+            domingo.setHours(
+                0,
+                0,
+                0,
+                0
+            );
 
-        const ano =  
-            domingo.getFullYear();  
 
+            const ano =
+                domingo.getFullYear();
 
-        const mes =  
-            String(  
-                domingo.getMonth() + 1  
-            ).padStart(  
-                2,  
-                "0"  
-            );  
 
+            const mes =
+                String(
+                    domingo.getMonth() + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
 
-        const dia =  
-            String(  
-                domingo.getDate()  
-            ).padStart(  
-                2,  
-                "0"  
-            );  
 
+            const dia =
+                String(
+                    domingo.getDate()
+                ).padStart(
+                    2,
+                    "0"
+                );
 
-        const semanaReferencia =  
-            `${ano}-${mes}-${dia}`;  
 
-        // ==================================  
-        // VERIFICAR PAGAMENTO DA SEMANA  
-        // ==================================  
+            const semanaReferencia =
+                `${ano}-${mes}-${dia}`;
 
-        const pagamentoExistente =  
-            await client.query(  
+            // ==================================
+            // VERIFICAR PAGAMENTO DA SEMANA
+            // ==================================
 
-                `  
-                SELECT id  
+            const pagamentoExistente =
+                await client.query(
 
-                FROM pagamentos_financeiro  
+                    `
+                    SELECT id
 
-                WHERE  
+                    FROM pagamentos_financeiro
 
-                    cliente_id = $1  
+                    WHERE
 
-                AND  
+                        cliente_id = $1
 
-                    semana_referencia = $2  
-                `,  
+                    AND
 
-                [  
+                        semana_referencia = $2
+                    `,
 
-                    clienteId,  
+                    [
 
-                    semanaReferencia  
+                        clienteId,
 
-                ]  
+                        semanaReferencia
 
-            );  
+                    ]
 
+                );
 
-        if (  
 
-            pagamentoExistente.rows.length > 0  
+            if (
 
-        ) {  
+                pagamentoExistente.rows.length > 0
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+            ) {
 
+                await client.query(
+                    "ROLLBACK"
+                );
 
-            return res.status(400).json({  
 
-                sucesso: false,  
+                return res.status(400).json({
 
-                erro:  
-                    "Este cliente já possui um pagamento registrado nesta semana"  
+                    sucesso: false,
 
-            });  
+                    erro:
+                        "Este cliente já possui um pagamento registrado nesta semana"
 
-        }  
+                });
 
+            }
 
-        // ==================================  
-        // REGISTRAR PAGAMENTO  
-        // ==================================  
 
-        const resultado =  
-            await client.query(  
+            // ==================================
+            // REGISTRAR PAGAMENTO
+            // ==================================
 
-                `  
-                INSERT INTO pagamentos_financeiro (  
+            const resultado =
+                await client.query(
 
-                    cliente_id,  
+                    `
+                    INSERT INTO pagamentos_financeiro (
 
-                    valor,  
+                        cliente_id,
 
-                    semana_referencia  
+                        valor,
 
-                )  
+                        semana_referencia
 
-                VALUES (  
+                    )
 
-                    $1,  
+                    VALUES (
 
-                    $2,  
+                        $1,
 
-                    $3  
+                        $2,
 
-                )  
+                        $3
 
-                RETURNING *  
-                `,  
+                    )
 
-                [  
+                    RETURNING *
+                    `,
 
-                    clienteId,  
+                    [
 
-                    valorPagamento,  
+                        clienteId,
 
-                    semanaReferencia  
+                        valorPagamento,
 
-                ]  
+                        semanaReferencia
 
-            );  
+                    ]
 
+                );
 
-        await client.query(  
-            "COMMIT"  
-        );  
 
+            await client.query(
+                "COMMIT"
+            );
 
-        res.status(201).json({  
 
-            sucesso: true,  
+            res.status(201).json({
 
-            mensagem:  
-                "Pagamento semanal registrado com sucesso!",  
+                sucesso: true,
 
+                mensagem:
+                    "Pagamento semanal registrado com sucesso!",
 
-            pagamento:  
-                resultado.rows[0],  
 
+                pagamento:
+                    resultado.rows[0],
 
-            valor_pago:  
-                valorPagamento,  
 
+                valor_pago:
+                    valorPagamento,
 
-            semana_referencia:  
-                semanaReferencia  
 
-        });  
+                semana_referencia:
+                    semanaReferencia
 
-    } catch (erro) {  
+            });
 
-        if (client) {  
+        } catch (erro) {
 
-            await client.query(  
-                "ROLLBACK"  
-            ).catch(  
-                () => {}  
-            );  
+            if (client) {
 
-        }  
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
 
+            }
 
-        console.error(  
-            "Erro pagamento semanal:",  
-            erro.message  
-        );  
 
+            console.error(
+                "Erro pagamento semanal:",
+                erro.message
+            );
 
-        // ERRO DO ÍNDICE ÚNICO  
 
-        if (  
-            erro.code === "23505"  
-        ) {  
+            // ERRO DO ÍNDICE ÚNICO
 
-            return res.status(400).json({  
+            if (
+                erro.code === "23505"
+            ) {
 
-                sucesso: false,  
+                return res.status(400).json({
 
-                erro:  
-                    "Este cliente já possui pagamento nesta semana"  
+                    sucesso: false,
 
-            });  
+                    erro:
+                        "Este cliente já possui pagamento nesta semana"
 
-        }  
+                });
 
+            }
 
-        res.status(500).json({  
 
-            sucesso: false,  
+            res.status(500).json({
 
-            erro:  
-                "Erro ao registrar pagamento"  
+                sucesso: false,
 
-        });  
+                erro:
+                    "Erro ao registrar pagamento"
 
-    } finally {  
+            });
 
-        if (client) {  
+        } finally {
 
-            client.release();  
+            if (client) {
 
-        }  
+                client.release();
 
-    }  
+            }
 
-}
+        }
+
+    }
 
 );
 
@@ -3129,307 +3171,311 @@ if (
 // ==========================================
 
 app.get(
-"/clientes/:id/pagamentos",
+    "/clientes/:id/pagamentos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
-
-
-        // ==================================  
-        // VERIFICAR SE O CLIENTE PERTENCE  
-        // AO USUÁRIO LOGADO  
-        // ==================================  
-
-        const clienteResultado =  
-            await pool.query(  
-
-                `  
-                SELECT id  
-
-                FROM clientes_financeiro  
-
-                WHERE  
-                    id = $1  
-
-                AND  
-                    usuario_id = $2  
-                `,  
-
-                [  
-                    clienteId,  
-                    req.usuario.id  
-                ]  
-
-            );  
+            const clienteId =
+                Number(req.params.id);
 
 
-        if (  
-            clienteResultado.rows.length === 0  
-        ) {  
+            // ==================================
+            // VERIFICAR SE O CLIENTE PERTENCE
+            // AO USUÁRIO LOGADO
+            // ==================================
 
-            return res.status(404).json({  
+            const clienteResultado =
+                await pool.query(
 
-                sucesso: false,  
+                    `
+                    SELECT id
 
-                erro:  
-                    "Cliente não encontrado"  
+                    FROM clientes_financeiro
 
-            });  
+                    WHERE
+                        id = $1
 
-        }  
+                    AND
+                        usuario_id = $2
+                    `,
+
+                    [
+                        clienteId,
+                        req.usuario.id
+                    ]
+
+                );
 
 
-        // ==================================  
-        // BUSCAR TODOS OS PAGAMENTOS  
-        // ==================================  
+            if (
+                clienteResultado.rows.length === 0
+            ) {
 
-        const resultado =  
-            await pool.query(  
+                return res.status(404).json({
 
-                `  
-                SELECT  
+                    sucesso: false,
 
-                    pagamento_id AS id,  
+                    erro:
+                        "Cliente não encontrado"
 
-                    valor,  
+                });
 
-                    tipo,  
+            }
 
-                    cobranca_id,  
 
-                    data_formatada,  
+            // ==================================
+            // BUSCAR TODOS OS PAGAMENTOS
+            // ==================================
 
-                    criado_em  
+            const resultado =
+                await pool.query(
 
-                FROM (  
+                    `
+                    SELECT
 
-                    /* =========================  
-                       PAGAMENTOS SEMANAIS  
-                    ========================= */  
+                        pagamento_id AS id,
 
-                    SELECT  
+                        valor,
 
-                        p.id  
-                        AS pagamento_id,  
+                        tipo,
 
-                        p.valor,  
+                        cobranca_id,
 
-                        'Pagamento semanal'  
-                        AS tipo,  
+                        data_formatada,
 
-                        NULL::INTEGER  
-                        AS cobranca_id,  
+                        criado_em
 
-                        TO_CHAR(  
+                    FROM (
 
-                            p.criado_em  
-                            AT TIME ZONE  
-                            'America/Maceio',  
+                        /* =========================
+                           PAGAMENTOS SEMANAIS
+                        ========================= */
 
-                            'DD/MM/YYYY HH24:MI:SS'  
+                        SELECT
 
-                        )  
-                        AS data_formatada,  
+                            p.id
+                            AS pagamento_id,
 
-                        p.criado_em  
+                            p.valor,
 
-                   FROM pagamentos_financeiro p
+                            'Pagamento semanal'
+                            AS tipo,
+
+                            NULL::INTEGER
+                            AS cobranca_id,
+
+                            TO_CHAR(
+
+                                p.criado_em
+                                AT TIME ZONE
+                                'America/Maceio',
+
+                                'DD/MM/YYYY HH24:MI:SS'
+
+                            )
+                            AS data_formatada,
+
+                            p.criado_em
+
+                       FROM pagamentos_financeiro p
 
 WHERE
-p.cliente_id = $1
+    p.cliente_id = $1
+
 
 UNION ALL
 
+
 /* =========================
-QUITAÇÃO DA DÍVIDA TOTAL
+   QUITAÇÃO DA DÍVIDA TOTAL
 ========================= */
 
 SELECT
 
-pd.id  
-AS pagamento_id,  
+    pd.id
+    AS pagamento_id,
 
-pd.valor,  
+    pd.valor,
 
-'Quitação da dívida'  
-AS tipo,  
+    'Quitação da dívida'
+    AS tipo,
 
-NULL::INTEGER  
-AS cobranca_id,  
+    NULL::INTEGER
+    AS cobranca_id,
 
-TO_CHAR(  
+    TO_CHAR(
 
-    pd.criado_em  
-    AT TIME ZONE  
-    'America/Maceio',  
+        pd.criado_em
+        AT TIME ZONE
+        'America/Maceio',
 
-    'DD/MM/YYYY HH24:MI:SS'  
+        'DD/MM/YYYY HH24:MI:SS'
 
-)  
-AS data_formatada,  
+    )
+    AS data_formatada,
 
-pd.criado_em
+    pd.criado_em
 
 FROM
-pagamentos_divida_financeiro pd
+    pagamentos_divida_financeiro pd
 
 WHERE
 
-pd.cliente_id = $1
+    pd.cliente_id = $1
+
 
 UNION ALL
 
+
 /* =========================
-PAGAMENTOS DE COBRANÇAS
-INCLUINDO JUROS
+   PAGAMENTOS DE COBRANÇAS
+   INCLUINDO JUROS
 ========================= */
 
 SELECT
 
-pc.id  
-AS pagamento_id,  
+    pc.id
+    AS pagamento_id,
 
-pc.valor,  
+    pc.valor,
 
-CASE  
+    CASE
 
-    WHEN  
-        co.juros_valor > 0  
+        WHEN
+            co.juros_valor > 0
 
-    THEN  
+        THEN
 
-        'Pagamento de cobrança com juros'  
+            'Pagamento de cobrança com juros'
 
-    ELSE  
+        ELSE
 
-        'Pagamento de cobrança'  
+            'Pagamento de cobrança'
 
-END  
-AS tipo,  
+    END
+    AS tipo,
 
-co.id  
-AS cobranca_id,  
+    co.id
+    AS cobranca_id,
 
-TO_CHAR(  
+    TO_CHAR(
 
-    pc.criado_em  
-    AT TIME ZONE  
-    'America/Maceio',  
+        pc.criado_em
+        AT TIME ZONE
+        'America/Maceio',
 
-    'DD/MM/YYYY HH24:MI:SS'  
+        'DD/MM/YYYY HH24:MI:SS'
 
-)  
-AS data_formatada,  
+    )
+    AS data_formatada,
 
-pc.criado_em
+    pc.criado_em
 
 FROM
-pagamentos_cobrancas_financeiro pc
+    pagamentos_cobrancas_financeiro pc
 
 INNER JOIN
-cobrancas_financeiro co
+    cobrancas_financeiro co
 
 ON
 
-co.id =  
-pc.cobranca_id
+    co.id =
+    pc.cobranca_id
 
 WHERE
 
-co.cliente_id = $1
+    co.cliente_id = $1
 
 AND
 
-co.usuario_id = $2   
+    co.usuario_id = $2 
 
 
 
-                ) AS historico  
+                    ) AS historico
 
 
-                ORDER BY  
+                    ORDER BY
 
-                    criado_em DESC  
-                `,  
+                        criado_em DESC
+                    `,
 
-                [  
+                    [
 
-                    clienteId,  
+                        clienteId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
-
-
-        // ==================================  
-        // CALCULAR TOTAL  
-        // ==================================  
-
-        const totalPago =  
-            resultado.rows.reduce(  
-
-                (  
-                    total,  
-                    pagamento  
-                ) =>  
-
-                    total +  
-
-                    Number(  
-                        pagamento.valor  
-                    ),  
-
-                0  
-
-            );  
+                );
 
 
-        res.json({  
+            // ==================================
+            // CALCULAR TOTAL
+            // ==================================
 
-            sucesso: true,  
+            const totalPago =
+                resultado.rows.reduce(
 
-            total_pago:  
-                totalPago,  
+                    (
+                        total,
+                        pagamento
+                    ) =>
 
-            quantidade:  
-                resultado.rows.length,  
+                        total +
 
-            pagamentos:  
-                resultado.rows  
+                        Number(
+                            pagamento.valor
+                        ),
 
-        });  
+                    0
 
-    } catch (erro) {  
-
-        console.error(  
-
-            "Erro histórico completo:",  
-
-            erro.message  
-
-        );  
+                );
 
 
-        res.status(500).json({  
+            res.json({
 
-            sucesso: false,  
+                sucesso: true,
 
-            erro:  
-                "Erro ao carregar histórico"  
+                total_pago:
+                    totalPago,
 
-        });  
+                quantidade:
+                    resultado.rows.length,
 
-    }  
+                pagamentos:
+                    resultado.rows
 
-}
+            });
+
+        } catch (erro) {
+
+            console.error(
+
+                "Erro histórico completo:",
+
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao carregar histórico"
+
+            });
+
+        }
+
+    }
 
 );
 
@@ -3439,565 +3485,565 @@ co.usuario_id = $2
 
 app.put(
 
-"/clientes/:id",  
+    "/clientes/:id",
 
-verificarToken,  
+    verificarToken,
 
-upload.fields([  
+    upload.fields([
 
-    {  
-        name: "documento",  
-        maxCount: 1  
-    },  
+        {
+            name: "documento",
+            maxCount: 1
+        },
 
-    {  
-        name: "foto_rosto",  
-        maxCount: 1  
-    }  
+        {
+            name: "foto_rosto",
+            maxCount: 1
+        }
 
-]),  
+    ]),
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(req.params.id);  
+            const clienteId =
+                Number(req.params.id);
 
 
-        const {  
+            const {
 
-            nome,  
-            cpf,  
-            nascimento,  
+                nome,
+                cpf,
+                nascimento,
 
-            rua,  
-            numero,  
-            bairro,  
-            cidade,  
-            estado,  
+                rua,
+                numero,
+                bairro,
+                cidade,
+                estado,
 
-            valor_devido,  
-            valor_semanal,  
-            dia_pagamento  
+                valor_devido,
+                valor_semanal,
+                dia_pagamento
 
-        } = req.body;  
+            } = req.body;
 
 
-        // ==============================  
-        // VALIDAR ID  
-        // ==============================  
+            // ==============================
+            // VALIDAR ID
+            // ==============================
 
-        if (  
+            if (
 
-            !Number.isInteger(clienteId) ||  
+                !Number.isInteger(clienteId) ||
 
-            clienteId <= 0  
+                clienteId <= 0
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cliente inválido"  
+                    erro:
+                        "Cliente inválido"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        // ==============================  
-        // VALIDAR CAMPOS  
-        // ==============================  
+            // ==============================
+            // VALIDAR CAMPOS
+            // ==============================
 
-        if (  
+            if (
 
-            !nome ||  
-            !cpf ||  
-            !nascimento ||  
+                !nome ||
+                !cpf ||
+                !nascimento ||
 
-            !rua ||  
-            !numero ||  
-            !bairro ||  
-            !cidade ||  
-            !estado ||  
+                !rua ||
+                !numero ||
+                !bairro ||
+                !cidade ||
+                !estado ||
 
-            valor_devido === undefined ||  
-            valor_semanal === undefined ||  
-            dia_pagamento === undefined  
+                valor_devido === undefined ||
+                valor_semanal === undefined ||
+                dia_pagamento === undefined
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Preencha todos os campos obrigatórios"  
+                    erro:
+                        "Preencha todos os campos obrigatórios"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const valor =  
-            Number(valor_devido);  
+            const valor =
+                Number(valor_devido);
 
 
-        const valorSemanal =  
-            Number(valor_semanal);  
+            const valorSemanal =
+                Number(valor_semanal);
 
 
-        const diaPagamento =  
-            Number(dia_pagamento);  
+            const diaPagamento =
+                Number(dia_pagamento);
 
 
-        // ==============================  
-        // VALIDAR VALORES  
-        // ==============================  
+            // ==============================
+            // VALIDAR VALORES
+            // ==============================
 
-        if (  
+            if (
 
-            Number.isNaN(valor) ||  
+                Number.isNaN(valor) ||
 
-            valor < 0  
+                valor < 0
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Valor devido inválido"  
+                    erro:
+                        "Valor devido inválido"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        if (  
+            if (
 
-            Number.isNaN(valorSemanal) ||  
+                Number.isNaN(valorSemanal) ||
 
-            valorSemanal <= 0  
+                valorSemanal <= 0
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Valor semanal inválido"  
+                    erro:
+                        "Valor semanal inválido"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        if (  
+            if (
 
-            !Number.isInteger(diaPagamento) ||  
+                !Number.isInteger(diaPagamento) ||
 
-            diaPagamento < 0 ||  
+                diaPagamento < 0 ||
 
-            diaPagamento > 6  
+                diaPagamento > 6
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Dia de pagamento inválido"  
+                    erro:
+                        "Dia de pagamento inválido"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        // ==============================  
-        // MONTAR ENDEREÇO  
-        // ==============================  
+            // ==============================
+            // MONTAR ENDEREÇO
+            // ==============================
 
-        const enderecoCompleto =  
+            const enderecoCompleto =
 
-            `${rua.trim()}, ${numero.trim()} - ` +  
+                `${rua.trim()}, ${numero.trim()} - ` +
 
-            `${bairro.trim()}, ${cidade.trim()} - ` +  
+                `${bairro.trim()}, ${cidade.trim()} - ` +
 
-            `${estado.trim()}`;  
+                `${estado.trim()}`;
 
 
-        // ==============================  
-        // PEGAR ARQUIVOS NOVOS  
-        // ==============================  
+            // ==============================
+            // PEGAR ARQUIVOS NOVOS
+            // ==============================
 
-        const documento =  
+            const documento =
 
-            req.files?.documento?.[0] ||  
+                req.files?.documento?.[0] ||
 
-            null;  
+                null;
 
 
-        const fotoRosto =  
+            const fotoRosto =
 
-            req.files?.foto_rosto?.[0] ||  
+                req.files?.foto_rosto?.[0] ||
 
-            null;  
+                null;
 
 
-        // ==============================  
-        // CONVERTER HEIC PARA JPEG  
-        // ==============================  
+            // ==============================
+            // CONVERTER HEIC PARA JPEG
+            // ==============================
 
-        let documentoBuffer = null;  
-        let documentoTipo = null;  
+            let documentoBuffer = null;
+            let documentoTipo = null;
 
 
-        if (documento) {  
+            if (documento) {
 
-            const tipoDocumento =  
+                const tipoDocumento =
 
-                documento.mimetype.toLowerCase();  
+                    documento.mimetype.toLowerCase();
 
 
-            if (  
+                if (
 
-                tipoDocumento === "image/heic" ||  
+                    tipoDocumento === "image/heic" ||
 
-                tipoDocumento === "image/heif"  
+                    tipoDocumento === "image/heif"
 
-            ) {  
+                ) {
 
-                console.log(  
-                    "Convertendo documento HEIC para JPEG..."  
-                );  
+                    console.log(
+                        "Convertendo documento HEIC para JPEG..."
+                    );
 
 
-                documentoBuffer =  
+                    documentoBuffer =
 
-                    await heicConvert({  
+                        await heicConvert({
 
-                        buffer:  
-                            documento.buffer,  
+                            buffer:
+                                documento.buffer,
 
-                        format:  
-                            "JPEG",  
+                            format:
+                                "JPEG",
 
-                        quality:  
-                            0.9  
+                            quality:
+                                0.9
 
-                    });  
+                        });
 
 
-                documentoTipo =  
-                    "image/jpeg";  
+                    documentoTipo =
+                        "image/jpeg";
 
-            } else {  
+                } else {
 
-                documentoBuffer =  
-                    documento.buffer;  
+                    documentoBuffer =
+                        documento.buffer;
 
 
-                documentoTipo =  
-                    documento.mimetype;  
+                    documentoTipo =
+                        documento.mimetype;
 
-            }  
+                }
 
-        }  
+            }
 
 
-        // ==============================  
-        // CONVERTER FOTO ROSTO HEIC  
-        // ==============================  
+            // ==============================
+            // CONVERTER FOTO ROSTO HEIC
+            // ==============================
 
-        let fotoRostoBuffer = null;  
-        let fotoRostoTipo = null;  
+            let fotoRostoBuffer = null;
+            let fotoRostoTipo = null;
 
 
-        if (fotoRosto) {  
+            if (fotoRosto) {
 
-            const tipoFoto =  
+                const tipoFoto =
 
-                fotoRosto.mimetype.toLowerCase();  
+                    fotoRosto.mimetype.toLowerCase();
 
 
-            if (  
+                if (
 
-                tipoFoto === "image/heic" ||  
+                    tipoFoto === "image/heic" ||
 
-                tipoFoto === "image/heif"  
+                    tipoFoto === "image/heif"
 
-            ) {  
+                ) {
 
-                console.log(  
-                    "Convertendo foto do rosto HEIC para JPEG..."  
-                );  
+                    console.log(
+                        "Convertendo foto do rosto HEIC para JPEG..."
+                    );
 
 
-                fotoRostoBuffer =  
+                    fotoRostoBuffer =
 
-                    await heicConvert({  
+                        await heicConvert({
 
-                        buffer:  
-                            fotoRosto.buffer,  
+                            buffer:
+                                fotoRosto.buffer,
 
-                        format:  
-                            "JPEG",  
+                            format:
+                                "JPEG",
 
-                        quality:  
-                            0.9  
+                            quality:
+                                0.9
 
-                    });  
+                        });
 
 
-                fotoRostoTipo =  
-                    "image/jpeg";  
+                    fotoRostoTipo =
+                        "image/jpeg";
 
-            } else {  
+                } else {
 
-                fotoRostoBuffer =  
-                    fotoRosto.buffer;  
+                    fotoRostoBuffer =
+                        fotoRosto.buffer;
 
 
-                fotoRostoTipo =  
-                    fotoRosto.mimetype;  
+                    fotoRostoTipo =
+                        fotoRosto.mimetype;
 
-            }  
+                }
 
-        }  
+            }
 
 
-        // ==============================  
-        // ATUALIZAR DADOS BÁSICOS  
-        // ==============================  
+            // ==============================
+            // ATUALIZAR DADOS BÁSICOS
+            // ==============================
 
-        let query = `  
+            let query = `
 
-            UPDATE clientes_financeiro  
+                UPDATE clientes_financeiro
 
-            SET  
+                SET
 
-                nome = $1,  
+                    nome = $1,
 
-                cpf = $2,  
+                    cpf = $2,
 
-                nascimento = $3,  
+                    nascimento = $3,
 
-                endereco = $4,  
+                    endereco = $4,
 
-                rua = $5,  
+                    rua = $5,
 
-                numero = $6,  
+                    numero = $6,
 
-                bairro = $7,  
+                    bairro = $7,
 
-                cidade = $8,  
+                    cidade = $8,
 
-                estado = $9,  
+                    estado = $9,
 
-                valor_devido = $10,  
+                    valor_devido = $10,
 
-                valor_semanal = $11,  
+                    valor_semanal = $11,
 
-                dia_pagamento = $12  
+                    dia_pagamento = $12
 
-        `;  
+            `;
 
 
-        const valores = [  
+            const valores = [
 
-            nome.trim(),  
+                nome.trim(),
 
-            cpf.trim(),  
+                cpf.trim(),
 
-            nascimento,  
+                nascimento,
 
-            enderecoCompleto,  
+                enderecoCompleto,
 
-            rua.trim(),  
+                rua.trim(),
 
-            numero.trim(),  
+                numero.trim(),
 
-            bairro.trim(),  
+                bairro.trim(),
 
-            cidade.trim(),  
+                cidade.trim(),
 
-            estado.trim(),  
+                estado.trim(),
 
-            valor,  
+                valor,
 
-            valorSemanal,  
+                valorSemanal,
 
-            diaPagamento  
+                diaPagamento
 
-        ];  
+            ];
 
 
-        let contador =  
-            13;  
+            let contador =
+                13;
 
 
-        // ==============================  
-        // ATUALIZAR DOCUMENTO  
-        // ==============================  
+            // ==============================
+            // ATUALIZAR DOCUMENTO
+            // ==============================
 
-        if (documento) {  
+            if (documento) {
 
-            query += `  
+                query += `
 
-                , documento_foto = $${contador}  
+                    , documento_foto = $${contador}
 
-                , documento_tipo = $${contador + 1}  
+                    , documento_tipo = $${contador + 1}
 
-            `;  
+                `;
 
 
-            valores.push(  
+                valores.push(
 
-                documentoBuffer,  
+                    documentoBuffer,
 
-                documentoTipo  
+                    documentoTipo
 
-            );  
+                );
 
 
-            contador += 2;  
+                contador += 2;
 
-        }  
+            }
 
 
-        // ==============================  
-        // ATUALIZAR FOTO DO ROSTO  
-        // ==============================  
+            // ==============================
+            // ATUALIZAR FOTO DO ROSTO
+            // ==============================
 
-        if (fotoRosto) {  
+            if (fotoRosto) {
 
-            query += `  
+                query += `
 
-                , foto_rosto = $${contador}  
+                    , foto_rosto = $${contador}
 
-                , foto_rosto_tipo = $${contador + 1}  
+                    , foto_rosto_tipo = $${contador + 1}
 
-            `;  
+                `;
 
 
-            valores.push(  
+                valores.push(
 
-                fotoRostoBuffer,  
+                    fotoRostoBuffer,
 
-                fotoRostoTipo  
+                    fotoRostoTipo
 
-            );  
+                );
 
 
-            contador += 2;  
+                contador += 2;
 
-        }  
+            }
 
 
-        // ==============================  
-        // WHERE  
-        // ==============================  
+            // ==============================
+            // WHERE
+            // ==============================
 
-        query += `  
+            query += `
 
-            WHERE  
+                WHERE
 
-                id = $${contador}  
+                    id = $${contador}
 
-            AND  
+                AND
 
-                usuario_id = $${contador + 1}  
+                    usuario_id = $${contador + 1}
 
-            RETURNING *  
+                RETURNING *
 
-        `;  
+            `;
 
 
-        valores.push(  
+            valores.push(
 
-            clienteId,  
+                clienteId,
 
-            req.usuario.id  
+                req.usuario.id
 
-        );  
+            );
 
 
-        // ==============================  
-        // EXECUTAR UPDATE  
-        // ==============================  
+            // ==============================
+            // EXECUTAR UPDATE
+            // ==============================
 
-        const resultado =  
+            const resultado =
 
-            await pool.query(  
+                await pool.query(
 
-                query,  
+                    query,
 
-                valores  
+                    valores
 
-            );  
+                );
 
 
-        if (  
+            if (
 
-            resultado.rows.length === 0  
+                resultado.rows.length === 0
 
-        ) {  
+            ) {
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cliente não encontrado"  
+                    erro:
+                        "Cliente não encontrado"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
-                "Cliente atualizado com sucesso!",  
+                mensagem:
+                    "Cliente atualizado com sucesso!",
 
-            cliente:  
-                resultado.rows[0]  
+                cliente:
+                    resultado.rows[0]
 
-        });  
+            });
 
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
+            console.error(
 
-            "Erro ao editar cliente:",  
+                "Erro ao editar cliente:",
 
-            erro  
+                erro
 
-        );  
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao editar cliente"  
+                erro:
+                    "Erro ao editar cliente"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -4006,363 +4052,364 @@ async (req, res) => {
 // ==========================================
 
 app.delete(
-"/clientes/:id",
+    "/clientes/:id",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const clienteId =  
-            Number(  
-                req.params.id  
-            );  
-
-
-        if (  
-
-            !Number.isInteger(clienteId) ||  
-            clienteId <= 0  
-
-        ) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Cliente inválido"  
-
-            });  
-
-        }  
+            const clienteId =
+                Number(
+                    req.params.id
+                );
 
 
-        const resultado =  
-            await pool.query(  
+            if (
 
-                `  
-                DELETE FROM clientes_financeiro  
+                !Number.isInteger(clienteId) ||
+                clienteId <= 0
 
-                WHERE  
+            ) {
 
-                    id = $1  
+                return res.status(400).json({
 
-                AND  
+                    sucesso: false,
 
-                    usuario_id = $2  
+                    erro:
+                        "Cliente inválido"
 
+                });
 
-                RETURNING id  
-                `,  
-
-                [  
-
-                    clienteId,  
-
-                    req.usuario.id  
-
-                ]  
-
-            );  
+            }
 
 
-        if (  
+            const resultado =
+                await pool.query(
 
-            resultado.rows.length === 0  
+                    `
+                    DELETE FROM clientes_financeiro
 
-        ) {  
+                    WHERE
 
-            return res.status(404).json({  
+                        id = $1
 
-                sucesso: false,  
+                    AND
 
-                erro:  
-                    "Cliente não encontrado"  
-
-            });  
-
-        }  
+                        usuario_id = $2
 
 
-        res.json({  
+                    RETURNING id
+                    `,
 
-            sucesso: true,  
+                    [
 
-            mensagem:  
-                "Cliente excluído com sucesso!"  
+                        clienteId,
 
-        });  
+                        req.usuario.id
 
-    } catch (erro) {  
+                    ]
 
-        console.error(  
-            "Erro ao excluir cliente:",  
-            erro.message  
-        );  
+                );
 
 
-        res.status(500).json({  
+            if (
 
-            sucesso: false,  
+                resultado.rows.length === 0
 
-            erro:  
-                "Erro ao excluir cliente"  
+            ) {
 
-        });  
+                return res.status(404).json({
 
-    }  
+                    sucesso: false,
 
-}
+                    erro:
+                        "Cliente não encontrado"
+
+                });
+
+            }
+
+
+            res.json({
+
+                sucesso: true,
+
+                mensagem:
+                    "Cliente excluído com sucesso!"
+
+            });
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao excluir cliente:",
+                erro.message
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+                    "Erro ao excluir cliente"
+
+            });
+
+        }
+
+    }
 
 );
+
 
 // ==========================================
 // RELATÓRIO FINANCEIRO
 // ==========================================
 
 app.get(
-"/relatorios/pagamentos",
+    "/relatorios/pagamentos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        const {  
+            const {
 
-            inicio,  
-            fim  
+                inicio,
+                fim
 
-        } = req.query;  
+            } = req.query;
 
 
-        if (  
+            if (
 
-            !inicio ||  
-            !fim  
+                !inicio ||
+                !fim
 
-        ) {  
+            ) {
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Informe a data inicial e final"  
+                    erro:
+                        "Informe a data inicial e final"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const pagamentosResultado =  
-            await pool.query(  
+            const pagamentosResultado =
+                await pool.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    p.id,  
+                        p.id,
 
-                    p.valor,  
+                        p.valor,
 
 
-                    TO_CHAR(  
+                        TO_CHAR(
 
-                        p.criado_em  
-                        AT TIME ZONE  
-                        'America/Maceio',  
+                            p.criado_em
+                            AT TIME ZONE
+                            'America/Maceio',
 
-                        'DD/MM/YYYY HH24:MI:SS'  
+                            'DD/MM/YYYY HH24:MI:SS'
 
-                    )  
-                    AS data_formatada,  
+                        )
+                        AS data_formatada,
 
 
-                    c.id  
-                    AS cliente_id,  
+                        c.id
+                        AS cliente_id,
 
 
-                    c.nome  
-                    AS cliente_nome,  
+                        c.nome
+                        AS cliente_nome,
 
 
-                    c.cpf  
-                    AS cliente_cpf  
+                        c.cpf
+                        AS cliente_cpf
 
 
-                FROM pagamentos_financeiro p  
+                    FROM pagamentos_financeiro p
 
 
-                INNER JOIN clientes_financeiro c  
+                    INNER JOIN clientes_financeiro c
 
-                ON  
-                    c.id = p.cliente_id  
+                    ON
+                        c.id = p.cliente_id
 
 
-                WHERE  
+                    WHERE
 
-                    c.usuario_id = $1  
+                        c.usuario_id = $1
 
 
-                AND  
+                    AND
 
-                    p.criado_em >= $2::date  
+                        p.criado_em >= $2::date
 
 
-                AND  
+                    AND
 
-                    p.criado_em < (  
-                        $3::date +  
-                        INTERVAL '1 day'  
-                    )  
+                        p.criado_em < (
+                            $3::date +
+                            INTERVAL '1 day'
+                        )
 
 
-                ORDER BY  
-                    p.criado_em DESC  
-                `,  
+                    ORDER BY
+                        p.criado_em DESC
+                    `,
 
-                [  
+                    [
 
-                    req.usuario.id,  
+                        req.usuario.id,
 
-                    inicio,  
+                        inicio,
 
-                    fim  
+                        fim
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        const resumoResultado =  
-            await pool.query(  
+            const resumoResultado =
+                await pool.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    COUNT(*)  
-                    AS quantidade_pagamentos,  
+                        COUNT(*)
+                        AS quantidade_pagamentos,
 
 
-                    COALESCE(  
-                        SUM(p.valor),  
-                        0  
-                    )  
-                    AS total_recebido  
+                        COALESCE(
+                            SUM(p.valor),
+                            0
+                        )
+                        AS total_recebido
 
 
-                FROM pagamentos_financeiro p  
+                    FROM pagamentos_financeiro p
 
 
-                INNER JOIN clientes_financeiro c  
+                    INNER JOIN clientes_financeiro c
 
-                ON  
-                    c.id = p.cliente_id  
+                    ON
+                        c.id = p.cliente_id
 
 
-                WHERE  
+                    WHERE
 
-                    c.usuario_id = $1  
+                        c.usuario_id = $1
 
 
-                AND  
+                    AND
 
-                    p.criado_em >= $2::date  
+                        p.criado_em >= $2::date
 
 
-                AND  
+                    AND
 
-                    p.criado_em < (  
+                        p.criado_em < (
 
-                        $3::date +  
+                            $3::date +
 
-                        INTERVAL '1 day'  
+                            INTERVAL '1 day'
 
-                    )  
-                `,  
+                        )
+                    `,
 
-                [  
+                    [
 
-                    req.usuario.id,  
+                        req.usuario.id,
 
-                    inicio,  
+                        inicio,
 
-                    fim  
+                        fim
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
 
-            periodo: {  
+                periodo: {
 
-                inicio,  
+                    inicio,
 
-                fim  
+                    fim
 
-            },  
+                },
 
 
-            resumo: {  
+                resumo: {
 
-                quantidade_pagamentos:  
+                    quantidade_pagamentos:
 
-                    Number(  
+                        Number(
 
-                        resumoResultado  
-                            .rows[0]  
-                            .quantidade_pagamentos  
+                            resumoResultado
+                                .rows[0]
+                                .quantidade_pagamentos
 
-                    ),  
+                        ),
 
 
-                total_recebido:  
+                    total_recebido:
 
-                    Number(  
+                        Number(
 
-                        resumoResultado  
-                            .rows[0]  
-                            .total_recebido  
+                            resumoResultado
+                                .rows[0]
+                                .total_recebido
 
-                    )  
+                        )
 
-            },  
+                },
 
 
-            pagamentos:  
+                pagamentos:
 
-                pagamentosResultado.rows  
+                    pagamentosResultado.rows
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
-            "Erro ao gerar relatório:",  
-            erro.message  
-        );  
+            console.error(
+                "Erro ao gerar relatório:",
+                erro.message
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao gerar relatório"  
+                erro:
+                    "Erro ao gerar relatório"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -4372,364 +4419,364 @@ async (req, res) => {
 // ==========================================
 
 app.get(
-"/pagamentos-semanais",
+    "/pagamentos-semanais",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    try {  
+        try {
 
-        // ==============================  
-        // GERAR COBRANÇAS DE HOJE  
-        // ==============================  
+            // ==============================
+            // GERAR COBRANÇAS DE HOJE
+            // ==============================
 
-        const dataHoje =  
-            await gerarCobrancasDoDia(  
-                req.usuario.id  
-            );  
+            const dataHoje =
+                await gerarCobrancasDoDia(
+                    req.usuario.id
+                );
 
 
-        // ==============================  
-        // BUSCAR TODAS AS COBRANÇAS  
-        // PENDENTES E AS DO DIA  
-        // ==============================  
+            // ==============================
+            // BUSCAR TODAS AS COBRANÇAS
+            // PENDENTES E AS DO DIA
+            // ==============================
 
-        const resultado =  
-            await pool.query(  
+            const resultado =
+                await pool.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    co.id  
-                    AS cobranca_id,  
+                        co.id
+                        AS cobranca_id,
 
-                    co.data_cobranca,  
+                        co.data_cobranca,
 
-                    co.valor_original,  
+                        co.valor_original,
 
-                    co.juros_percentual,  
+                        co.juros_percentual,
 
-                    co.juros_valor,  
+                        co.juros_valor,
 
-                    co.status,  
+                        co.status,
 
-                    co.quitado_em,  
+                        co.quitado_em,
 
 
-                    c.id  
-                    AS cliente_id,  
+                        c.id
+                        AS cliente_id,
 
-                    c.nome,  
+                        c.nome,
 
-                    c.cpf,  
+                        c.cpf,
 
-                    c.valor_devido,  
+                        c.valor_devido,
 
-                    c.valor_semanal,  
+                        c.valor_semanal,
 
-                    c.dia_pagamento,  
+                        c.dia_pagamento,
 
 
-                    COALESCE(  
+                        COALESCE(
 
-                        SUM(pc.valor),  
+                            SUM(pc.valor),
 
-                        0  
+                            0
 
-                    )  
-                    AS total_pago  
+                        )
+                        AS total_pago
 
 
-                FROM cobrancas_financeiro co  
+                    FROM cobrancas_financeiro co
 
 
-                INNER JOIN  
-                clientes_financeiro c  
+                    INNER JOIN
+                    clientes_financeiro c
 
-                ON  
+                    ON
 
-                    c.id =  
-                    co.cliente_id  
+                        c.id =
+                        co.cliente_id
 
 
-                LEFT JOIN  
-                pagamentos_cobrancas_financeiro pc  
+                    LEFT JOIN
+                    pagamentos_cobrancas_financeiro pc
 
-                ON  
+                    ON
 
-                    pc.cobranca_id =  
-                    co.id  
+                        pc.cobranca_id =
+                        co.id
 
 
-                WHERE  
+                    WHERE
 
-                    co.usuario_id = $1  
+                        co.usuario_id = $1
 
 
-                AND (  
+                    AND (
 
-                    co.status != 'quitado'  
+                        co.status != 'quitado'
 
-                    OR  
+                        OR
 
-                    co.data_cobranca = $2  
+                        co.data_cobranca = $2
 
-                )  
+                    )
 
 
-                GROUP BY  
+                    GROUP BY
 
-                    co.id,  
+                        co.id,
 
-                    co.data_cobranca,  
+                        co.data_cobranca,
 
-                    co.valor_original,  
+                        co.valor_original,
 
-                    co.juros_percentual,  
+                        co.juros_percentual,
 
-                    co.juros_valor,  
+                        co.juros_valor,
 
-                    co.status,  
+                        co.status,
 
-                    co.quitado_em,  
+                        co.quitado_em,
 
 
-                    c.id,  
+                        c.id,
 
-                    c.nome,  
+                        c.nome,
 
-                    c.cpf,  
+                        c.cpf,
 
-                    c.valor_devido,  
+                        c.valor_devido,
 
-                    c.valor_semanal,  
+                        c.valor_semanal,
 
-                    c.dia_pagamento  
+                        c.dia_pagamento
 
 
-                ORDER BY  
+                    ORDER BY
 
-                    CASE  
+                        CASE
 
-                        WHEN  
-                        co.data_cobranca < $2  
-                        THEN 0  
+                            WHEN
+                            co.data_cobranca < $2
+                            THEN 0
 
-                        ELSE 1  
+                            ELSE 1
 
-                    END,  
+                        END,
 
 
-                    co.data_cobranca ASC,  
+                        co.data_cobranca ASC,
 
 
-                    c.nome ASC  
-                `,  
+                        c.nome ASC
+                    `,
 
-                [  
+                    [
 
-                    req.usuario.id,  
+                        req.usuario.id,
 
-                    dataHoje  
+                        dataHoje
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        const cobrancas =  
-            resultado.rows.map(  
-                (item) => {  
+            const cobrancas =
+                resultado.rows.map(
+                    (item) => {
 
-                    const valorOriginal =  
-                        Number(  
-                            item.valor_original  
-                        ) || 0;  
+                        const valorOriginal =
+                            Number(
+                                item.valor_original
+                            ) || 0;
 
 
-                    const juros =  
-                        Number(  
-                            item.juros_valor  
-                        ) || 0;  
+                        const juros =
+                            Number(
+                                item.juros_valor
+                            ) || 0;
 
 
-                    const totalPago =  
-                        Number(  
-                            item.total_pago  
-                        ) || 0;  
+                        const totalPago =
+                            Number(
+                                item.total_pago
+                            ) || 0;
 
 
-                    const valorTotal =  
-                        valorOriginal +  
-                        juros;  
+                        const valorTotal =
+                            valorOriginal +
+                            juros;
 
 
-                    const saldoRestante =  
-                        Math.max(  
+                        const saldoRestante =
+                            Math.max(
 
-                            valorTotal -  
-                            totalPago,  
+                                valorTotal -
+                                totalPago,
 
-                            0  
+                                0
 
-                        );  
+                            );
 
 
-                    let status =  
-                        item.status;  
+                        let status =
+                            item.status;
 
 
-                    if (  
-                        saldoRestante <= 0  
-                    ) {  
+                        if (
+                            saldoRestante <= 0
+                        ) {
 
-                        status =  
-                            "quitado";  
+                            status =
+                                "quitado";
 
-                    } else if (  
-                        totalPago > 0  
-                    ) {  
+                        } else if (
+                            totalPago > 0
+                        ) {
 
-                        status =  
-                            "parcial";  
+                            status =
+                                "parcial";
 
-                    } else if (  
-                        item.data_cobranca <  
-                        dataHoje  
-                    ) {  
+                        } else if (
+                            item.data_cobranca <
+                            dataHoje
+                        ) {
 
-                        status =  
-                            "atrasado";  
+                            status =
+                                "atrasado";
 
-                    } else {  
+                        } else {
 
-                        status =  
-                            "pendente";  
+                            status =
+                                "pendente";
 
-                    }  
+                        }
 
 
-                    return {  
+                        return {
 
-                        ...item,  
+                            ...item,
 
-                        valor_original:  
-                            valorOriginal,  
+                            valor_original:
+                                valorOriginal,
 
-                        total_pago:  
-                            totalPago,  
+                            total_pago:
+                                totalPago,
 
-                        juros:  
-                            juros,  
+                            juros:
+                                juros,
 
-                        valor_total:  
-                            valorTotal,  
+                            valor_total:
+                                valorTotal,
 
-                        saldo_restante:  
-                            saldoRestante,  
+                            saldo_restante:
+                                saldoRestante,
 
-                        status,  
+                            status,
 
-                        atrasada:  
+                            atrasada:
 
-                            item.data_cobranca <  
-                            dataHoje  
+                                item.data_cobranca <
+                                dataHoje
 
-                    };  
+                        };
 
-                }  
-            );  
+                    }
+                );
 
 
-        // ==============================  
-        // RESUMO  
-        // ==============================  
+            // ==============================
+            // RESUMO
+            // ==============================
 
-        const pendentes =  
-            cobrancas.filter(  
+            const pendentes =
+                cobrancas.filter(
 
-                (cobranca) =>  
+                    (cobranca) =>
 
-                    cobranca.status ===  
-                    "pendente"  
+                        cobranca.status ===
+                        "pendente"
 
-            );  
+                );
 
 
-        const atrasados =  
-            cobrancas.filter(  
+            const atrasados =
+                cobrancas.filter(
 
-                (cobranca) =>  
+                    (cobranca) =>
 
-                    cobranca.status ===  
-                    "atrasado" ||  
+                        cobranca.status ===
+                        "atrasado" ||
 
-                    cobranca.status ===  
-                    "parcial"  
+                        cobranca.status ===
+                        "parcial"
 
-            );  
+                );
 
 
-        const quitados =  
-            cobrancas.filter(  
+            const quitados =
+                cobrancas.filter(
 
-                (cobranca) =>  
+                    (cobranca) =>
 
-                    cobranca.status ===  
-                    "quitado"  
+                        cobranca.status ===
+                        "quitado"
 
-            );  
+                );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            data_hoje:  
-                dataHoje,  
+                data_hoje:
+                    dataHoje,
 
-            total:  
-                cobrancas.length,  
+                total:
+                    cobrancas.length,
 
-            pendentes:  
-                pendentes.length,  
+                pendentes:
+                    pendentes.length,
 
-            atrasados:  
-                atrasados.length,  
+                atrasados:
+                    atrasados.length,
 
-            quitados:  
-                quitados.length,  
+                quitados:
+                    quitados.length,
 
-            pagamentos:  
-                cobrancas  
+                pagamentos:
+                    cobrancas
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
+            console.error(
 
-            "Erro ao carregar folha:",  
+                "Erro ao carregar folha:",
 
-            erro.message  
+                erro.message
 
-        );  
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
+                erro:
 
-                "Erro ao carregar folha de pagamentos"  
+                    "Erro ao carregar folha de pagamentos"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -4738,441 +4785,441 @@ async (req, res) => {
 // ==========================================
 
 app.post(
-"/cobrancas/:id/pagamentos",
+    "/cobrancas/:id/pagamentos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    const cobrancaId =  
-        Number(req.params.id);  
+        const cobrancaId =
+            Number(req.params.id);
 
 
-    const valor =  
-        Number(req.body.valor);  
+        const valor =
+            Number(req.body.valor);
 
 
-    if (  
-        !Number.isInteger(cobrancaId) ||  
-        cobrancaId <= 0  
-    ) {  
+        if (
+            !Number.isInteger(cobrancaId) ||
+            cobrancaId <= 0
+        ) {
 
-        return res.status(400).json({  
+            return res.status(400).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Cobrança inválida"  
+                erro:
+                    "Cobrança inválida"
 
-        });  
+            });
 
-    }  
+        }
 
 
-    if (  
-        Number.isNaN(valor) ||  
-        valor <= 0  
-    ) {  
+        if (
+            Number.isNaN(valor) ||
+            valor <= 0
+        ) {
 
-        return res.status(400).json({  
+            return res.status(400).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Informe um valor válido"  
+                erro:
+                    "Informe um valor válido"
 
-        });  
+            });
 
-    }  
+        }
 
 
-    let client;  
+        let client;
 
 
-    try {  
+        try {
 
-        client =  
-            await pool.connect();  
+            client =
+                await pool.connect();
 
 
-        await client.query(  
-            "BEGIN"  
-        );  
+            await client.query(
+                "BEGIN"
+            );
 
 
-        // ==============================  
-        // BUSCAR COBRANÇA  
-        // ==============================  
+            // ==============================
+            // BUSCAR COBRANÇA
+            // ==============================
 
-        const cobrancaResultado =  
-            await client.query(  
+            const cobrancaResultado =
+                await client.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    co.id,  
+                        co.id,
 
-                    co.valor_original,  
+                        co.valor_original,
 
-                    co.juros_valor,  
+                        co.juros_valor,
 
-                    co.status,  
+                        co.status,
 
 
-                    COALESCE(  
-                        SUM(pc.valor),  
-                        0  
-                    ) AS total_pago  
+                        COALESCE(
+                            SUM(pc.valor),
+                            0
+                        ) AS total_pago
 
 
-                FROM cobrancas_financeiro co  
+                    FROM cobrancas_financeiro co
 
 
-                LEFT JOIN  
-                pagamentos_cobrancas_financeiro pc  
+                    LEFT JOIN
+                    pagamentos_cobrancas_financeiro pc
 
-                ON  
-                    pc.cobranca_id = co.id  
+                    ON
+                        pc.cobranca_id = co.id
 
 
-                WHERE  
+                    WHERE
 
-                    co.id = $1  
+                        co.id = $1
 
-                AND  
+                    AND
 
-                    co.usuario_id = $2  
+                        co.usuario_id = $2
 
 
-                GROUP BY  
+                    GROUP BY
 
-                    co.id,  
+                        co.id,
 
-                    co.valor_original,  
+                        co.valor_original,
 
-                    co.juros_valor,  
+                        co.juros_valor,
 
-                    co.status  
-                `,  
+                        co.status
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId,  
+                        cobrancaId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        if (  
-            cobrancaResultado.rows.length === 0  
-        ) {  
+            if (
+                cobrancaResultado.rows.length === 0
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cobrança não encontrada"  
+                    erro:
+                        "Cobrança não encontrada"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const cobranca =  
-            cobrancaResultado.rows[0];  
+            const cobranca =
+                cobrancaResultado.rows[0];
 
 
-        if (  
-            cobranca.status === "quitado"  
-        ) {  
+            if (
+                cobranca.status === "quitado"
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Esta cobrança já foi quitada"  
+                    erro:
+                        "Esta cobrança já foi quitada"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const valorOriginal =  
-            Number(  
-                cobranca.valor_original  
-            );  
+            const valorOriginal =
+                Number(
+                    cobranca.valor_original
+                );
 
 
-        const juros =  
-            Number(  
-                cobranca.juros_valor  
-            ) || 0;  
+            const juros =
+                Number(
+                    cobranca.juros_valor
+                ) || 0;
 
 
-        const totalPago =  
-            Number(  
-                cobranca.total_pago  
-            ) || 0;  
+            const totalPago =
+                Number(
+                    cobranca.total_pago
+                ) || 0;
 
 
-        const valorTotal =  
-            valorOriginal +  
-            juros;  
+            const valorTotal =
+                valorOriginal +
+                juros;
 
 
-        const saldoRestante =  
-            Math.max(  
+            const saldoRestante =
+                Math.max(
 
-                valorTotal -  
-                totalPago,  
+                    valorTotal -
+                    totalPago,
 
-                0  
+                    0
 
-            );  
+                );
 
 
-        // ==============================  
-        // NÃO DEIXAR PAGAR MAIS  
-        // QUE O RESTANTE  
-        // ==============================  
+            // ==============================
+            // NÃO DEIXAR PAGAR MAIS
+            // QUE O RESTANTE
+            // ==============================
 
-        if (  
-            valor > saldoRestante  
-        ) {  
+            if (
+                valor > saldoRestante
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    `O valor é maior que o saldo restante de R$ ${saldoRestante.toFixed(2)}`  
+                    erro:
+                        `O valor é maior que o saldo restante de R$ ${saldoRestante.toFixed(2)}`
 
-            });  
+                });
 
-        }  
+            }
 
 
-        // ==============================  
-        // REGISTRAR PAGAMENTO  
-        // ==============================  
+            // ==============================
+            // REGISTRAR PAGAMENTO
+            // ==============================
 
-        const pagamentoResultado =  
-            await client.query(  
+            const pagamentoResultado =
+                await client.query(
 
-                `  
-                INSERT INTO  
-                pagamentos_cobrancas_financeiro (  
+                    `
+                    INSERT INTO
+                    pagamentos_cobrancas_financeiro (
 
-                    cobranca_id,  
+                        cobranca_id,
 
-                    valor  
+                        valor
 
-                )  
+                    )
 
-                VALUES (  
+                    VALUES (
 
-                    $1,  
+                        $1,
 
-                    $2  
+                        $2
 
-                )  
+                    )
 
-                RETURNING *  
-                `,  
+                    RETURNING *
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId,  
+                        cobrancaId,
 
-                    valor  
+                        valor
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        const novoTotalPago =  
-            totalPago +  
-            valor;  
+            const novoTotalPago =
+                totalPago +
+                valor;
 
 
-        const novoSaldo =  
-            Math.max(  
+            const novoSaldo =
+                Math.max(
 
-                valorTotal -  
-                novoTotalPago,  
+                    valorTotal -
+                    novoTotalPago,
 
-                0  
+                    0
 
-            );  
+                );
 
 
-        let novoStatus =  
-            "parcial";  
+            let novoStatus =
+                "parcial";
 
 
-        if (  
-            novoSaldo <= 0  
-        ) {  
+            if (
+                novoSaldo <= 0
+            ) {
 
-            novoStatus =  
-                "quitado";  
+                novoStatus =
+                    "quitado";
 
-        }  
+            }
 
 
-        // ==============================  
-        // ATUALIZAR STATUS  
-        // ==============================  
+            // ==============================
+            // ATUALIZAR STATUS
+            // ==============================
 
-        await client.query(  
+            await client.query(
 
-            `  
-            UPDATE cobrancas_financeiro  
+                `
+                UPDATE cobrancas_financeiro
 
-            SET  
+                SET
 
-                status = $1,  
+                    status = $1,
 
-                quitado_em =  
+                    quitado_em =
 
-                    CASE  
+                        CASE
 
-                        WHEN $1 = 'quitado'  
+                            WHEN $1 = 'quitado'
 
-                        THEN CURRENT_TIMESTAMP  
+                            THEN CURRENT_TIMESTAMP
 
-                        ELSE NULL  
+                            ELSE NULL
 
-                    END  
+                        END
 
-            WHERE  
-                id = $2  
-            `,  
+                WHERE
+                    id = $2
+                `,
 
-            [  
+                [
 
-                novoStatus,  
+                    novoStatus,
 
-                cobrancaId  
+                    cobrancaId
 
-            ]  
+                ]
 
-        );  
+            );
 
 
-        await client.query(  
-            "COMMIT"  
-        );  
+            await client.query(
+                "COMMIT"
+            );
 
 
-        res.status(201).json({  
+            res.status(201).json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
+                mensagem:
 
-                novoStatus === "quitado"  
+                    novoStatus === "quitado"
 
-                    ? "Cobrança quitada com sucesso!"  
+                        ? "Cobrança quitada com sucesso!"
 
-                    : "Pagamento registrado com sucesso!",  
+                        : "Pagamento registrado com sucesso!",
 
 
-            pagamento:  
+                pagamento:
 
-                pagamentoResultado.rows[0],  
+                    pagamentoResultado.rows[0],
 
 
-            valor_original:  
+                valor_original:
 
-                valorOriginal,  
+                    valorOriginal,
 
 
-            valor_pago_agora:  
+                valor_pago_agora:
 
-                valor,  
+                    valor,
 
 
-            total_pago:  
+                total_pago:
 
-                novoTotalPago,  
+                    novoTotalPago,
 
 
-            saldo_restante:  
+                saldo_restante:
 
-                novoSaldo,  
+                    novoSaldo,
 
 
-            status:  
+                status:
 
-                novoStatus  
+                    novoStatus
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        if (client) {  
+            if (client) {
 
-            await client.query(  
-                "ROLLBACK"  
-            ).catch(  
-                () => {}  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
 
-        }  
+            }
 
 
-        console.error(  
+            console.error(
 
-            "Erro ao registrar pagamento:",  
+                "Erro ao registrar pagamento:",
 
-            erro.message  
+                erro.message
 
-        );  
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
+                erro:
 
-                "Erro ao registrar pagamento"  
+                    "Erro ao registrar pagamento"
 
-        });  
+            });
 
-    } finally {  
+        } finally {
 
-        if (client) {  
+            if (client) {
 
-            client.release();  
+                client.release();
 
-        }  
+            }
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -5181,332 +5228,332 @@ async (req, res) => {
 // ==========================================
 
 app.post(
-"/cobrancas/:id/quitar",
+    "/cobrancas/:id/quitar",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    const cobrancaId =  
-        Number(req.params.id);  
+        const cobrancaId =
+            Number(req.params.id);
 
 
-    if (  
-        !Number.isInteger(cobrancaId) ||  
-        cobrancaId <= 0  
-    ) {  
+        if (
+            !Number.isInteger(cobrancaId) ||
+            cobrancaId <= 0
+        ) {
 
-        return res.status(400).json({  
+            return res.status(400).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Cobrança inválida"  
+                erro:
+                    "Cobrança inválida"
 
-        });  
+            });
 
-    }  
+        }
 
 
-    let client;  
+        let client;
 
 
-    try {  
+        try {
 
-        client =  
-            await pool.connect();  
+            client =
+                await pool.connect();
 
 
-        await client.query(  
-            "BEGIN"  
-        );  
+            await client.query(
+                "BEGIN"
+            );
 
 
-        // ==============================  
-        // BUSCAR COBRANÇA  
-        // ==============================  
+            // ==============================
+            // BUSCAR COBRANÇA
+            // ==============================
 
-        const resultado =  
-            await client.query(  
+            const resultado =
+                await client.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    co.id,  
+                        co.id,
 
-                    co.valor_original,  
+                        co.valor_original,
 
-                    co.juros_valor,  
+                        co.juros_valor,
 
-                    co.status,  
+                        co.status,
 
 
-                    COALESCE(  
-                        SUM(pc.valor),  
-                        0  
-                    ) AS total_pago  
+                        COALESCE(
+                            SUM(pc.valor),
+                            0
+                        ) AS total_pago
 
 
-                FROM cobrancas_financeiro co  
+                    FROM cobrancas_financeiro co
 
 
-                LEFT JOIN  
-                pagamentos_cobrancas_financeiro pc  
+                    LEFT JOIN
+                    pagamentos_cobrancas_financeiro pc
 
-                ON  
-                    pc.cobranca_id = co.id  
+                    ON
+                        pc.cobranca_id = co.id
 
 
-                WHERE  
+                    WHERE
 
-                    co.id = $1  
+                        co.id = $1
 
-                AND  
+                    AND
 
-                    co.usuario_id = $2  
+                        co.usuario_id = $2
 
 
-                GROUP BY  
+                    GROUP BY
 
-                    co.id,  
+                        co.id,
 
-                    co.valor_original,  
+                        co.valor_original,
 
-                    co.juros_valor,  
+                        co.juros_valor,
 
-                    co.status  
-                `,  
+                        co.status
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId,  
+                        cobrancaId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        if (  
-            resultado.rows.length === 0  
-        ) {  
+            if (
+                resultado.rows.length === 0
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cobrança não encontrada"  
+                    erro:
+                        "Cobrança não encontrada"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const cobranca =  
-            resultado.rows[0];  
+            const cobranca =
+                resultado.rows[0];
 
 
-        if (  
-            cobranca.status === "quitado"  
-        ) {  
+            if (
+                cobranca.status === "quitado"
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Esta cobrança já está quitada"  
+                    erro:
+                        "Esta cobrança já está quitada"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const valorOriginal =  
-            Number(  
-                cobranca.valor_original  
-            );  
+            const valorOriginal =
+                Number(
+                    cobranca.valor_original
+                );
 
 
-        const juros =  
-            Number(  
-                cobranca.juros_valor  
-            ) || 0;  
+            const juros =
+                Number(
+                    cobranca.juros_valor
+                ) || 0;
 
 
-        const totalPago =  
-            Number(  
-                cobranca.total_pago  
-            ) || 0;  
+            const totalPago =
+                Number(
+                    cobranca.total_pago
+                ) || 0;
 
 
-        const valorTotal =  
-            valorOriginal +  
-            juros;  
+            const valorTotal =
+                valorOriginal +
+                juros;
 
 
-        const saldoRestante =  
-            Math.max(  
+            const saldoRestante =
+                Math.max(
 
-                valorTotal -  
-                totalPago,  
+                    valorTotal -
+                    totalPago,
 
-                0  
+                    0
 
-            );  
+                );
 
 
-        // ==============================  
-        // REGISTRAR O VALOR RESTANTE  
-        // ==============================  
+            // ==============================
+            // REGISTRAR O VALOR RESTANTE
+            // ==============================
 
-        if (  
-            saldoRestante > 0  
-        ) {  
+            if (
+                saldoRestante > 0
+            ) {
 
-            await client.query(  
+                await client.query(
 
-                `  
-                INSERT INTO  
-                pagamentos_cobrancas_financeiro (  
+                    `
+                    INSERT INTO
+                    pagamentos_cobrancas_financeiro (
 
-                    cobranca_id,  
+                        cobranca_id,
 
-                    valor  
+                        valor
 
-                )  
+                    )
 
-                VALUES (  
+                    VALUES (
 
-                    $1,  
+                        $1,
 
-                    $2  
+                        $2
 
-                )  
-                `,  
+                    )
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId,  
+                        cobrancaId,
 
-                    saldoRestante  
+                        saldoRestante
 
-                ]  
+                    ]
 
-            );  
+                );
 
-        }  
+            }
 
 
-        // ==============================  
-        // MARCAR COMO QUITADA  
-        // ==============================  
+            // ==============================
+            // MARCAR COMO QUITADA
+            // ==============================
 
-        await client.query(  
+            await client.query(
 
-            `  
-            UPDATE cobrancas_financeiro  
+                `
+                UPDATE cobrancas_financeiro
 
-            SET  
+                SET
 
-                status = 'quitado',  
+                    status = 'quitado',
 
-                quitado_em =  
-                    CURRENT_TIMESTAMP  
+                    quitado_em =
+                        CURRENT_TIMESTAMP
 
-            WHERE  
-                id = $1  
-            `,  
+                WHERE
+                    id = $1
+                `,
 
-            [  
+                [
 
-                cobrancaId  
+                    cobrancaId
 
-            ]  
+                ]
 
-        );  
+            );
 
 
-        await client.query(  
-            "COMMIT"  
-        );  
+            await client.query(
+                "COMMIT"
+            );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
+                mensagem:
 
-                "Cobrança quitada com sucesso!",  
+                    "Cobrança quitada com sucesso!",
 
 
-            valor_quitado:  
+                valor_quitado:
 
-                saldoRestante,  
+                    saldoRestante,
 
 
-            valor_total:  
+                valor_total:
 
-                valorTotal  
+                    valorTotal
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        if (client) {  
+            if (client) {
 
-            await client.query(  
-                "ROLLBACK"  
-            ).catch(  
-                () => {}  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
 
-        }  
+            }
 
 
-        console.error(  
+            console.error(
 
-            "Erro ao quitar cobrança:",  
+                "Erro ao quitar cobrança:",
 
-            erro.message  
+                erro.message
 
-        );  
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
+                erro:
 
-                "Erro ao quitar cobrança"  
+                    "Erro ao quitar cobrança"
 
-        });  
+            });
 
-    } finally {  
+        } finally {
 
-        if (client) {  
+            if (client) {
 
-            client.release();  
+                client.release();
 
-        }  
+            }
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -5515,152 +5562,152 @@ async (req, res) => {
 // ==========================================
 
 app.get(
-"/cobrancas/:id/pagamentos",
+    "/cobrancas/:id/pagamentos",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    const cobrancaId =  
-        Number(req.params.id);  
+        const cobrancaId =
+            Number(req.params.id);
 
 
-    try {  
+        try {
 
-        // ==============================  
-        // VERIFICAR COBRANÇA  
-        // ==============================  
+            // ==============================
+            // VERIFICAR COBRANÇA
+            // ==============================
 
-        const cobranca =  
-            await pool.query(  
+            const cobranca =
+                await pool.query(
 
-                `  
-                SELECT id  
+                    `
+                    SELECT id
 
-                FROM cobrancas_financeiro  
+                    FROM cobrancas_financeiro
 
-                WHERE  
+                    WHERE
 
-                    id = $1  
+                        id = $1
 
-                AND  
+                    AND
 
-                    usuario_id = $2  
-                `,  
+                        usuario_id = $2
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId,  
+                        cobrancaId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        if (  
-            cobranca.rows.length === 0  
-        ) {  
+            if (
+                cobranca.rows.length === 0
+            ) {
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cobrança não encontrada"  
+                    erro:
+                        "Cobrança não encontrada"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        // ==============================  
-        // BUSCAR PAGAMENTOS  
-        // ==============================  
+            // ==============================
+            // BUSCAR PAGAMENTOS
+            // ==============================
 
-        const resultado =  
-            await pool.query(  
+            const resultado =
+                await pool.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    id,  
+                        id,
 
-                    cobranca_id,  
+                        cobranca_id,
 
-                    valor,  
+                        valor,
 
 
-                    TO_CHAR(  
+                        TO_CHAR(
 
-                        criado_em  
-                        AT TIME ZONE  
-                        'America/Maceio',  
+                            criado_em
+                            AT TIME ZONE
+                            'America/Maceio',
 
-                        'DD/MM/YYYY HH24:MI:SS'  
+                            'DD/MM/YYYY HH24:MI:SS'
 
-                    )  
-                    AS data_formatada  
+                        )
+                        AS data_formatada
 
 
-                FROM  
-                pagamentos_cobrancas_financeiro  
+                    FROM
+                    pagamentos_cobrancas_financeiro
 
 
-                WHERE  
+                    WHERE
 
-                    cobranca_id = $1  
+                        cobranca_id = $1
 
 
-                ORDER BY  
+                    ORDER BY
 
-                    criado_em DESC  
-                `,  
+                        criado_em DESC
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId  
+                        cobrancaId
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            pagamentos:  
+                pagamentos:
 
-                resultado.rows  
+                    resultado.rows
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        console.error(  
+            console.error(
 
-            "Erro ao carregar histórico:",  
+                "Erro ao carregar histórico:",
 
-            erro.message  
+                erro.message
 
-        );  
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
+                erro:
 
-                "Erro ao carregar histórico"  
+                    "Erro ao carregar histórico"
 
-        });  
+            });
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -5669,205 +5716,202 @@ async (req, res) => {
 // ==========================================
 
 app.put(
-"/cobrancas/:id/juros",
+    "/cobrancas/:id/juros",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    const cobrancaId =  
-        Number(req.params.id);  
-
-
-    const jurosValor =  
-Number(req.body.juros_valor);  
-
-    if (  
-        !Number.isInteger(cobrancaId) ||  
-        cobrancaId <= 0  
-    ) {  
-
-        return res.status(400).json({  
-
-            sucesso: false,  
-
-            erro:  
-                "Cobrança inválida"  
-
-        });  
-
-    }  
+        const cobrancaId =
+            Number(req.params.id);
 
 
-    if (  
-Number.isNaN(jurosValor) ||  
-jurosValor < 0
+        const jurosValor =
+    Number(req.body.juros_valor);
 
+        if (
+            !Number.isInteger(cobrancaId) ||
+            cobrancaId <= 0
+        ) {
+
+            return res.status(400).json({
+
+                sucesso: false,
+
+                erro:
+                    "Cobrança inválida"
+
+            });
+
+        }
+
+
+        if (
+    Number.isNaN(jurosValor) ||
+    jurosValor < 0
 ) {
 
-return res.status(400).json({  
+    return res.status(400).json({
 
-    sucesso: false,  
+        sucesso: false,
 
-    erro:  
-        "Valor do juros inválido"  
+        erro:
+            "Valor do juros inválido"
 
-});
+    });
 
 }
 
-try {  
+        try {
 
-        // ==============================  
-        // BUSCAR COBRANÇA  
-        // ==============================  
+            // ==============================
+            // BUSCAR COBRANÇA
+            // ==============================
 
-        const resultado =  
-            await pool.query(  
+            const resultado =
+                await pool.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    id,  
+                        id,
 
-                    valor_original,  
+                        valor_original,
 
-                    status  
+                        status
 
-                FROM  
-                cobrancas_financeiro  
+                    FROM
+                    cobrancas_financeiro
 
-                WHERE  
+                    WHERE
 
-                    id = $1  
+                        id = $1
 
-                AND  
+                    AND
 
-                    usuario_id = $2  
-                `,  
+                        usuario_id = $2
+                    `,
 
-                [  
+                    [
 
-                    cobrancaId,  
+                        cobrancaId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
-
-
-        if (  
-            resultado.rows.length === 0  
-        ) {  
-
-            return res.status(404).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Cobrança não encontrada"  
-
-            });  
-
-        }  
+                );
 
 
-        const cobranca =  
-            resultado.rows[0];  
+            if (
+                resultado.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Cobrança não encontrada"
+
+                });
+
+            }
 
 
-        if (  
-            cobranca.status === "quitado"  
-        ) {  
-
-            return res.status(400).json({  
-
-                sucesso: false,  
-
-                erro:  
-                    "Não é possível aplicar juros em uma cobrança quitada"  
-
-            });  
-
-        }  
+            const cobranca =
+                resultado.rows[0];
 
 
+            if (
+                cobranca.status === "quitado"
+            ) {
+
+                return res.status(400).json({
+
+                    sucesso: false,
+
+                    erro:
+                        "Não é possível aplicar juros em uma cobrança quitada"
+
+                });
+
+            }
 
 
-        // ==============================  
-        // ATUALIZAR COBRANÇA  
-        // ==============================  
 
-        const atualizado =  
-            await pool.query(  
 
-                `  
-                UPDATE
+            // ==============================
+            // ATUALIZAR COBRANÇA
+            // ==============================
 
+            const atualizado =
+                await pool.query(
+
+                    `
+                    UPDATE
 cobrancas_financeiro
 
 SET
 
-juros_percentual = 0,  
+    juros_percentual = 0,
 
-juros_valor = $1
+    juros_valor = $1
 
 WHERE
 
-id = $2
+    id = $2
 
 RETURNING *
-`,
+                    `,
 
-[  
-jurosValor,  
-cobrancaId
-
+                    [
+    jurosValor,
+    cobrancaId
 ]
 
-);  
+                );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
+                mensagem:
 
-                "Juros aplicado com sucesso!",  
-
-
-            cobranca:  
-
-                atualizado.rows[0]  
-
-        });  
-
-    } catch (erro) {  
-
-        console.error(  
-
-            "Erro ao aplicar juros:",  
-
-            erro.message  
-
-        );  
+                    "Juros aplicado com sucesso!",
 
 
-        res.status(500).json({  
+                cobranca:
 
-            sucesso: false,  
+                    atualizado.rows[0]
 
-            erro:  
+            });
 
-                "Erro ao aplicar juros"  
+        } catch (erro) {
 
-        });  
+            console.error(
 
-    }  
+                "Erro ao aplicar juros:",
 
-}
+                erro.message
+
+            );
+
+
+            res.status(500).json({
+
+                sucesso: false,
+
+                erro:
+
+                    "Erro ao aplicar juros"
+
+            });
+
+        }
+
+    }
 
 );
 
@@ -5876,278 +5920,278 @@ cobrancaId
 // ==========================================
 
 app.post(
-"/clientes/:id/quitar-divida",
+    "/clientes/:id/quitar-divida",
 
-verificarToken,  
+    verificarToken,
 
-async (req, res) => {  
+    async (req, res) => {
 
-    const clienteId =  
-        Number(req.params.id);  
+        const clienteId =
+            Number(req.params.id);
 
 
-    if (  
+        if (
 
-        !Number.isInteger(clienteId) ||  
-        clienteId <= 0  
+            !Number.isInteger(clienteId) ||
+            clienteId <= 0
 
-    ) {  
+        ) {
 
-        return res.status(400).json({  
+            return res.status(400).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Cliente inválido"  
+                erro:
+                    "Cliente inválido"
 
-        });  
+            });
 
-    }  
+        }
 
 
-    let client;  
+        let client;
 
 
-    try {  
+        try {
 
-        client =  
-            await pool.connect();  
+            client =
+                await pool.connect();
 
 
-        await client.query(  
-            "BEGIN"  
-        );  
+            await client.query(
+                "BEGIN"
+            );
 
 
-        // ==============================  
-        // BUSCAR CLIENTE  
-        // ==============================  
+            // ==============================
+            // BUSCAR CLIENTE
+            // ==============================
 
-        const resultadoCliente =  
-            await client.query(  
+            const resultadoCliente =
+                await client.query(
 
-                `  
-                SELECT  
+                    `
+                    SELECT
 
-                    id,  
+                        id,
 
-                    valor_devido  
+                        valor_devido
 
-                FROM clientes_financeiro  
+                    FROM clientes_financeiro
 
-                WHERE  
+                    WHERE
 
-                    id = $1  
+                        id = $1
 
-                AND  
+                    AND
 
-                    usuario_id = $2  
+                        usuario_id = $2
 
-                FOR UPDATE  
-                `,  
+                    FOR UPDATE
+                    `,
 
-                [  
+                    [
 
-                    clienteId,  
+                        clienteId,
 
-                    req.usuario.id  
+                        req.usuario.id
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        if (  
+            if (
 
-            resultadoCliente.rows.length === 0  
+                resultadoCliente.rows.length === 0
 
-        ) {  
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(404).json({  
+                return res.status(404).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Cliente não encontrado"  
+                    erro:
+                        "Cliente não encontrado"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        const cliente =  
-            resultadoCliente.rows[0];  
+            const cliente =
+                resultadoCliente.rows[0];
 
 
-        const valorDevido =  
-            Number(  
-                cliente.valor_devido  
-            ) || 0;  
+            const valorDevido =
+                Number(
+                    cliente.valor_devido
+                ) || 0;
 
 
-        // ==============================  
-        // VERIFICAR SE EXISTE DÍVIDA  
-        // ==============================  
+            // ==============================
+            // VERIFICAR SE EXISTE DÍVIDA
+            // ==============================
 
-        if (  
+            if (
 
-            valorDevido <= 0  
+                valorDevido <= 0
 
-        ) {  
+            ) {
 
-            await client.query(  
-                "ROLLBACK"  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                );
 
 
-            return res.status(400).json({  
+                return res.status(400).json({
 
-                sucesso: false,  
+                    sucesso: false,
 
-                erro:  
-                    "Este cliente não possui dívida pendente"  
+                    erro:
+                        "Este cliente não possui dívida pendente"
 
-            });  
+                });
 
-        }  
+            }
 
 
-        // ==============================  
-        // REGISTRAR PAGAMENTO  
-        // ==============================  
+            // ==============================
+            // REGISTRAR PAGAMENTO
+            // ==============================
 
-        const pagamento =  
-            await client.query(  
+            const pagamento =
+                await client.query(
 
-                `  
-                INSERT INTO  
-                pagamentos_divida_financeiro (  
+                    `
+                    INSERT INTO
+                    pagamentos_divida_financeiro (
 
-                    cliente_id,  
+                        cliente_id,
 
-                    valor  
+                        valor
 
-                )  
+                    )
 
-                VALUES (  
+                    VALUES (
 
-                    $1,  
+                        $1,
 
-                    $2  
+                        $2
 
-                )  
+                    )
 
-                RETURNING *  
-                `,  
+                    RETURNING *
+                    `,
 
-                [  
+                    [
 
-                    clienteId,  
+                        clienteId,
 
-                    valorDevido  
+                        valorDevido
 
-                ]  
+                    ]
 
-            );  
+                );
 
 
-        // ==============================  
-        // ZERAR A DÍVIDA  
-        // ==============================  
+            // ==============================
+            // ZERAR A DÍVIDA
+            // ==============================
 
-        await client.query(  
+            await client.query(
 
-            `  
-            UPDATE clientes_financeiro  
+                `
+                UPDATE clientes_financeiro
 
-            SET  
+                SET
 
-                valor_devido = 0  
+                    valor_devido = 0
 
-            WHERE  
+                WHERE
 
-                id = $1  
-            `,  
+                    id = $1
+                `,
 
-            [  
+                [
 
-                clienteId  
+                    clienteId
 
-            ]  
+                ]
 
-        );  
+            );
 
 
-        await client.query(  
-            "COMMIT"  
-        );  
+            await client.query(
+                "COMMIT"
+            );
 
 
-        res.json({  
+            res.json({
 
-            sucesso: true,  
+                sucesso: true,
 
-            mensagem:  
-                "Dívida quitada com sucesso!",  
+                mensagem:
+                    "Dívida quitada com sucesso!",
 
-            valor_quitado:  
-                valorDevido,  
+                valor_quitado:
+                    valorDevido,
 
-            saldo_restante:  
-                0,  
+                saldo_restante:
+                    0,
 
-            pagamento:  
-                pagamento.rows[0]  
+                pagamento:
+                    pagamento.rows[0]
 
-        });  
+            });
 
-    } catch (erro) {  
+        } catch (erro) {
 
-        if (client) {  
+            if (client) {
 
-            await client.query(  
-                "ROLLBACK"  
-            ).catch(  
-                () => {}  
-            );  
+                await client.query(
+                    "ROLLBACK"
+                ).catch(
+                    () => {}
+                );
 
-        }  
+            }
 
 
-        console.error(  
+            console.error(
 
-            "Erro ao quitar dívida:",  
+                "Erro ao quitar dívida:",
 
-            erro.message  
+                erro.message
 
-        );  
+            );
 
 
-        res.status(500).json({  
+            res.status(500).json({
 
-            sucesso: false,  
+                sucesso: false,
 
-            erro:  
-                "Erro ao quitar dívida"  
+                erro:
+                    "Erro ao quitar dívida"
 
-        });  
+            });
 
-    } finally {  
+        } finally {
 
-        if (client) {  
+            if (client) {
 
-            client.release();  
+                client.release();
 
-        }  
+            }
 
-    }  
+        }
 
-}
+    }
 
 );
 
@@ -6156,49 +6200,50 @@ async (req, res) => {
 // ==========================================
 
 app.get(
-"/api/status",
+    "/api/status",
 
-(req, res) => {  
+    (req, res) => {
 
-    res.json({  
+        res.json({
 
-        sucesso: true,  
+            sucesso: true,
 
-        mensagem:  
-            "API funcionando!"  
+            mensagem:
+                "API funcionando!"
 
-    });  
+        });
 
-}
+    }
 
 );
+
 
 // ==========================================
 // INICIAR SERVIDOR
 // ==========================================
 
 app.listen(
-PORT,
-"0.0.0.0",
+    PORT,
+    "0.0.0.0",
 
-() => {  
+    () => {
 
-    console.log(  
-        "===================================="  
-    );  
+        console.log(
+            "===================================="
+        );
 
-    console.log(  
-        "SERVIDOR RODANDO!"  
-    );  
+        console.log(
+            "SERVIDOR RODANDO!"
+        );
 
-    console.log(  
-        `Porta: ${PORT}`  
-    );  
+        console.log(
+            `Porta: ${PORT}`
+        );
 
-    console.log(  
-        "===================================="  
-    );  
+        console.log(
+            "===================================="
+        );
 
-}
+    }
 
 );
