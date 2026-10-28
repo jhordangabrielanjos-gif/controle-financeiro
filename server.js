@@ -490,138 +490,67 @@ criarTabelas();
 // GERAR COBRANÇAS DO DIA
 // ==========================================
 
-async function gerarCobrancasDoDia(
-    usuarioId
-) {
 
+async function gerarCobrancasDoDia(usuarioId) {
     const agoraBrasil = new Date(
-        new Date().toLocaleString(
-            "en-US",
-            {
-                timeZone:
-                    "America/Maceio"
-            }
-        )
+        new Date().toLocaleString("en-US", {
+            timeZone: "America/Maceio"
+        })
     );
 
+    const ano = agoraBrasil.getFullYear();
 
-    const ano =
-        agoraBrasil.getFullYear();
+    const mes = String(
+        agoraBrasil.getMonth() + 1
+    ).padStart(2, "0");
 
+    const dia = String(
+        agoraBrasil.getDate()
+    ).padStart(2, "0");
 
-    const mes =
-        String(
-            agoraBrasil.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
+    const dataHoje = `${ano}-${mes}-${dia}`;
+    const diaSemana = agoraBrasil.getDay();
 
+    // Buscar somente clientes que ainda possuem dívida
+    const clientes = await pool.query(
+        `
+        SELECT
+            id,
+            valor_semanal
+        FROM clientes_financeiro
+        WHERE usuario_id = $1
+          AND dia_pagamento = $2
+          AND COALESCE(valor_devido, 0) > 0
+        `,
+        [usuarioId, diaSemana]
+    );
 
-    const dia =
-        String(
-            agoraBrasil.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const dataHoje =
-        `${ano}-${mes}-${dia}`;
-
-
-    const diaSemana =
-        agoraBrasil.getDay();
-
-
-    // BUSCAR CLIENTES QUE PAGAM HOJE
-
-    const clientes =
+    // Criar cobrança para cada cliente elegível
+    for (const cliente of clientes.rows) {
         await pool.query(
-
-           const clientes = await pool.query(
-    `
-    SELECT
-        id,
-        valor_semanal
-    FROM clientes_financeiro
-    WHERE usuario_id = $1
-      AND dia_pagamento = $2
-      AND COALESCE(valor_devido, 0) > 0
-    `,
-    [
-        usuarioId,
-        diaSemana
-    ]
-);
-
-
-    // CRIAR COBRANÇA PARA CADA CLIENTE
-
-    for (
-        const cliente of clientes.rows
-    ) {
-
-        await pool.query(
-
             `
-            INSERT INTO
-            cobrancas_financeiro (
-
+            INSERT INTO cobrancas_financeiro (
                 cliente_id,
-
                 usuario_id,
-
                 data_cobranca,
-
                 valor_original
-
             )
-
-            VALUES (
-
-                $1,
-
-                $2,
-
-                $3,
-
-                $4
-
-            )
-
-            ON CONFLICT (
-
-                cliente_id,
-
-                data_cobranca
-
-            )
-
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (cliente_id, data_cobranca)
             DO NOTHING
             `,
-
             [
-
                 cliente.id,
-
                 usuarioId,
-
                 dataHoje,
-
                 cliente.valor_semanal
-
             ]
-
         );
-
     }
 
-
     return dataHoje;
-
 }
+
 
 
 // ==========================================
