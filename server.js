@@ -540,34 +540,21 @@ async function gerarCobrancasDoDia(
     const clientes =
         await pool.query(
 
-            `
-            SELECT
-
-                id,
-
-                valor_semanal
-
-            FROM clientes_financeiro
-
-            WHERE
-
-                usuario_id = $1
-
-            AND
-
-                dia_pagamento = $2
-
-            `,
-
-            [
-
-                usuarioId,
-
-                diaSemana
-
-            ]
-
-        );
+           const clientes = await pool.query(
+    `
+    SELECT
+        id,
+        valor_semanal
+    FROM clientes_financeiro
+    WHERE usuario_id = $1
+      AND dia_pagamento = $2
+      AND COALESCE(valor_devido, 0) > 0
+    `,
+    [
+        usuarioId,
+        diaSemana
+    ]
+);
 
 
     // CRIAR COBRANÇA PARA CADA CLIENTE
@@ -4510,19 +4497,15 @@ app.get(
 
 
                     WHERE
+    co.usuario_id = $1
 
-                        co.usuario_id = $1
+AND COALESCE(c.valor_devido, 0) > 0
 
-
-                    AND (
-
-                        co.status != 'quitado'
-
-                        OR
-
-                        co.data_cobranca = $2
-
-                    )
+AND (
+    co.status != 'quitado'
+    OR
+    co.data_cobranca = $2
+)
 
 
                     GROUP BY
