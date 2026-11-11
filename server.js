@@ -6140,6 +6140,72 @@ app.post(
 
 );
 
+
+app.post(
+    "/tarefas/gerar-cobrancas",
+    async (req, res) => {
+
+        // Proteger a rota com uma chave secreta
+        const segredoConfigurado = process.env.CRON_SECRET;
+        const segredoEnviado = req.get("x-cron-secret");
+
+        if (!segredoConfigurado) {
+            return res.status(503).json({
+                sucesso: false,
+                erro: "CRON_SECRET não configurado."
+            });
+        }
+
+        if (segredoEnviado !== segredoConfigurado) {
+            return res.status(401).json({
+                sucesso: false,
+                erro: "Acesso não autorizado."
+            });
+        }
+
+        try {
+            console.log("[ROTINA AUTOMATICA] Iniciando.");
+
+            // Buscar todos os usuários cadastrados
+            const usuarios = await pool.query(`
+                SELECT id
+                FROM usuarios_financeiro
+                ORDER BY id
+            `);
+
+            let processados = 0;
+
+            for (const usuario of usuarios.rows) {
+                await gerarCobrancasDoDia(usuario.id);
+                processados++;
+            }
+
+            console.log(
+                "[ROTINA AUTOMATICA] Usuários processados:",
+                processados
+            );
+
+            return res.json({
+                sucesso: true,
+                mensagem: "Geração de cobranças concluída.",
+                usuarios_processados: processados
+            });
+
+        } catch (erro) {
+            console.error(
+                "[ROTINA AUTOMATICA] Erro:",
+                erro
+            );
+
+            return res.status(500).json({
+                sucesso: false,
+                erro: "Erro ao gerar cobranças."
+            });
+        }
+    }
+);
+
+
 // ==========================================
 // STATUS
 // ==========================================
