@@ -491,64 +491,97 @@ criarTabelas();
 // ==========================================
 
 
+
 async function gerarCobrancasDoDia(usuarioId) {
-    const agoraBrasil = new Date(
-        new Date().toLocaleString("en-US", {
-            timeZone: "America/Maceio"
-        })
-    );
+    try {
+        console.log("==================================");
+        console.log("[COBRANCAS] Iniciando geração");
+        console.log("[COBRANCAS] Usuário:", usuarioId);
 
-    const ano = agoraBrasil.getFullYear();
-
-    const mes = String(
-        agoraBrasil.getMonth() + 1
-    ).padStart(2, "0");
-
-    const dia = String(
-        agoraBrasil.getDate()
-    ).padStart(2, "0");
-
-    const dataHoje = `${ano}-${mes}-${dia}`;
-    const diaSemana = agoraBrasil.getDay();
-
-    // Buscar somente clientes que ainda possuem dívida
-    const clientes = await pool.query(
-        `
-        SELECT
-            id,
-            valor_semanal
-        FROM clientes_financeiro
-        WHERE usuario_id = $1
-          AND dia_pagamento = $2
-          AND COALESCE(valor_devido, 0) > 0
-        `,
-        [usuarioId, diaSemana]
-    );
-
-    // Criar cobrança para cada cliente elegível
-    for (const cliente of clientes.rows) {
-        await pool.query(
-            `
-            INSERT INTO cobrancas_financeiro (
-                cliente_id,
-                usuario_id,
-                data_cobranca,
-                valor_original
-            )
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (cliente_id, data_cobranca)
-            DO NOTHING
-            `,
-            [
-                cliente.id,
-                usuarioId,
-                dataHoje,
-                cliente.valor_semanal
-            ]
+        const agoraBrasil = new Date(
+            new Date().toLocaleString("en-US", {
+                timeZone: "America/Maceio"
+            })
         );
-    }
 
-    return dataHoje;
+        const ano = agoraBrasil.getFullYear();
+
+        const mes = String(
+            agoraBrasil.getMonth() + 1
+        ).padStart(2, "0");
+
+        const dia = String(
+            agoraBrasil.getDate()
+        ).padStart(2, "0");
+
+        const dataHoje = `${ano}-${mes}-${dia}`;
+        const diaSemana = agoraBrasil.getDay();
+
+        console.log("[COBRANCAS] Data:", dataHoje);
+        console.log("[COBRANCAS] Dia da semana:", diaSemana);
+
+        // Buscar somente clientes que ainda possuem dívida
+        const clientes = await pool.query(
+            `
+            SELECT
+                id,
+                valor_semanal
+            FROM clientes_financeiro
+            WHERE usuario_id = $1
+              AND dia_pagamento = $2
+              AND COALESCE(valor_devido, 0) > 0
+            `,
+            [usuarioId, diaSemana]
+        );
+
+        console.log(
+            "[COBRANCAS] Clientes encontrados:",
+            clientes.rows.length
+        );
+
+        let criadas = 0;
+        let jaExistentes = 0;
+
+        // Criar cobrança para cada cliente elegível
+        for (const cliente of clientes.rows) {
+            const resultado = await pool.query(
+                `
+                INSERT INTO cobrancas_financeiro (
+                    cliente_id,
+                    usuario_id,
+                    data_cobranca,
+                    valor_original
+                )
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (cliente_id, data_cobranca)
+                DO NOTHING
+                `,
+                [
+                    cliente.id,
+                    usuarioId,
+                    dataHoje,
+                    cliente.valor_semanal
+                ]
+            );
+
+            if (resultado.rowCount > 0) {
+                criadas++;
+            } else {
+                jaExistentes++;
+            }
+        }
+
+        console.log("[COBRANCAS] Novas cobranças:", criadas);
+        console.log("[COBRANCAS] Já existentes:", jaExistentes);
+        console.log("[COBRANCAS] Finalizado:", dataHoje);
+        console.log("==================================");
+
+        return dataHoje;
+
+    } catch (erro) {
+        console.error("[COBRANCAS] ERRO NA GERAÇÃO:", erro);
+        throw erro;
+    }
 }
 
 
