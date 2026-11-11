@@ -1,0 +1,27 @@
+
+name: Gerar cobrancas diarias
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  gerar-cobrancas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Executar geracao de cobrancas
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+        run: |
+          test -n "$API_URL"
+          test -n "$CRON_SECRET"
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            "${API_URL%/}/tarefas/gerar-cobrancas" \
+            --header "x-cron-secret: ${CRON_SECRET}"
