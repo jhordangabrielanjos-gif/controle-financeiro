@@ -498,6 +498,7 @@ async function gerarCobrancasDoDia(usuarioId) {
         console.log("[COBRANCAS] Iniciando geração");
         console.log("[COBRANCAS] Usuário:", usuarioId);
 
+        // Data e horário de Brasília
         const agoraBrasil = new Date(
             new Date().toLocaleString("en-US", {
                 timeZone: "America/Maceio"
@@ -505,33 +506,30 @@ async function gerarCobrancasDoDia(usuarioId) {
         );
 
         const ano = agoraBrasil.getFullYear();
-
-        const mes = String(
-            agoraBrasil.getMonth() + 1
-        ).padStart(2, "0");
-
-        const dia = String(
-            agoraBrasil.getDate()
-        ).padStart(2, "0");
+        const mes = String(agoraBrasil.getMonth() + 1).padStart(2, "0");
+        const dia = String(agoraBrasil.getDate()).padStart(2, "0");
 
         const dataHoje = `${ano}-${mes}-${dia}`;
-        const diaSemana = agoraBrasil.getDay();
 
-        console.log("[COBRANCAS] Data:", dataHoje);
-        console.log("[COBRANCAS] Dia da semana:", diaSemana);
+        // Usar UTC para fazer cálculos somente de datas
+        const dataBase = new Date(Date.UTC(ano, mes - 1, Number(dia)));
+        const diaSemanaAtual = dataBase.getUTCDay();
 
-        // Buscar somente clientes que ainda possuem dívida
+        console.log("[COBRANCAS] Data atual:", dataHoje);
+
         const clientes = await pool.query(
             `
             SELECT
                 id,
-                valor_semanal
+                valor_semanal,
+                dia_pagamento
             FROM clientes_financeiro
             WHERE usuario_id = $1
-              AND dia_pagamento = $2
               AND COALESCE(valor_devido, 0) > 0
+              AND COALESCE(valor_semanal, 0) > 0
+              AND dia_pagamento BETWEEN 0 AND 6
             `,
-            [usuarioId, diaSemana]
+            [usuarioId]
         );
 
         console.log(
@@ -542,8 +540,24 @@ async function gerarCobrancasDoDia(usuarioId) {
         let criadas = 0;
         let jaExistentes = 0;
 
-        // Criar cobrança para cada cliente elegível
         for (const cliente of clientes.rows) {
+            const diaPagamento = Number(cliente.dia_pagamento);
+
+            // Descobre a ocorrência mais recente do dia de pagamento
+            const diasAtras = (
+                diaSemanaAtual - diaPagamento + 7
+            ) % 7;
+
+            const dataCobranca = new Date(dataBase);
+
+            dataCobranca.setUTCDate(
+                dataCobranca.getUTCDate() - diasAtras
+            );
+
+            const dataFormatada = dataCobranca
+                .toISOString()
+                .slice(0, 10);
+
             const resultado = await pool.query(
                 `
                 INSERT INTO cobrancas_financeiro (
@@ -559,13 +573,18 @@ async function gerarCobrancasDoDia(usuarioId) {
                 [
                     cliente.id,
                     usuarioId,
-                    dataHoje,
+                    dataFormatada,
                     cliente.valor_semanal
                 ]
             );
 
             if (resultado.rowCount > 0) {
                 criadas++;
+                console.log(
+                    "[COBRANCAS] Criada:",
+                    cliente.id,
+                    dataFormatada
+                );
             } else {
                 jaExistentes++;
             }
