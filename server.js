@@ -4458,17 +4458,10 @@ app.get(
                         co.id
 
 
-                    WHERE
+                   WHERE
     co.usuario_id = $1
 
 AND COALESCE(c.valor_devido, 0) > 0
-
-AND (
-    co.status != 'quitado'
-    OR
-    co.data_cobranca = $2
-)
-
 
                     GROUP BY
 
@@ -4628,10 +4621,15 @@ AND (
                                 item.data_cobranca <
                                 dataHoje
 
-                        };
+                                            };
 
-                    }
-                );
+                }
+            ).filter(
+
+                (cobranca) =>
+                    cobranca.saldo_restante > 0
+
+            );
 
 
             // ==============================
